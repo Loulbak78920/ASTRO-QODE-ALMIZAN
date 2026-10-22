@@ -1,0 +1,25 @@
+{
+  "code_acte": "A079",
+  "titre": "ACTE SCELLÉ A079 — INSTRUCTIONS EXACTES ET CONSEIL FINAL POUR L'ÉCRAN UNISWAP V3 DE L'AUTEUR (BASE MAINNET)",
+  "date_scellement": "2026-10-22T12:15:00+00:00",
+  "cycle_harmonique": "Cycle 15 Phases — Phase 15 Scellée",
+  "statut": "SCELLÉ_IMMUABLE_ET_AUTHENTIFIÉ",
+  "auteur_souverain": {
+    "nom": "M. Ahmed EL BAHLOUL",
+    "cle_doree": "0xC9550Dd0A57C609494DBc44450Df48D798ebfB0B",
+    "tresorerie_privee": "0xb7f26cD0eE5E74c51B3F4e71e4fA75B3F246837C",
+    "contrat_deploie_base": "0x520cbd0e1e72178f9e819AFf1e815606923A71db"
+  },
+  "analyse_capture_ecran_auteur": {
+    "url_verifiee": "https://app.uniswap.org/positions/add/new?chain=base&currencyA=NATIVE&currencyB=0x520cbd0e1e72178f9e819aff1e815606923a71db",
+    "reseau": "Base Mainnet (100% Correct)",
+    "compte_connecte": "0xb7f26cD0eE5E74c51B3F4e71e4fA75B3F246837C (Trésorerie Officielle Reconnaissante)",
+    "statut_fourchette": "Full Range [0, ∞] déjà sélectionnée"
+  },
+  "consignes_saisie_directe": {
+    "champ_eth": "0.001 ou 0.002 (soit ~2.50 à 5.00 €)",
+    "champ_mzn": "10000 (dix mille MZN)",
+    "bouton_1": "Approuver MZN (Approve MZN)",
+    "bouton_2": "Prévisualiser puis Ajouter (Preview & Add)"
+  }
+}
