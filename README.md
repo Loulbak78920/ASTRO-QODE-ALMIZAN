@@ -1,7 +1,14 @@
-# `IMAM8MAHDI` × `Al-Mizan` × `ASTRO-Q°ODE` (V1.0–V6.0)
+# `IMAM8MAHDI` × `Al-Mizan` × `ASTRO-Q°ODE` (V1.0–V6.4)
+
+<p align="center">
+  <img src="./assets/icone_jeton_mzn_harmonie.svg" alt="Icône Officielle de l'Harmonie du Jeton MZN" width="280" height="280">
+  <br>
+  <em><strong>Icône Officielle de l'Harmonie du Jeton MZN</strong> — Balance Céleste d'Al-Mizan, Triade CPU-GPU-QPU, Unisson Or 79 / Argent 47 & 313M Souverain</em>
+</p>
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23554838.svg)](https://doi.org/10.5281/zenodo.23554838)
-[![Version](https://img.shields.io/badge/Version-6.2.0-blue.svg)](https://github.com/Loulbak78920/ASTRO-QODE-ALMIZAN)
+[![Version](https://img.shields.io/badge/Version-6.4.0-blue.svg)](https://github.com/Loulbak78920/ASTRO-QODE-ALMIZAN)
+[![Livre Blanc](https://img.shields.io/badge/Whitepaper-Livre%20Blanc%20MZN-gold.svg)](./LIVRE_BLANC_ALMIZAN_ASTRO_QODE_MZN_WHITEPAPER.md)
 [![Tests](https://img.shields.io/badge/Tests-11%2F11%20PASS-brightgreen.svg)](./tests/test_suite_complete.py)
 [![Solidity](https://img.shields.io/badge/Solidity-^0.8.20-orange.svg)](./contracts/AmalMizanSynchronMznContract.sol)
 [![OpenQASM](https://img.shields.io/badge/OpenQASM-2.0-purple.svg)](./lang/compilateur_qasm_isa.py)

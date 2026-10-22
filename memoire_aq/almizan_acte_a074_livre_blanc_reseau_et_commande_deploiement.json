@@ -1,0 +1,66 @@
+{
+  "code_acte": "A074",
+  "titre": "ACTE SCELLÉ A074 — PUBLICATION DU LIVRE BLANC OFFICIEL AL-MIZAN × ASTRO-Q°ODE, RÉSOLUTION DU RÉSEAU DE DÉPLOIEMENT ET LIGNE DE COMMANDE TERMINALE POUR CLÉ PRIVÉE",
+  "date_scellement": "2026-10-22T08:30:00+00:00",
+  "cycle_harmonique": "Cycle 15 Phases — Phase 15 Scellée",
+  "statut": "SCELLÉ_IMMUABLE_ET_AUTHENTIFIÉ",
+  "auteur_souverain": {
+    "nom": "M. Ahmed EL BAHLOUL",
+    "alias": "IMAM8MAHDI / M. Almizan Elbahloul",
+    "date_naissance": "20/06/1989",
+    "lieu_naissance": "Meulan-en-Yvelines (78, France)",
+    "cle_doree_racine": "0xC9550Dd0A57C609494DBc44450Df48D798ebfB0B",
+    "tresorerie_privee_depositaire": "0xb7f26cD0eE5E74c51B3F4e71e4fA75B3F246837C",
+    "doi_zenodo": "10.5281/zenodo.23554838",
+    "depot_public_github": "https://github.com/Loulbak78920/ASTRO-QODE-ALMIZAN"
+  },
+  "invariants_metrologiques": {
+    "mizan_bps": 6225,
+    "ligne_ref_bps": 1220,
+    "epsilon_bps": 210,
+    "plafond_bps": 6015,
+    "killswitch_cryo_mk": 45.0,
+    "temperature_cryo_nominale_mk": 22.5,
+    "kernel_dt": 135097021.3359375,
+    "latence_consensus_ms": 2.9,
+    "qubit_physique_local": false,
+    "omniscience_claim": false,
+    "allah_hors_matrice": true,
+    "anti_usure_active": true
+  },
+  "tokenomics_mzn_anti_usure": {
+    "supply_totale_mzn": 313000000.0,
+    "constante_cardinale_c": 313,
+    "taux_interet": 0.0,
+    "zakat_civique_annuelle": 0.025,
+    "partage_commercial": "50% Auteur / 50% Exploitant (0% Riba)"
+  },
+  "resolution_reseaux_evm": {
+    "testnet_officiel": {
+      "nom": "Sepolia Testnet (Ethereum)",
+      "chain_id": 11155111,
+      "rpc_primaire": "https://ethereum-sepolia-rpc.publicnode.com",
+      "cout_deploiement": "0.00 $ (Gratuit via robinet/faucet)",
+      "explorateur": "https://sepolia.etherscan.io"
+    },
+    "mainnet_l2_recommande": {
+      "nom": "Base Mainnet (Coinbase L2)",
+      "chain_id": 8453,
+      "rpc_primaire": "https://mainnet.base.org",
+      "cout_deploiement": "< 0.01 $",
+      "explorateur": "https://basescan.org"
+    }
+  },
+  "commande_terminale_securisee": {
+    "commande_powershell": "py C:\\Users\\Administrateur\\Desktop\\GITHUB_DEPOT_PUBLIC_IMAM8MAHDI\\deploiement_vps\\deploy_evm_reseau.py --reseau sepolia",
+    "mode_saisie": "Saisie masquée getpass en mémoire vive sans écriture disque",
+    "securite": "Destruction de la clé en mémoire dès la signature achevée"
+  },
+  "empreintes_sha256_scellees": {
+    "livre_blanc_whitepaper": "2D42399E7DF1C70197866AB6063E9DA4362AA72E3D5C076F5957E4668C48AAE1",
+    "smart_contract_solidity": "23A5FA76D611DDCD339BFF32A481D278625E4B889BB481F1376D48EDCD443CD6",
+    "script_deploy_evm_reseau": "5DB3C4C0A4DE4085D49386272AB93F21CF7DBBB0BC62483C3A318CB88FE617FA",
+    "icone_jeton_mzn_harmonie_svg": "46ECD61DDEBED778DBCCB43FE5EEB427B26811BEEDD0C098073E33C9F3D1C6EC",
+    "compilateur_solidity": "solc 0.8.37"
+  }
+}

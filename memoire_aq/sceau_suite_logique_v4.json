@@ -1,6 +1,6 @@
 {
   "nom_sceau": "sceau_suite_logique_v4",
-  "timestamp": "2026-10-22T10:12:47",
+  "timestamp": "2026-10-22T10:35:16",
   "statut": "SCEAU_ASTRO_QODE_CONSOLIDE_OK",
   "doi": "10.5281/zenodo.23479740",
   "invariants": {
@@ -167,5 +167,5 @@
   "metadata_supplementaire": {
     "diagnostic_pont_materiel": {}
   },
-  "empreinte_sha256": "abb0dc98105d7ce28cdb8f56105ef5e014a4e500008822dd80e3071b1d524b8e"
+  "empreinte_sha256": "a4c52f75bf38e0aff19424e89f04a358e060940c99606f5286ad222b647bffb3"
 }
