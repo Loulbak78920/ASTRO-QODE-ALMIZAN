@@ -1,0 +1,23 @@
+{
+  "code_acte": "A084",
+  "titre": "ACTE SCELLÉ A084 — RÉSOLUTION VISUELLE CRITIQUE DU TOGGLE 'AJOUTER EN TANT QUE ETH' ET SCROLL BAS SUR UNISWAP V3",
+  "date_scellement": "2026-10-22T12:45:00+00:00",
+  "cycle_harmonique": "Cycle 15 Phases — Phase 15 Scellée",
+  "statut": "SCELLÉ_IMMUABLE_ET_AUTHENTIFIÉ",
+  "auteur_souverain": {
+    "nom": "M. Ahmed EL BAHLOUL",
+    "cle_doree": "0xC9550Dd0A57C609494DBc44450Df48D798ebfB0B",
+    "tresorerie_privee": "0xb7f26cD0eE5E74c51B3F4e71e4fA75B3F246837C"
+  },
+  "decouvertes_visuelles_sur_capture": {
+    "solde_mzn_confirme": "8 000 000,00 MZN affiché clairement en bas à droite !",
+    "solde_eth_confirme": "0,00016 ETH affiché en haut à droite",
+    "bloqueur_numero_1": "Le bouton bascule rose 'Ajouter en tant que ETH' est activé (il force le paiement de tout en ETH au lieu d'utiliser vos 8M MZN).",
+    "bloqueur_numero_2": "Le bouton de validation se trouve plus bas sur la page web : l'utilisateur doit faire défiler vers le bas (scroll)."
+  },
+  "actions_de_resolution_immediates": [
+    "1. Désactiver l'interrupteur rose 'Ajouter en tant que ETH' en cliquant dessus (pour qu'il devienne gris/éteint).",
+    "2. Cliquer dans la case du haut (ETH) et taper directement : 0.00005",
+    "3. Faire rouler la molette de la souris vers le bas pour voir le bouton violet d'approbation et cliquer dessus."
+  ]
+}
