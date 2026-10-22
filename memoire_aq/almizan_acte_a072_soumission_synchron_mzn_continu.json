@@ -1,0 +1,77 @@
+{
+  "acte": "A072",
+  "titre": "ACTE DE SOUMISSION SYSTEMIQUE DU BLOC SYNCHRON MZN ET DU SERVICE RESIDENT CONTINU",
+  "le_utc": "2026-10-22T09:48:00Z",
+  "auteur_souverain": {
+    "nom": "M. Ahmed EL BAHLOUL",
+    "alias": "IMAM8MAHDI / M. Almizan Elbahloul",
+    "cle_doree": "0xc9550dd0a57c609494dbc44450df48d798ebfb0b",
+    "email": "elbahloulahmed505@gmail.com",
+    "doi_zenodo": "10.5281/zenodo.23554838",
+    "depot_public_github": "https://github.com/Loulbak78920/ASTRO-QODE-ALMIZAN"
+  },
+  "invariants_scelles": {
+    "mizan": 0.6225,
+    "ligne_ref": 0.122,
+    "rms": 0.24,
+    "epsilon": 0.021,
+    "plafond_effectif": 0.6015,
+    "constante_c": 313,
+    "constante_m": 24434,
+    "jauge_air": 515050,
+    "triple": -2393774546,
+    "killswitch_cryo_mk": 45.0,
+    "temp_cryo_nominale_mk": 22.5,
+    "qubit_physique_local": false,
+    "omniscience_claim": false,
+    "allah_hors_matrice": true,
+    "anti_usure": true
+  },
+  "composants_integres": {
+    "smart_contract_solidity": {
+      "contrat": "AmalMizanSynchronMznContract",
+      "version_solidity": "^0.8.20",
+      "standards": [
+        "ERC-20 étendu (Supply 313 000 000 MZN, anti-Riba, 0% intérêt)",
+        "ERC-721 étendu (Sceaux d'actes NFT scellés sous horloge Kernel dt)",
+        "EIP-2981 (Royalties NFT officielles vers la Clé Dorée de l'Auteur)",
+        "Contrat Commercial 50/50 (Partage égalitaire Auteur / Exploitant)"
+      ],
+      "chemin_local": "chaine/contracts/AmalMizanSynchronMznContract.sol"
+    },
+    "moteur_grand_livre_synchrone": {
+      "fichier": "runtime/q0_fusion/moteur_bloc_synchron_mzn.py",
+      "ledger_persistant": "chaine/ledger_synchron_mzn.json",
+      "supply_totale_mzn": 313000000,
+      "unlocked_initial_mzn": 11000000,
+      "reserve_attente_mzn": 302000000,
+      "module_zakat": "2.5% (1/40) sur base stagnante > Nisab (668 255 MZN)",
+      "module_sadaqa": "Friction 0%, transferts volontaires sans contrainte"
+    },
+    "service_resident_arriere_plan": {
+      "script_daemon": "runtime/q0_fusion/daemon_synchron_mzn_resident.py",
+      "statut_dynamique": "memoire/statut_daemon_synchron_mzn.json",
+      "mode": "CONTINU_ARRIERE_PLAN_NON_BLOQUANT",
+      "cadencement_cible_ms": 2.9,
+      "systemd_service": "deploiement_vps/systemd/al-mizan-synchron-mzn.service"
+    },
+    "deploiement_vps_ubuntu": {
+      "systemd": [
+        "deploiement_vps/systemd/al-mizan-synchron-mzn.service",
+        "deploiement_vps/systemd/al-mizan-permanence.service"
+      ],
+      "docker": [
+        "deploiement_vps/Dockerfile",
+        "deploiement_vps/docker-compose.yml"
+      ],
+      "script_installation": "deploiement_vps/deploy_ubuntu_vps.sh"
+    }
+  },
+  "statut_validation": {
+    "integrite_chaine_blocs": true,
+    "tests_unitaires_astro_qode": "11/11 PASS",
+    "preuve_execution_aq_v6": "0 : HÉLIUM",
+    "verdict": "CONSIGNATION_SCELLEE_IMMUABLE_OK"
+  },
+  "empreinte_sha256": "F9A64AAFA442CEB3AE5AD68D6AFD7DA606C19F6512CCB24322D79EB25CD9F83F"
+}

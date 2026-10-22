@@ -61,7 +61,14 @@ interface IERC721 {
     function transferFrom(address from, address to, uint256 tokenId) external;
 }
 
-contract AmalMizanSynchronMznContract is IERC20, IERC721 {
+interface IERC2981 {
+    function royaltyInfo(uint256 tokenId, uint256 salePrice)
+        external
+        view
+        returns (address receiver, uint256 royaltyAmount);
+}
+
+contract AmalMizanSynchronMznContract is IERC20, IERC721, IERC2981 {
     // --- MÉTADONNÉES DE L'AUTEUR & DOI ---
     string public constant AUTEUR = "M. Ahmed EL BAHLOUL";
     string public constant AUTEUR_ALIAS = "IMAM8MAHDI / M. Almizan Elbahloul";
@@ -452,5 +459,28 @@ contract AmalMizanSynchronMznContract is IERC20, IERC721 {
             _balances[from] -= burnAmt;
             emit KaffaraPurge(from, burnAmt);
         }
+    }
+
+    // ========================================================================
+    //               STANDARD EIP-2981 : ROYALTIES NFT OFFICIELLES
+    // ========================================================================
+
+    uint256 public constant ROYALTY_BPS_DEFAUT = 500; // 5.0% = 500 bps
+
+    function royaltyInfo(uint256 /* tokenId */, uint256 salePrice)
+        external
+        pure
+        override
+        returns (address receiver, uint256 royaltyAmount)
+    {
+        receiver = CLE_DOREE_AUTEUR;
+        royaltyAmount = (salePrice * ROYALTY_BPS_DEFAUT) / 10000;
+    }
+
+    function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
+        return interfaceId == 0x01ffc9a7 // ERC-165
+            || interfaceId == 0x80ac58cd // ERC-721
+            || interfaceId == 0x36372b43 // ERC-20
+            || interfaceId == 0x2a5520c3; // ERC-2981 (Royalties)
     }
 }

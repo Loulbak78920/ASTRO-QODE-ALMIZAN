@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  almizan-node:
+    build:
+      context: ..
+      dockerfile: deploiement_vps/Dockerfile
+    container_name: almizan-synchron-core
+    restart: unless-stopped
+    environment:
+      - MIZAN=0.6225
+      - EPSILON=0.021
+      - PLAFOND=0.6015
+      - C=313
+      - M=24434
+      - QUBIT_PHYSIQUE_LOCAL=false
+      - OMNISCIENCE_CLAIM=false
+      - ALLAH_HORS_MATRICE=true
+    ports:
+      - "8766:8766" # Permanence HTTPS
+      - "8765:8765" # Porte HTTP Async
+      - "8000:8000" # Dashboard
+      - "5030:5030" # Emulateur Die Silicium
+      - "5025:5025" # SCPI AWG
+      - "5026:5026" # Capteur Cryo
+    volumes:
+      - ../memoire:/opt/al-mizan/memoire
+      - ../chaine:/opt/al-mizan/chaine
+      - ../sorties:/opt/al-mizan/sorties
+    networks:
+      - almizan-net
+
+networks:
+  almizan-net:
+    driver: bridge

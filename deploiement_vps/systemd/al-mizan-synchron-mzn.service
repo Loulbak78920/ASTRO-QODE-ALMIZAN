@@ -1,0 +1,25 @@
+[Unit]
+Description=Service Resident Al-Mizan Daemon Synchron MZN (Consensus & Grand Livre)
+After=network.target
+
+[Service]
+Type=simple
+User=almizan
+Group=almizan
+WorkingDirectory=/opt/al-mizan
+Environment=PYTHONPATH=/opt/al-mizan:/opt/al-mizan/runtime:/opt/al-mizan/outils_sans_usine
+ExecStart=/usr/bin/python3 /opt/al-mizan/runtime/q0_fusion/daemon_synchron_mzn_resident.py --interval 2.0
+Restart=always
+RestartSec=5s
+KillMode=process
+StandardOutput=journal
+StandardError=journal
+
+# Garde-fous de securite et limites systeme
+LimitNOFILE=65536
+LimitNPROC=4096
+PrivateTmp=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target

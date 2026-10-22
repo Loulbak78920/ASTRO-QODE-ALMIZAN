@@ -1,0 +1,22 @@
+[Unit]
+Description=Service Resident Al-Mizan Permanence HTTPS Multi-Sensorielle (:8766)
+After=network.target al-mizan-synchron-mzn.service
+
+[Service]
+Type=simple
+User=almizan
+Group=almizan
+WorkingDirectory=/opt/al-mizan
+Environment=PYTHONPATH=/opt/al-mizan:/opt/al-mizan/runtime:/opt/al-mizan/outils_sans_usine
+ExecStart=/usr/bin/python3 -m q0_assistant.permanence --tls --port 8766
+Restart=always
+RestartSec=5s
+KillMode=process
+StandardOutput=journal
+StandardError=journal
+
+LimitNOFILE=65536
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
