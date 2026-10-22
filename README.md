@@ -1,7 +1,7 @@
 # `IMAM8MAHDI` × `Al-Mizan` × `ASTRO-Q°ODE` (V1.0–V6.0)
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23554838.svg)](https://doi.org/10.5281/zenodo.23554838)
-[![Version](https://img.shields.io/badge/Version-6.0.0-blue.svg)](https://github.com/Loulbak78920/ASTRO-QODE-ALMIZAN)
+[![Version](https://img.shields.io/badge/Version-6.2.0-blue.svg)](https://github.com/Loulbak78920/ASTRO-QODE-ALMIZAN)
 [![Tests](https://img.shields.io/badge/Tests-11%2F11%20PASS-brightgreen.svg)](./tests/test_suite_complete.py)
 [![Solidity](https://img.shields.io/badge/Solidity-^0.8.20-orange.svg)](./contracts/AmalMizanSynchronMznContract.sol)
 [![OpenQASM](https://img.shields.io/badge/OpenQASM-2.0-purple.svg)](./lang/compilateur_qasm_isa.py)
@@ -24,6 +24,7 @@
 | **DOI Zenodo Officiel Réel** | **`10.5281/zenodo.23554838`** — [https://doi.org/10.5281/zenodo.23554838](https://doi.org/10.5281/zenodo.23554838) |
 | **DOIs Zenodo Antérieurs Liés** | `10.5281/zenodo.23479740` & `10.5281/zenodo.23288947` |
 | **Clé Publique Dorée** | `0xc9550dd0a57c609494dbc44450df48d798ebfb0b` |
+| **Trésorerie Privée Synchronisée** | `0xb7f26cD0eE5E74c51B3F4e71e4fA75B3F246837C` |
 | **Point Fixe Réseau / Édifice** | `46 760 951 383` / `13 459 202 583 446` |
 | **CID IPFS** | `bafybeia5t5nviafc2vij3nfzdg4f54onayiqrlbeofpctnlxhcqcljxxem` |
 

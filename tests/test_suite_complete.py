@@ -474,11 +474,15 @@ class TestSystemeCompletAstroQode(unittest.TestCase):
         self.assertIn("contract AmalMizanSynchronMznContract", sol_content)
         self.assertIn("M. Ahmed EL BAHLOUL", sol_content)
         self.assertIn("0xc9550dd0a57c609494dbc44450df48d798ebfb0b", sol_content.lower())
+        self.assertIn("0xb7f26cd0ee5e74c51b3f4e71e4fa75b3f246837c", sol_content.lower())
         self.assertIn("10.5281/zenodo.23554838", sol_content)
         self.assertIn("313_000_000", sol_content)
         self.assertIn("calculerPartageCommercial5050", sol_content)
         self.assertIn("calculerZakatEligible", sol_content)
         self.assertIn("enregistrerBlocSynchron", sol_content)
+        self.assertIn("royaltyInfo", sol_content)
+        self.assertIn("supportsInterface", sol_content)
+        self.assertIn("estCompteAuteur", sol_content)
 
         # 9. Exécution native du script ASTRO-Q°ODE bloc_synchron_mzn_v6.aq
         chemin_aq = RACINE_SYSTEME / "bibliotheques" / "stdlib_aq" / "bloc_synchron_mzn_v6.aq"

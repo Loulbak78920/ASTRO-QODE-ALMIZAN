@@ -136,7 +136,9 @@ class ScelleurMemoireAstroQode:
         nb_valides = 0
         fichiers = sorted(
             p for p in DOSSIER_MEMOIRE_AQ.glob("*.json")
-            if p.name != FICHIER_INDEX_SCEAUX.name and p.name != "ledger_synchron_mzn.json"
+            if p.name != FICHIER_INDEX_SCEAUX.name
+            and p.name != "ledger_synchron_mzn.json"
+            and not p.name.startswith("almizan_acte_")
         )
 
         for f in fichiers:
@@ -144,7 +146,7 @@ class ScelleurMemoireAstroQode:
                 contenu = json.loads(f.read_text(encoding="utf-8"))
                 attendu = contenu.get("empreinte_sha256")
                 calcule = cls.calculer_sha256_canonique(contenu)
-                valide = bool(attendu and attendu == calcule)
+                valide = bool(attendu and str(attendu).lower() == str(calcule).lower())
                 if valide:
                     nb_valides += 1
                 details.append({

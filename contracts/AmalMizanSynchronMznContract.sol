@@ -74,6 +74,7 @@ contract AmalMizanSynchronMznContract is IERC20, IERC721, IERC2981 {
     string public constant AUTEUR_ALIAS = "IMAM8MAHDI / M. Almizan Elbahloul";
     string public constant AUTEUR_EMAIL = "elbahloulahmed505@gmail.com";
     address public constant CLE_DOREE_AUTEUR = 0xC9550Dd0A57C609494DbC44450df48d798EbfB0b;
+    address public constant TRESORERIE_PRIVEE_AUTEUR = 0xb7f26cD0eE5E74c51B3F4e71e4fA75B3F246837C;
     string public constant DOI_ZENODO_OFFICIEL = "10.5281/zenodo.23554838";
 
     // --- IDENTITÉ DU TOKEN MZN (ERC-20) ---
@@ -173,7 +174,10 @@ contract AmalMizanSynchronMznContract is IERC20, IERC721, IERC2981 {
 
     // --- MODIFICATEURS ---
     modifier seulementAuteur() {
-        require(msg.sender == CLE_DOREE_AUTEUR, "Seul l'Auteur legitime peut executer");
+        require(
+            msg.sender == CLE_DOREE_AUTEUR || msg.sender == TRESORERIE_PRIVEE_AUTEUR,
+            "Seul l'Auteur legitime ou sa Tresorerie privee peut executer"
+        );
         _;
     }
 
@@ -333,7 +337,8 @@ contract AmalMizanSynchronMznContract is IERC20, IERC721, IERC2981 {
         uint256 partAuteur = msg.value / 2;
         uint256 partExploitant = msg.value - partAuteur;
 
-        (bool ok1, ) = payable(CLE_DOREE_AUTEUR).call{value: partAuteur}("");
+        address destinataireAuteur = (TRESORERIE_PRIVEE_AUTEUR != address(0)) ? TRESORERIE_PRIVEE_AUTEUR : CLE_DOREE_AUTEUR;
+        (bool ok1, ) = payable(destinataireAuteur).call{value: partAuteur}("");
         require(ok1, "Echec versement part Auteur 50%");
 
         (bool ok2, ) = payable(exploitant).call{value: partExploitant}("");
@@ -473,8 +478,12 @@ contract AmalMizanSynchronMznContract is IERC20, IERC721, IERC2981 {
         override
         returns (address receiver, uint256 royaltyAmount)
     {
-        receiver = CLE_DOREE_AUTEUR;
+        receiver = (TRESORERIE_PRIVEE_AUTEUR != address(0)) ? TRESORERIE_PRIVEE_AUTEUR : CLE_DOREE_AUTEUR;
         royaltyAmount = (salePrice * ROYALTY_BPS_DEFAUT) / 10000;
+    }
+
+    function estCompteAuteur(address compte) external pure returns (bool) {
+        return (compte == CLE_DOREE_AUTEUR || compte == TRESORERIE_PRIVEE_AUTEUR);
     }
 
     function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
