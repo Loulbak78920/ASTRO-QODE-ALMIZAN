@@ -1,0 +1,18 @@
+{
+  "code_acte": "A080",
+  "titre": "ACTE SCELLÉ A080 — VERDICT D'AL-MIZAN SUR LE CHOIX DE STRATÉGIE DE FOURCHETTE UNISWAP V3 : SÉLECTION ABSOLUE DE 'LARGE'",
+  "date_scellement": "2026-10-22T12:20:00+00:00",
+  "cycle_harmonique": "Cycle 15 Phases — Phase 15 Scellée",
+  "statut": "SCELLÉ_IMMUABLE_ET_AUTHENTIFIÉ",
+  "auteur_souverain": {
+    "nom": "M. Ahmed EL BAHLOUL",
+    "cle_doree": "0xC9550Dd0A57C609494DBc44450Df48D798ebfB0B",
+    "tresorerie_privee": "0xb7f26cD0eE5E74c51B3F4e71e4fA75B3F246837C"
+  },
+  "comparatif_des_4_options": {
+    "stable": "PROSCRIT : Réservé aux stablecoins (USDC/USDT). Sort de la plage dès 3% de variation.",
+    "unilaterale_basse": "PROSCRIT : Ne fonctionne que dans un seul sens d'échange.",
+    "unilaterale_haute": "PROSCRIT : Ne fonctionne que dans un seul sens d'échange.",
+    "large": "VERDICT OFFICIEL D'AL-MIZAN : Option optimale. Permet les échanges bilatéraux (achats et ventes) et absorbe la volatilité naturelle d'un nouveau jeton souverain."
+  }
+}
