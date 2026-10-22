@@ -12,6 +12,9 @@
 [![Digiposte](https://img.shields.io/badge/Coffre--Fort-Digiposte%20NF%20Z42--013-blueviolet.svg)](./memoire_aq/almizan_acte_a076_dossier_coffre_fort_digiposte.json)
 [![Tests](https://img.shields.io/badge/Tests-11%2F11%20PASS-brightgreen.svg)](./tests/test_suite_complete.py)
 [![Solidity](https://img.shields.io/badge/Solidity-^0.8.20-orange.svg)](./contracts/AmalMizanSynchronMznContract.sol)
+[![Basescan Verified](https://img.shields.io/badge/Basescan-Source_Code_Verified_%E2%9C%94-brightgreen.svg)](https://basescan.org/address/0x520cbd0e1e72178f9e819AFf1e815606923A71db#code)
+[![Uniswap v3 Pool](https://img.shields.io/badge/Uniswap_v3-Pool_MZN%20%2F%20USDC-ff007a.svg)](https://basescan.org/address/0xfb76b57c2e179a44ba7919d3960fc18a4c9db172)
+[![Dedaub Tokin](https://img.shields.io/badge/Dedaub_Tok{in}-11%2F11_Checks_Passed_%E2%9C%94-success.svg)](https://tokin.dedaub.com/scan/base/0x520cbd0e1e72178f9e819aff1e815606923a71db)
 [![OpenQASM](https://img.shields.io/badge/OpenQASM-2.0-purple.svg)](./lang/compilateur_qasm_isa.py)
 [![Licence](https://img.shields.io/badge/Licence-ASLS--2.0%20Anti--Dolosif%20%7C%20Commercial%2050%2F50-gold.svg)](./LICENSE)
 
