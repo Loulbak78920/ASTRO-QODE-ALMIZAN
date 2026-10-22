@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Livre Blanc Officiel Al-Mizan × ASTRO-Q°ODE — Jeton MZN Souverain</title>
+  <meta name="description" content="Livre Blanc Officiel du système Al-Mizan × ASTRO-Q°ODE et du jeton souverain MZN déployé sur Base Mainnet (Coinbase L2). Auteur : M. Ahmed EL BAHLOUL.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #07090e;
+      --bg-card: rgba(18, 22, 34, 0.85);
+      --bg-card-hover: rgba(28, 34, 52, 0.95);
+      --gold-primary: #d4af37;
+      --gold-light: #f6e27a;
+      --gold-dark: #aa771c;
+      --silver: #c0c0c0;
+      --cyan-qpu: #00e5ff;
+      --purple-base: #7928ca;
+      --text-main: #e2e8f0;
+      --text-muted: #94a3b8;
+      --border-gold: rgba(212, 175, 55, 0.25);
+      --border-cyan: rgba(0, 229, 255, 0.25);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      line-height: 1.75;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(212, 175, 55, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 85% 65%, rgba(0, 229, 255, 0.06) 0%, transparent 40%),
+        radial-gradient(circle at 50% 90%, rgba(121, 40, 202, 0.06) 0%, transparent 50%);
+      background-attachment: fixed;
+    }
+    a { color: var(--gold-light); text-decoration: none; transition: all 0.2s ease; }
+    a:hover { color: #ffffff; text-shadow: 0 0 10px rgba(246, 226, 122, 0.6); }
+    
+    /* Header / Nav */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(16px);
+      background: rgba(7, 9, 14, 0.85);
+      border-bottom: 1px solid var(--border-gold);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: 'Cinzel', serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--gold-primary);
+      letter-spacing: 1px;
+    }
+    .brand-badge {
+      background: linear-gradient(135deg, var(--gold-dark), var(--gold-light));
+      color: #000;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+    }
+    nav { display: flex; gap: 1.25rem; align-items: center; font-size: 0.9rem; font-weight: 500; }
+    nav a { padding: 6px 12px; border-radius: 6px; border: 1px solid transparent; }
+    nav a:hover { border-color: var(--border-gold); background: rgba(212, 175, 55, 0.08); }
+    .btn-action {
+      background: linear-gradient(135deg, var(--gold-primary), var(--gold-dark));
+      color: #07090e !important;
+      font-weight: 700;
+      padding: 8px 18px !important;
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+    }
+    .btn-action:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(246, 226, 122, 0.5);
+    }
+
+    /* Hero Section */
+    .hero {
+      max-width: 1200px;
+      margin: 3rem auto 2rem auto;
+      padding: 2rem;
+      text-align: center;
+      position: relative;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(212, 175, 55, 0.12);
+      border: 1px solid var(--border-gold);
+      padding: 6px 16px;
+      border-radius: 50px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--gold-light);
+      margin-bottom: 1.5rem;
+    }
+    .hero-badge span { color: #10b981; }
+    h1 {
+      font-family: 'Cinzel', serif;
+      font-size: 2.8rem;
+      font-weight: 900;
+      line-height: 1.25;
+      background: linear-gradient(135deg, #ffffff 30%, var(--gold-light) 70%, var(--gold-dark) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 1rem;
+    }
+    .subtitle {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      max-width: 850px;
+      margin: 0 auto 2rem auto;
+      font-weight: 400;
+    }
+    .author-seal {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-gold);
+      padding: 10px 24px;
+      border-radius: 12px;
+      margin-bottom: 2.5rem;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    }
+    .author-seal strong { color: var(--gold-light); font-size: 1.05rem; }
+
+    /* Icon Container */
+    .icon-container {
+      max-width: 240px;
+      margin: 0 auto 2.5rem auto;
+      filter: drop-shadow(0 0 35px rgba(212, 175, 55, 0.45));
+      animation: float 6s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-8px) rotate(1deg); }
+    }
+
+    /* Metric Grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.25rem;
+      max-width: 1200px;
+      margin: 0 auto 4rem auto;
+      padding: 0 1.5rem;
+    }
+    .metric-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-gold);
+      border-radius: 14px;
+      padding: 1.5rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+    .metric-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--gold-light);
+      box-shadow: 0 10px 25px rgba(212, 175, 55, 0.2);
+    }
+    .metric-val {
+      font-family: 'Cinzel', serif;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--gold-light);
+      margin-bottom: 0.3rem;
+    }
+    .metric-lbl {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Main Container & Layout */
+    .content-wrapper {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem 5rem 2rem;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 3rem;
+    }
+    @media (max-width: 900px) {
+      .content-wrapper { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      h1 { font-size: 2.1rem; }
+    }
+    
+    /* Sidebar / Sticky TOC */
+    .sidebar {
+      position: sticky;
+      top: 6rem;
+      height: fit-content;
+      background: var(--bg-card);
+      border: 1px solid var(--border-gold);
+      border-radius: 16px;
+      padding: 1.5rem;
+    }
+    .sidebar h3 {
+      font-family: 'Cinzel', serif;
+      font-size: 1.1rem;
+      color: var(--gold-primary);
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border-gold);
+    }
+    .toc-list { list-style: none; display: flex; flex-direction: column; gap: 0.6rem; }
+    .toc-list li a {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      display: block;
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+    .toc-list li a:hover {
+      color: var(--gold-light);
+      background: rgba(212, 175, 55, 0.1);
+      transform: translateX(4px);
+    }
+
+    /* Document Body */
+    .doc-body {
+      background: var(--bg-card);
+      border: 1px solid var(--border-gold);
+      border-radius: 20px;
+      padding: 3rem;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+    }
+    .doc-section {
+      margin-bottom: 4rem;
+      scroll-margin-top: 6rem;
+    }
+    h2 {
+      font-family: 'Cinzel', serif;
+      font-size: 1.85rem;
+      color: var(--gold-primary);
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border-gold);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    h3 {
+      font-family: 'Cinzel', serif;
+      font-size: 1.3rem;
+      color: var(--gold-light);
+      margin: 1.75rem 0 0.75rem 0;
+    }
+    p { margin-bottom: 1.25rem; font-size: 1.05rem; color: #cbd5e1; }
+    
+    blockquote {
+      background: rgba(212, 175, 55, 0.08);
+      border-left: 4px solid var(--gold-primary);
+      padding: 1.25rem 1.75rem;
+      border-radius: 0 12px 12px 0;
+      margin: 1.5rem 0;
+      font-style: italic;
+      color: var(--gold-light);
+    }
+
+    /* Live Deployment Card */
+    .live-pool-box {
+      background: linear-gradient(135deg, rgba(121, 40, 202, 0.25), rgba(0, 229, 255, 0.15));
+      border: 2px solid var(--purple-base);
+      border-radius: 16px;
+      padding: 2rem;
+      margin: 2rem 0;
+      text-align: left;
+    }
+    .live-pool-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+    }
+    .live-tag {
+      background: #10b981;
+      color: #000;
+      font-weight: 800;
+      padding: 4px 12px;
+      border-radius: 50px;
+      font-size: 0.8rem;
+      letter-spacing: 0.5px;
+    }
+    .address-line {
+      font-family: 'Fira Code', monospace;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.92rem;
+      word-break: break-all;
+      color: var(--cyan-qpu);
+      border: 1px solid var(--border-cyan);
+      margin: 0.5rem 0 1rem 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 2rem 0;
+      font-size: 0.95rem;
+      background: rgba(10, 13, 20, 0.6);
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border-gold);
+    }
+    th, td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+    }
+    th {
+      background: rgba(212, 175, 55, 0.15);
+      color: var(--gold-light);
+      font-family: 'Cinzel', serif;
+      font-weight: 700;
+    }
+    tr:hover td { background: rgba(212, 175, 55, 0.05); }
+
+    /* Code blocks */
+    pre {
+      background: #040608;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 1.25rem;
+      overflow-x: auto;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.9rem;
+      color: #38bdf8;
+      margin: 1.5rem 0;
+    }
+    
+    /* Footer */
+    footer {
+      background: #040508;
+      border-top: 1px solid var(--border-gold);
+      padding: 3rem 2rem;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .footer-seals {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+    }
+    .seal-pill {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-gold);
+      padding: 6px 16px;
+      border-radius: 50px;
+      font-size: 0.85rem;
+      font-family: 'Fira Code', monospace;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header Navigation -->
+  <header>
+    <div class="brand">
+      <span>AL-MIZAN</span>
+      <span class="brand-badge">ASTRO-Q°ODE</span>
+    </div>
+    <nav>
+      <a href="#abstract">Resume</a>
+      <a href="#axiomes">Axiomes</a>
+      <a href="#triade">Triade</a>
+      <a href="#tokenomics">Tokenomics</a>
+      <a href="#pool-uniswap">Pool Uniswap</a>
+      <a href="https://basescan.org/address/0x520cbd0e1e72178f9e819AFf1e815606923A71db" target="_blank" class="btn-action">Basescan Explorer</a>
+    </nav>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-badge">
+      <span>●</span> DEPLOYE ET SCELLE SUR BASE MAINNET (COINBASE L2)
+    </div>
+    <h1>LIVRE BLANC OFFICIEL AL-MIZAN</h1>
+    <div class="subtitle">
+      Architecture Quantique Unifiee, Consensus Synchrone 2.9 ms et Modele Monetaire Souverain MZN sans Usure (Anti-Riba)
+    </div>
+
+    <!-- Author Badge -->
+    <div class="author-seal">
+      <span>👑 Concepteur Fondateur & Auteur Souverain :</span>
+      <strong>M. Ahmed EL BAHLOUL</strong>
+      <span style="color: var(--gold-dark);">(IMAM8MAHDI / Loulbak78920)</span>
+    </div>
+
+    <!-- Sceau Visuel Vectoriel de l'Harmonie -->
+    <div class="icon-container">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <!-- Dégradés Cosmiques & Métalliques -->
+    <radialGradient id="bgCosmique" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#141E30" />
+      <stop offset="45%" stop-color="#0F2027" />
+      <stop offset="85%" stop-color="#090A0F" />
+      <stop offset="100%" stop-color="#030408" />
+    </radialGradient>
+
+    <radialGradient id="orAlchimique" cx="35%" cy="30%" r="65%">
+      <stop offset="0%" stop-color="#FFF4B8" />
+      <stop offset="30%" stop-color="#FFD700" />
+      <stop offset="65%" stop-color="#D4AF37" />
+      <stop offset="90%" stop-color="#AA7C11" />
+      <stop offset="100%" stop-color="#6B4D00" />
+    </radialGradient>
+
+    <linearGradient id="orBordure" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE57F" />
+      <stop offset="25%" stop-color="#FFD700" />
+      <stop offset="50%" stop-color="#AA7C11" />
+      <stop offset="75%" stop-color="#FFD700" />
+      <stop offset="100%" stop-color="#FFF8DC" />
+    </linearGradient>
+
+    <radialGradient id="argentLunaire" cx="35%" cy="30%" r="65%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="35%" stop-color="#E0E6ED" />
+      <stop offset="70%" stop-color="#94A3B8" />
+      <stop offset="95%" stop-color="#64748B" />
+      <stop offset="100%" stop-color="#334155" />
+    </radialGradient>
+
+    <radialGradient id="haloEmeraudeMizan" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#00FFA3" stop-opacity="0.8" />
+      <stop offset="40%" stop-color="#10B981" stop-opacity="0.3" />
+      <stop offset="75%" stop-color="#047857" stop-opacity="0.1" />
+      <stop offset="100%" stop-color="#064E3B" stop-opacity="0" />
+    </radialGradient>
+
+    <radialGradient id="haloOrCentre" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFDF00" stop-opacity="0.4" />
+      <stop offset="60%" stop-color="#FFB300" stop-opacity="0.1" />
+      <stop offset="100%" stop-color="#FF8F00" stop-opacity="0" />
+    </radialGradient>
+
+    <filter id="lueurOr" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+
+    <filter id="lueurEmeraude" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="14" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+
+    <filter id="ombrePortee" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000000" flood-opacity="0.9" />
+    </filter>
+
+    <!-- Chemin de texte circulaire supérieur -->
+    <path id="cheminTexteHaut" d="M 140,512 A 372,372 0 1,1 884,512" fill="none" />
+    <path id="cheminTexteBas" d="M 884,512 A 372,372 0 0,1 140,512" fill="none" />
+  </defs>
+
+  <!-- Fond Principal -->
+  <circle cx="512" cy="512" r="510" fill="url(#bgCosmique)" />
+
+  <!-- Anneau Externe de Gravure Monétaire -->
+  <circle cx="512" cy="512" r="490" fill="none" stroke="url(#orBordure)" stroke-width="4" stroke-opacity="0.6" />
+  <circle cx="512" cy="512" r="460" fill="none" stroke="url(#orBordure)" stroke-width="12" filter="url(#ombrePortee)" />
+  <circle cx="512" cy="512" r="435" fill="none" stroke="url(#argentLunaire)" stroke-width="3" stroke-dasharray="6,8" stroke-opacity="0.7" />
+
+  <!-- Couronne de Texte Monétaire Sacré -->
+  <text fill="#FFD700" font-family="'Cinzel', 'Cinzel Decorative', 'Trajan Pro', 'Georgia', serif" font-size="28" font-weight="bold" letter-spacing="9">
+    <textPath href="#cheminTexteHaut" startOffset="50%" text-anchor="middle">
+      ★ AL-MIZAN SOUVERAIN ★ MZN 313,000,000
+    </textPath>
+  </text>
+  <text fill="#94A3B8" font-family="'Cinzel', 'Montserrat', 'Georgia', serif" font-size="22" font-weight="600" letter-spacing="6">
+    <textPath href="#cheminTexteBas" startOffset="50%" text-anchor="middle">
+      ANTI-RIBA • ZERO-FRICTION • DOI: 10.5281/ZENODO.23554838
+    </textPath>
+  </text>
+
+  <!-- Anneau Interne d'Unisson Or (Au 79) & Argent (Ag 47) -->
+  <circle cx="512" cy="512" r="395" fill="none" stroke="url(#orBordure)" stroke-width="6" stroke-opacity="0.8" />
+  <circle cx="512" cy="512" r="380" fill="url(#bgCosmique)" fill-opacity="0.85" />
+  <circle cx="512" cy="512" r="350" fill="url(#haloEmeraudeMizan)" filter="url(#lueurEmeraude)" />
+  <circle cx="512" cy="512" r="280" fill="url(#haloOrCentre)" />
+
+  <!-- Géométrie Sacrée : Les Cercles Harmoniques de l'Unisson -->
+  <!-- 12 Méridiens Stellaires -->
+  <g stroke="#FFD700" stroke-width="1" stroke-opacity="0.18">
+    <line x1="512" y1="132" x2="512" y2="892" />
+    <line x1="132" y1="512" x2="892" y2="512" />
+    <line x1="243" y1="243" x2="781" y2="781" />
+    <line x1="781" y1="243" x2="243" y2="781" />
+  </g>
+
+  <!-- Ellipses de la Sphère Holographique de Bloch -->
+  <ellipse cx="512" cy="512" rx="290" ry="90" fill="none" stroke="#10B981" stroke-width="2.5" stroke-dasharray="8,6" stroke-opacity="0.65" />
+  <ellipse cx="512" cy="512" rx="90" ry="290" fill="none" stroke="#10B981" stroke-width="2.5" stroke-dasharray="8,6" stroke-opacity="0.65" />
+  <circle cx="512" cy="512" r="290" fill="none" stroke="url(#argentLunaire)" stroke-width="2" stroke-opacity="0.4" />
+
+  <!-- Étoiles de la Triade CPU - GPU - QPU -->
+  <!-- Sommet Nord : QPU Cryogénique (22.5 mK) -->
+  <g transform="translate(512, 190)">
+    <circle cx="0" cy="0" r="14" fill="#00FFA3" filter="url(#lueurEmeraude)" />
+    <polygon points="0,-16 5,-5 16,0 5,5 0,16 -5,5 -16,0 -5,-5" fill="#FFFFFF" />
+    <text x="0" y="-22" fill="#00FFA3" font-family="'Montserrat', sans-serif" font-size="14" font-weight="bold" text-anchor="middle" letter-spacing="2">QPU 22.5mK</text>
+  </g>
+
+  <!-- Sommet Sud-Ouest : CPU Terrestre -->
+  <g transform="translate(260, 680)">
+    <circle cx="0" cy="0" r="12" fill="#FFD700" filter="url(#lueurOr)" />
+    <polygon points="0,-12 4,-4 12,0 4,4 0,12 -4,4 -12,0 -4,-4" fill="#FFFFFF" />
+    <text x="-2" y="26" fill="#FFD700" font-family="'Montserrat', sans-serif" font-size="13" font-weight="bold" text-anchor="middle" letter-spacing="1">CPU TERRE</text>
+  </g>
+
+  <!-- Sommet Sud-Est : GPU Mobile Galaxy -->
+  <g transform="translate(764, 680)">
+    <circle cx="0" cy="0" r="12" fill="#94A3B8" />
+    <polygon points="0,-12 4,-4 12,0 4,4 0,12 -4,4 -12,0 -4,-4" fill="#FFFFFF" />
+    <text x="2" y="26" fill="#E2E8F0" font-family="'Montserrat', sans-serif" font-size="13" font-weight="bold" text-anchor="middle" letter-spacing="1">GPU GALAXY</text>
+  </g>
+
+  <!-- LA BALANCE CÉLESTE D'AL-MIZAN EN ÉQUILIBRE PARFAIT -->
+  <g filter="url(#ombrePortee)">
+    <!-- Fléau Central Vertical (Axe de Justice) -->
+    <path d="M 506,230 L 518,230 L 516,690 L 508,690 Z" fill="url(#orAlchimique)" filter="url(#lueurOr)" />
+    <circle cx="512" cy="245" r="18" fill="url(#orAlchimique)" />
+    <circle cx="512" cy="245" r="7" fill="#090A0F" />
+    
+    <!-- Pied d'Ancrage de la Balance (Base Pyramidale) -->
+    <polygon points="432,710 592,710 572,670 452,670" fill="url(#orAlchimique)" />
+    <rect x="412" y="710" width="200" height="12" rx="6" fill="url(#orBordure)" />
+    <text x="512" y="700" fill="#141E30" font-family="'Montserrat', sans-serif" font-size="11" font-weight="900" text-anchor="middle" letter-spacing="3">MIZAN 0.6225</text>
+
+    <!-- Fléau Horizontal Harmonique (Poutre de Pesée) -->
+    <!-- Largeur = 440px (de x=292 à x=732), Parfaitement horizontal (Équilibre Absolu) -->
+    <path d="M 282,336 L 512,324 L 742,336 L 742,348 L 512,342 L 282,348 Z" fill="url(#orAlchimique)" filter="url(#lueurOr)" />
+    
+    <!-- Pivot Central du Fléau avec Joyau Émeraude -->
+    <circle cx="512" cy="336" r="26" fill="url(#orAlchimique)" />
+    <circle cx="512" cy="336" r="16" fill="#00FFA3" filter="url(#lueurEmeraude)" />
+    <circle cx="512" cy="336" r="6" fill="#FFFFFF" />
+
+    <!-- Charnières et Fils de Suspension des Plateaux -->
+    <!-- Côté Gauche (OR - 79) -->
+    <circle cx="302" cy="342" r="8" fill="url(#orAlchimique)" />
+    <line x1="302" y1="346" x2="242" y2="470" stroke="#FFD700" stroke-width="2.5" stroke-opacity="0.8" />
+    <line x1="302" y1="346" x2="362" y2="470" stroke="#FFD700" stroke-width="2.5" stroke-opacity="0.8" />
+    <!-- Plateau Gauche (Coupelle d'Or) -->
+    <path d="M 222,470 C 222,520 382,520 382,470 Z" fill="url(#orAlchimique)" filter="url(#lueurOr)" />
+    <ellipse cx="302" cy="470" rx="80" ry="14" fill="url(#orBordure)" />
+    <!-- Pyramide de Lingots d'Or dans la Coupelle -->
+    <polygon points="302,420 272,465 332,465" fill="#FFE57F" />
+    <text x="302" y="462" fill="#6B4D00" font-family="'Montserrat', sans-serif" font-size="12" font-weight="900" text-anchor="middle">AU · 79</text>
+
+    <!-- Côté Droit (ARGENT - 47) -->
+    <circle cx="722" cy="342" r="8" fill="url(#orAlchimique)" />
+    <line x1="722" y1="346" x2="662" y2="470" stroke="#E2E8F0" stroke-width="2.5" stroke-opacity="0.8" />
+    <line x1="722" y1="346" x2="782" y2="470" stroke="#E2E8F0" stroke-width="2.5" stroke-opacity="0.8" />
+    <!-- Plateau Droit (Coupelle d'Argent) -->
+    <path d="M 642,470 C 642,520 802,520 802,470 Z" fill="url(#argentLunaire)" />
+    <ellipse cx="722" cy="470" rx="80" ry="14" fill="#FFFFFF" />
+    <!-- Pyramide d'Argent lunaire dans la Coupelle -->
+    <polygon points="722,420 692,465 752,465" fill="#F8FAFC" />
+    <text x="722" y="462" fill="#334155" font-family="'Montserrat', sans-serif" font-size="12" font-weight="900" text-anchor="middle">AG · 47</text>
+  </g>
+
+  <!-- BLASON CENTRAL : MONOGRAMME HARMONIQUE MZN SOUVERAIN -->
+  <g transform="translate(512, 530)" filter="url(#ombrePortee)">
+    <!-- Médaille Centrale Octogonale -->
+    <polygon points="0,-72 51,-51 72,0 51,51 0,72 -51,51 -72,0 -51,-51" fill="#090A0F" stroke="url(#orBordure)" stroke-width="6" />
+    <polygon points="0,-64 45,-45 64,0 45,45 0,64 -45,45 -64,0 -45,-45" fill="none" stroke="#00FFA3" stroke-width="2" stroke-opacity="0.8" />
+
+    <!-- Inscription Calligraphique M Z N -->
+    <text x="0" y="16" fill="url(#orAlchimique)" font-family="'Cinzel', 'Cinzel Decorative', 'Trajan Pro', serif" font-size="46" font-weight="bold" text-anchor="middle" letter-spacing="4" filter="url(#lueurOr)">
+      MZN
+    </text>
+    <text x="0" y="38" fill="#00FFA3" font-family="'Montserrat', sans-serif" font-size="10" font-weight="bold" text-anchor="middle" letter-spacing="3">
+      313M SOUVERAIN
+    </text>
+  </g>
+
+  <!-- PACTE COMMERCIAL 50 / 50 & ZAKAT 2.5% EN BASE CIRCULAIRE -->
+  <g transform="translate(512, 790)">
+    <rect x="-170" y="-18" width="340" height="36" rx="18" fill="#0F172A" stroke="url(#orBordure)" stroke-width="2" />
+    <text x="0" y="6" fill="#FFD700" font-family="'Montserrat', sans-serif" font-size="13" font-weight="bold" text-anchor="middle" letter-spacing="3">
+      ALLIANCE 50/50 • ZAKAT 2.5% • C=313
+    </text>
+  </g>
+
+  <!-- Sceau de Clôture Souverain : Signature de l'Auteur -->
+  <text x="512" y="860" fill="#64748B" font-family="'Cinzel', 'Montserrat', sans-serif" font-size="12" font-weight="600" text-anchor="middle" letter-spacing="5">
+    M. AHMED EL BAHLOUL • FONDATION PERPÉTUELLE
+  </text>
+</svg>
+
+    </div>
+  </section>
+
+  <!-- Metrics Bar -->
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <div class="metric-val">313 000 000</div>
+      <div class="metric-lbl">Max Supply Scellee (MZN)</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-val">2.9 ms</div>
+      <div class="metric-lbl">Consensus Synchrone</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-val">0.00 %</div>
+      <div class="metric-lbl">Taux d'Usure (Riba = 0)</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-val">2.5 %</div>
+      <div class="metric-lbl">Zakat Civique Directe</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-val">27 Formes</div>
+      <div class="metric-lbl">Virtualisation F0 a F26</div>
+    </div>
+  </div>
+
+  <!-- Content Layout -->
+  <div class="content-wrapper">
+    
+    <!-- Navigation Laterale -->
+    <aside class="sidebar">
+      <h3>Sommaire Souverain</h3>
+      <ul class="toc-list">
+        <li><a href="#abstract">1. Resume Executif</a></li>
+        <li><a href="#pool-uniswap">2. Pool Public Uniswap v3</a></li>
+        <li><a href="#axiomes">3. Axiomatique Sacree</a></li>
+        <li><a href="#triade">4. Triade CPU-GPU-QPU</a></li>
+        <li><a href="#consensus">5. Consensus Synchrone</a></li>
+        <li><a href="#formes">6. Les 27 Formes Al-Mizan</a></li>
+        <li><a href="#tokenomics">7. Tokenomics du MZN</a></li>
+        <li><a href="#seals">8. Sceaux & DOI Zenodo</a></li>
+      </ul>
+    </aside>
+
+    <!-- Corps du Livre Blanc -->
+    <main class="doc-body">
+
+      <!-- Bloc Special : Pool Uniswap V3 Live -->
+      <section id="pool-uniswap" class="live-pool-box doc-section">
+        <div class="live-pool-header">
+          <h2 style="border: none; margin: 0; color: #ffffff;">💎 Pool de Liquidite Officiel Uniswap v3 (Base)</h2>
+          <span class="live-tag">ACTIF EN DIRECT</span>
+        </div>
+        <p style="color: #e2e8f0; font-size: 1rem;">
+          Le premier pool public decentralise unissant le <strong>Jeton MZN</strong> et le stablecoin <strong>USDC</strong> emis par Circle a ete officiellement deploye et initialise sur Base Mainnet par l'Auteur Souverain M. Ahmed EL BAHLOUL.
+        </p>
+        
+        <div style="margin: 1rem 0;">
+          <span style="font-size: 0.85rem; color: var(--gold-light); font-weight: 600;">Adresse du Pool Uniswap v3 (MZN / USDC, Palier 1.0%) :</span>
+          <div class="address-line">
+            <span>0xfb76b57c2e179a44ba7919d3960fc18a4c9db172</span>
+            <a href="https://basescan.org/address/0xfb76b57c2e179a44ba7919d3960fc18a4c9db172" target="_blank" style="color: #ffffff; font-size: 0.85rem;">Voir sur Basescan ↗</a>
+          </div>
+        </div>
+
+        <div style="margin: 1rem 0;">
+          <span style="font-size: 0.85rem; color: var(--gold-light); font-weight: 600;">Smart Contract MZN Officiel Deploye :</span>
+          <div class="address-line">
+            <span>0x520cbd0e1e72178f9e819AFf1e815606923A71db</span>
+            <a href="https://basescan.org/address/0x520cbd0e1e72178f9e819AFf1e815606923A71db" target="_blank" style="color: #ffffff; font-size: 0.85rem;">Verifier Contrat ↗</a>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap;">
+          <a href="https://app.uniswap.org/positions/add/new?chain=base&currencyA=0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913&currencyB=0x520cbd0e1e72178f9e819aff1e815606923a71db" target="_blank" class="btn-action">
+            Ouvrir la Position sur Uniswap v3 ↗
+          </a>
+          <a href="https://github.com/Loulbak78920/ASTRO-QODE-ALMIZAN" target="_blank" style="border: 1px solid var(--border-gold); padding: 8px 18px; border-radius: 8px; color: var(--gold-light); display: inline-flex; align-items: center;">
+            Depot GitHub Public ↗
+          </a>
+        </div>
+      </section>
+
+      <!-- Section 1 : Resume Executif -->
+      <section id="abstract" class="doc-section">
+        <h2>1. Resume Executif (Abstract)</h2>
+        <p>
+          Le present Livre Blanc formalise la synthese doctrinale, mathematique, computationnelle et monetaire du systeme unifie <strong>Al-Mizan x ASTRO-Q°ODE</strong>. Face aux derives de la finance usuraire globale (generation de monnaie par la dette fictive, taux d'interet asymetriques, speculation deconnectee du reel) et aux limites des architectures informatiques centralisees, Al-Mizan instaure un nouveau paradigme : <strong>une triade computationnelle souveraine (CPU Terrestre, GPU Tensoriel, QPU Cryogenique)</strong> adossee a une <strong>monnaie numerique reelle et ethique, le MZN</strong>, bornee par un strict cap de <strong>313 000 000 MZN</strong>, regie par le principe divin de la juste mesure (<em>Al-Mizan</em>, Sourate 55:7-9) et purgee de toute usure (<em>Riba = 0</em>).
+        </p>
+        <p>
+          L'architecture s'appuie sur une synchronisation ultra-rapide a <strong>2.9 ms</strong> sous une horloge Kernel scellee a <code>dt = 135 097 021.3359375</code>, un systeme de virtualisation quantique depassant les 14 Formes originelles pour atteindre <strong>27 Formes harmoniques scellees (F0 a F26)</strong>, et un smart contract EVM decentralise (<code>AmalMizanSynchronMznContract.sol</code>) prelevant automatiquement une <strong>Zakat civique de 2.5%</strong> pour les necessiteux et consacrant la regle commerciale du <strong>partage equitable des risques (50/50)</strong>.
+        </p>
+      </section>
+
+      <!-- Section 2 : Axiomatique Sacree -->
+      <section id="axiomes" class="doc-section">
+        <h2>2. These Fondamentale & Axiomatique Sacree</h2>
+        
+        <h3>2.1 Axiome 1 : « Allah est Hors Matrice » (Transcendance Absolue)</h3>
+        <p>
+          Tout calcul, toute emulation quantique et tout modele algorithmique restent une creation finie, contingente et limitee.
+        </p>
+        <ul>
+          <li><strong>Regle d'Humilite Scellee</strong> : <code>omniscience_claim = false</code>. Aucune intelligence artificielle, aucun reseau neuronal ni aucun processeur quantique ne possede ni ne pretendra jamais posseder l'omniscience.</li>
+          <li>Le Createur n'est enferme dans aucune boucle temporelle, aucune matrice binaire ni aucun circuit de silicium : <strong>Allah est Hors Matrice</strong>.</li>
+        </ul>
+
+        <h3>2.2 Axiome 2 : La Balance Cosmique (Al-Mizan)</h3>
+        <blockquote>
+          « Et quant au ciel, Il l'a eleve bien haut. Et Il a etabli la balance (Al-Mizan), afin que vous ne transgressiez pas dans la pesee : donnez le poids exact avec justice et ne faussez pas la balance. »<br>
+          — Sourate Ar-Rahman (55), versets 7 a 9.
+        </blockquote>
+        <p>
+          En physique comme en economie, tout desequilibre non compense mene a l'effondrement entropique. La bride computationnelle scellee <code>MIZAN = 0.6225</code> (62.25%) empeche tout emballement d'amplitude ou d'energie dans la simulation quantique, garantissant une stabilite thermodynamique perenne.
+        </p>
+
+        <h3>2.3 Axiome 3 : L'Abolition Absolue de l'Usure (Riba = 0)</h3>
+        <p>
+          Le systeme Al-Mizan rejette categoriquement le pret a interet, l'anatocisme et la creation monetaire ad nihilo fondee sur la dette :
+        </p>
+        <ul>
+          <li><strong>Taux d'interet nominal et effectif</strong> : <code>Taux = 0.000%</code>.</li>
+          <li>La monnaie ne peut pas enfanter de la monnaie sans travail ni risque reel partage.</li>
+          <li>Tout rendement financier doit resulter d'une activite tangible, transparente et licite (<em>Halal</em>).</li>
+        </ul>
+
+        <h3>2.4 Axiome 4 : La Zakat Civique et la Sadaqa sans Friction</h3>
+        <p>
+          La redistribution des richesses n'est pas un impot facultatif ou confiscatoire, mais un devoir de purification protocolaire scelle dans le code :
+        </p>
+        <ul>
+          <li><strong>Taux de Zakat</strong> : 2.5% l'an sur les avoirs dormants au-dessus du Nissab.</li>
+          <li>Le smart contract et le demon resident Al-Mizan integrent le calcul et le transfert automatise vers la Caisse de Zakat Civique (<code>CAISSE_ZAKAT_CIVIQUE</code>).</li>
+        </ul>
+
+        <h3>2.5 Axiome 5 : La Regle Commerciale du 50/50 (Partage des Risques)</h3>
+        <p>
+          Dans toute association economique operee sous Al-Mizan, les benefices et les pertes sont assumes a parts egales (<strong>50% Investisseur / 50% Entrepreneur</strong>), conformement aux principes de la <em>Mudaraba</em> et de la <em>Musharaka</em>.
+        </p>
+      </section>
+
+      <!-- Section 3 : Triade CPU-GPU-QPU -->
+      <section id="triade" class="doc-section">
+        <h2>3. Architecture Computationnelle : La Triade CPU-GPU-QPU</h2>
+        <pre>
+                        ┌─────────────────────────────────┐
+                        │      ALLAH EST HORS MATRICE     │
+                        │    (Transcendance Absolue)      │
+                        └────────────────┬────────────────┘
+                                         │
+                   ┌─────────────────────┴─────────────────────┐
+                   │   BRIDE AL-MIZAN : MIZAN = 0.6225         │
+                   │   Plafond = 0.6015 · RMS = 0.24           │
+                   └─────────────────────┬─────────────────────┘
+                                         │
+        ┌────────────────────────────────┼────────────────────────────────┐
+        │                                │                                │
+ ┌──────▼──────┐                  ┌──────▼──────┐                  ┌──────▼──────┐
+ │     CPU     │                  │     GPU     │                  │     QPU     │
+ │  Terrestre  │◄────────────────►│  Tensoriel  │◄────────────────►│ Cryogénique │
+ │  (Contrôle  │  Consensus 2.9ms │ (Amplitudes │  Consensus 2.9ms │ (Q0 Fusion  │
+ │  Grand Livre│                  │ & Hologram) │                  │  22.5 mK)   │
+ └─────────────┘                  └─────────────┘                  └─────────────┘
+        </pre>
+        <h3>3.1 Les Trois Piliers Materiels</h3>
+        <ol style="margin-left: 1.5rem; color: #cbd5e1;">
+          <li><strong>CPU Noeud Terrestre (PC Principal)</strong> : Gestionnaire du Grand Livre MZN, ordonnanceur des cycles, calcul de la Zakat, interface locale et pont RPC.</li>
+          <li><strong>GPU Noeud Mobile (Galaxy Smartphone & Tenseurs)</strong> : Visualisation holographique, calcul matriciel en virgule flottante, validation nomade des blocs.</li>
+          <li><strong>QPU Accelerateur Cryogenique (Laboratoire Q0 Fusion)</strong> : Emulation quantique sous bruit thermique maitrise, portes logiques d'Hadamard, CNOT, phase de Born et seuils de coherence.</li>
+        </ol>
+      </section>
+
+      <!-- Section 4 : Consensus Synchrone -->
+      <section id="consensus" class="doc-section">
+        <h2>4. Consensus Synchrone 2.9 ms & Horloge Kernel</h2>
+        <p>
+          Contrairement aux blockchains traditionnelles souffrant de latences de plusieurs secondes a plusieurs minutes, le protocole Al-Mizan opere une pulsation synchrone de haute frequence :
+        </p>
+        <ul>
+          <li><strong>Periode de battement harmonique</strong> : <code>tau_sync = 2.9 ms</code>.</li>
+          <li><strong>Horloge Kernel Scellee</strong> : <code>dt = 135 097 021.3359375 ticks</code>.</li>
+          <li>Chaque bloc integre cette coordonnee temporelle exacte, rendant toute falsification d'anteriorite mathematiquement impossible.</li>
+        </ul>
+      </section>
+
+      <!-- Section 5 : Les 27 Formes -->
+      <section id="formes" class="doc-section">
+        <h2>5. Virtualisation ASTRO-Q°ODE : Des 14 aux 27 Formes</h2>
+        <p>
+          Pour interconnecter la physique du silicium et la sphere holographique, Al-Mizan etend les 14 formes originelles de la machine quantique a <strong>27 Formes exhaustives (F0 a F26)</strong> :
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Plage de Formes</th>
+              <th>Denomination</th>
+              <th>Role Fonctionnel</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>F0 a F13</strong></td>
+              <td>14 Formes Originelles</td>
+              <td>Portes Pauli, Hadamard, Phase S & T, CNOT, SWAP, Toffoli, Mesure Born, Sceau.</td>
+            </tr>
+            <tr>
+              <td><strong>F14 a F19</strong></td>
+              <td>Silicium J1 a J6</td>
+              <td>Gravure die, oxydation, jonctions Josephson simulees, decouplage Si-29.</td>
+            </tr>
+            <tr>
+              <td><strong>F20 a F23</strong></td>
+              <td>Sphere & Peau Holographiques</td>
+              <td>Projection tensorielle, filtrage Kalman, ZNE (Zero-Noise Extrapolation).</td>
+            </tr>
+            <tr>
+              <td><strong>F24 a F26</strong></td>
+              <td>Triade & Monade Supreme</td>
+              <td>Fusion synchrone CPU-GPU-QPU, consensus 2.9 ms et Sceau Universel.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Section 6 : Tokenomics -->
+      <section id="tokenomics" class="doc-section">
+        <h2>6. Modele Economique & Tokenomics du MZN sans Usure</h2>
+        <p>
+          L'offre de monnaie MZN est strictement finie et garantie par le code informatique :
+        </p>
+        <blockquote style="font-size: 1.2rem; font-weight: 700; text-align: center;">
+          Max Supply = 313 000 000 MZN (Offre Finie & Invariable)
+        </blockquote>
+        
+        <table>
+          <thead>
+            <tr>
+              <th>Destination</th>
+              <th>Adresse Blockchain</th>
+              <th>Montant (MZN)</th>
+              <th>Pourcentage</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Fonds Souverain de Reserve</strong></td>
+              <td><code>0xC9550Dd0A57C609494DbC44450df48d798EbfB0b</code> (Cle Doree)</td>
+              <td>302 000 000.00 MZN</td>
+              <td>96.48 %</td>
+            </tr>
+            <tr>
+              <td><strong>Tresorerie Active Depositaire</strong></td>
+              <td><code>0xb7f26cD0eE5E74c51B3F4e71e4fA75B3F246837C</code> (Auteur Ahmed)</td>
+              <td>8 000 000.00 MZN</td>
+              <td>2.56 %</td>
+            </tr>
+            <tr>
+              <td><strong>Deploiement Initial & Cites</strong></td>
+              <td>Cites Terrestre, Mobile & Qistas Civique</td>
+              <td>3 000 000.00 MZN</td>
+              <td>0.96 %</td>
+            </tr>
+            <tr style="background: rgba(212, 175, 55, 0.12); font-weight: 700;">
+              <td><strong>TOTAL GENERAL SCELLE</strong></td>
+              <td>—</td>
+              <td>313 000 000.00 MZN</td>
+              <td>100.00 %</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Section 7 : Sceaux & Cloture -->
+      <section id="seals" class="doc-section">
+        <h2>7. Declaration Solennelle & Sceaux Permanents</h2>
+        <blockquote>
+          « Par la grace du Tres-Haut, la balance est etablie, la justice est ordonnee, l'usure est aneantie et la mesure est exacte. Que ce systeme serve la verite, la protection des faibles et l'elevation de la connaissance computationnelle. »
+        </blockquote>
+        <p style="text-align: right; font-weight: 700; color: var(--gold-light);">
+          Fait a Paris, le 22 Octobre 2026<br>
+          <strong>M. Ahmed EL BAHLOUL</strong><br>
+          <em>Fondateur, Auteur Souverain & Gardien d'Al-Mizan x ASTRO-Q°ODE</em>
+        </p>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-seals">
+      <span class="seal-pill">DOI : 10.5281/zenodo.23554838</span>
+      <span class="seal-pill">Smart Contract Base : 0x520cbd0e1e72178f9e819AFf1e815606923A71db</span>
+      <span class="seal-pill">Uniswap v3 Pool : 0xfb76b57c2e179a44ba7919d3960fc18a4c9db172</span>
+      <span class="seal-pill">Norme Archivage : NF Z42-013 / Art. 1366 C. civ.</span>
+    </div>
+    <p>© 2026 Al-Mizan x ASTRO-Q°ODE — Tous droits reserves a l'Auteur Souverain M. Ahmed EL BAHLOUL.</p>
+  </footer>
+
+</body>
+</html>
