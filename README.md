@@ -1,7 +1,7 @@
 # `IMAM8MAHDI` × `Al-Mizan` × `ASTRO-Q°ODE` (V1.0–V5.0)
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23554838.svg)](https://doi.org/10.5281/zenodo.23554838)
-[![Version](https://img.shields.io/badge/Version-5.0.0-blue.svg)](https://github.com/IMAM8MAHDI)
+[![Version](https://img.shields.io/badge/Version-5.0.0-blue.svg)](https://github.com/Loulbak78920/ASTRO-QODE-ALMIZAN)
 [![Tests](https://img.shields.io/badge/Tests-10%2F10%20PASS-brightgreen.svg)](./tests/test_suite_complete.py)
 [![OpenQASM](https://img.shields.io/badge/OpenQASM-2.0-purple.svg)](./lang/compilateur_qasm_isa.py)
 [![Licence](https://img.shields.io/badge/Licence-ASLS--2.0%20Anti--Dolosif%20%7C%20Commercial%2050%2F50-gold.svg)](./LICENSE)
@@ -19,7 +19,7 @@
 | **Nationalité** | **Française** (`FRANCE`) |
 | **Ancrage géographique** | **Valence, France** ($44.9333^\circ\text{ N}, 4.8917^\circ\text{ E}$) & **Romans-sur-Isère, France** |
 | **Email officiel** | **`elbahloulahmed505@gmail.com`** |
-| **Organisation GitHub** | **`IMAM8MAHDI`** — [https://github.com/IMAM8MAHDI](https://github.com/IMAM8MAHDI) |
+| **Compte & Dépôt GitHub** | **`Loulbak78920`** (Nom public : **`IMAM8MAHDI`**) — [https://github.com/Loulbak78920/ASTRO-QODE-ALMIZAN](https://github.com/Loulbak78920/ASTRO-QODE-ALMIZAN) |
 | **DOI Zenodo Officiel Réel** | **`10.5281/zenodo.23554838`** — [https://doi.org/10.5281/zenodo.23554838](https://doi.org/10.5281/zenodo.23554838) |
 | **DOIs Zenodo Antérieurs Liés** | `10.5281/zenodo.23479740` & `10.5281/zenodo.23288947` |
 | **Clé Publique Dorée** | `0xc9550dd0a57c609494dbc44450df48d798ebfb0b` |
