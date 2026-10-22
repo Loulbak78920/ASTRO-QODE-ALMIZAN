@@ -1,0 +1,17 @@
+{
+  "code_acte": "A082",
+  "titre": "ACTE SCELLÉ A082 — CLARIFICATION DOCTRINALE DU MESSAGE 'PRIX DU MARCHÉ INTROUVABLE' ET CONVERSION DU SENS DE RATIO UNISWAP V3",
+  "date_scellement": "2026-10-22T12:25:00+00:00",
+  "cycle_harmonique": "Cycle 15 Phases — Phase 15 Scellée",
+  "statut": "SCELLÉ_IMMUABLE_ET_AUTHENTIFIÉ",
+  "auteur_souverain": {
+    "nom": "M. Ahmed EL BAHLOUL",
+    "cle_doree": "0xC9550Dd0A57C609494DBc44450Df48D798ebfB0B",
+    "tresorerie_privee": "0xb7f26cD0eE5E74c51B3F4e71e4fA75B3F246837C"
+  },
+  "explication_technique": {
+    "nature_du_message": "Avertissement informatif normal de genèse (aucun historique préalable car jeton nouvellement déployé).",
+    "piege_du_sens_unite": "Confusion possible entre 'MZN par ETH' et 'ETH par MZN'.",
+    "resolution_mizan": "Vérifier le sens de l'unité ou saisir directement 0.00008 ETH et 1000 MZN dans les montants de dépôt."
+  }
+}
