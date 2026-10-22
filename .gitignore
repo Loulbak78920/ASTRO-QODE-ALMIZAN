@@ -10,3 +10,13 @@ build/
 venv/
 .DS_Store
 Thumbs.db
+
+# Secrets et Cles Privees (Securite Absolue)
+.env
+.env.*
+*.key
+*.pem
+*.keystore
+secrets/
+private_keys/
+*.secret

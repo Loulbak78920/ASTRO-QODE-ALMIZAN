@@ -1,0 +1,56 @@
+{
+  "acte": "A073",
+  "titre": "ACTE DE CONSIGNATION DU GUIDE DE DEPLOIEMENT SECURISE EVM AVEC CLE PRIVEE",
+  "le_utc": "2026-10-22T10:12:00Z",
+  "auteur_souverain": {
+    "nom": "M. Ahmed EL BAHLOUL",
+    "alias": "IMAM8MAHDI / M. Almizan Elbahloul",
+    "cle_doree_racine": "0xc9550dd0a57c609494dbc44450df48d798ebfb0b",
+    "tresorerie_privee_synchronisee": "0xb7f26cD0eE5E74c51B3F4e71e4fA75B3F246837C",
+    "email": "elbahloulahmed505@gmail.com",
+    "doi_zenodo": "10.5281/zenodo.23554838",
+    "depot_public_github": "https://github.com/Loulbak78920/ASTRO-QODE-ALMIZAN"
+  },
+  "doctrine_securite_absolue": {
+    "regle_or": "AUCUNE_CLE_PRIVEE_NE_DOIT_JAMAIS_ETRE_CODEE_EN_DUR_NI_COMMUTEE_SUR_GIT",
+    "garde_fou_gitignore": [
+      ".env",
+      ".env.*",
+      "*.key",
+      "*.pem",
+      "*.keystore",
+      "secrets/",
+      "private_keys/"
+    ],
+    "protection_patrimoine": "Les fonds de la cle privee restent sous la garde souveraine exclusive de l'Auteur."
+  },
+  "methodes_deploiement_certifiees": {
+    "methode_1_recommandee": {
+      "nom": "Remix IDE via Injected Provider MetaMask",
+      "url": "https://remix.ethereum.org",
+      "securite": "MAXIMALE - Cle confinee dans le wallet client, zero terminal",
+      "etapes": [
+        "1. Coller AmalMizanSynchronMznContract.sol dans Remix",
+        "2. Compiler en Solidity ^0.8.20",
+        "3. Choisir Injected Provider - MetaMask (connecté avec 0xb7f26cD0eE5E74c51B3F4e71e4fA75B3F246837C)",
+        "4. Renseigner les 5 adresses dans le constructeur",
+        "5. Valider la transaction dans MetaMask"
+      ]
+    },
+    "methode_2_cli_python": {
+      "nom": "Script deploy_evm_reseau.py",
+      "securite": "Ephémère en RAM sans trace disque",
+      "commande_powershell": "$env:RPC_URL='...'; $env:ETHEREUM_PRIVATE_KEY='...'; py chaine/deploy_evm_reseau.py; Remove-Item Env:\\ETHEREUM_PRIVATE_KEY"
+    },
+    "methode_3_foundry": {
+      "nom": "Foundry cast wallet import (Keystore chiffré AES)",
+      "securite": "Chiffrement local fort par mot de passe"
+    }
+  },
+  "reseaux_recommandes": {
+    "test_gratuit": "Sepolia Testnet (0.00 $)",
+    "production_l2": "Arbitrum One / Base / Polygon PoS (< 0.02 $ par transaction)"
+  },
+  "statut": "SOUMIS_ET_SCELLE_DANS_AL_MIZAN",
+  "empreinte_sha256": "CFCB5A52C8DF4740613A8F54B8311D127DC7BF2442CD49463093F16A5D862EF4"
+}
