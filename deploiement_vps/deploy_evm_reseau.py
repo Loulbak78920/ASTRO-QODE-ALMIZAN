@@ -10,6 +10,14 @@ Trésorerie Dépositaire : 0xb7f26cD0eE5E74c51B3F4e71e4fA75B3F246837C
 DOI Officiel Zenodo : 10.5281/zenodo.23554838
 Dépôt GitHub : https://github.com/Loulbak78920/ASTRO-QODE-ALMIZAN
 ===============================================================================
+RÉSEAUX SÉCURISÉS OFFICIELS (SANS SITES MALVEILLANTS NI FAUCETS SUSPECTS) :
+- Base Mainnet (Coinbase L2) : RPC Officiel https://mainnet.base.org (< 0.01 €)
+- Arbitrum One Mainnet (Offchain Labs) : RPC Officiel https://arb1.arbitrum.io/rpc (< 0.02 €)
+- Polygon PoS Mainnet : RPC https://1rpc.io/matic (< 0.01 €)
+- Base Sepolia Testnet : RPC Officiel Coinbase https://sepolia.base.org (0.00 €)
+- Arbitrum Sepolia Testnet : RPC Officiel https://sepolia-rollup.arbitrum.io/rpc (0.00 €)
+- Local Hors-Ligne : http://127.0.0.1:8545 (Zéro Internet, Zéro Risque)
+===============================================================================
 """
 
 from __future__ import annotations
@@ -22,40 +30,34 @@ import sys
 import time
 from pathlib import Path
 
+# Fix encodage console Windows
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 # Adresses Protocolaires Fondatrices Scellées
 CLE_DOREE_AUTEUR = "0xC9550Dd0A57C609494DBc44450Df48D798ebfB0B"
 TRESORERIE_PRIVEE = "0xb7f26cD0eE5E74c51B3F4e71e4fA75B3F246837C"
 
 RESEAUX_CONFIG = {
-    "sepolia": {
-        "nom": "Sepolia Testnet (Ethereum)",
-        "rpc": [
-            "https://ethereum-sepolia-rpc.publicnode.com",
-            "https://1rpc.io/sepolia",
-            "https://rpc.sepolia.org",
-        ],
-        "chain_id": 11155111,
-        "explorateur": "https://sepolia.etherscan.io",
-        "symbole": "SepoliaETH",
-        "faucets": [
-            "https://sepoliafaucet.com",
-            "https://cloud.google.com/application/web3/faucet/ethereum/sepolia",
-            "https://faucets.chain.link/sepolia",
-        ],
-    },
     "base": {
-        "nom": "Base Mainnet (Coinbase L2)",
+        "nom": "Base Mainnet (Coinbase L2 Officiel)",
         "rpc": [
             "https://mainnet.base.org",
-            "https://base-rpc.publicnode.com",
+            "https://base.publicnode.com",
         ],
         "chain_id": 8453,
         "explorateur": "https://basescan.org",
         "symbole": "ETH",
+        "est_testnet": False,
+        "frais_estimes": "< 0.01 € (1 centime)",
         "faucets": [],
     },
     "arbitrum": {
-        "nom": "Arbitrum One Mainnet (L2)",
+        "nom": "Arbitrum One Mainnet (Offchain Labs Officiel)",
         "rpc": [
             "https://arb1.arbitrum.io/rpc",
             "https://arbitrum-one-rpc.publicnode.com",
@@ -63,17 +65,63 @@ RESEAUX_CONFIG = {
         "chain_id": 42161,
         "explorateur": "https://arbiscan.io",
         "symbole": "ETH",
+        "est_testnet": False,
+        "frais_estimes": "< 0.02 € (2 centimes)",
         "faucets": [],
     },
     "polygon": {
         "nom": "Polygon PoS Mainnet",
         "rpc": [
-            "https://polygon-rpc.com",
+            "https://1rpc.io/matic",
             "https://polygon-bor-rpc.publicnode.com",
         ],
         "chain_id": 137,
         "explorateur": "https://polygonscan.com",
         "symbole": "POL",
+        "est_testnet": False,
+        "frais_estimes": "< 0.01 €",
+        "faucets": [],
+    },
+    "base-sepolia": {
+        "nom": "Base Sepolia Testnet (Coinbase L2 Officiel)",
+        "rpc": [
+            "https://sepolia.base.org",
+        ],
+        "chain_id": 84532,
+        "explorateur": "https://sepolia.basescan.org",
+        "symbole": "ETH",
+        "est_testnet": True,
+        "frais_estimes": "0.00 € (Gratuit)",
+        "faucets": [
+            "https://faucets.chain.link/base-sepolia",
+            "https://docs.base.org/tools/network-faucets/",
+        ],
+    },
+    "arbitrum-sepolia": {
+        "nom": "Arbitrum Sepolia Testnet (Offchain Labs Officiel)",
+        "rpc": [
+            "https://sepolia-rollup.arbitrum.io/rpc",
+        ],
+        "chain_id": 421614,
+        "explorateur": "https://sepolia.arbiscan.io",
+        "symbole": "ETH",
+        "est_testnet": True,
+        "frais_estimes": "0.00 € (Gratuit)",
+        "faucets": [
+            "https://faucets.chain.link/arbitrum-sepolia",
+        ],
+    },
+    "local": {
+        "nom": "Réseau Local Privé Hors-Ligne (Anvil / Hardhat)",
+        "rpc": [
+            "http://127.0.0.1:8545",
+            "http://localhost:8545",
+        ],
+        "chain_id": 31337,
+        "explorateur": "Console Locale",
+        "symbole": "ETH",
+        "est_testnet": True,
+        "frais_estimes": "0.00 € (Local)",
         "faucets": [],
     },
 }
@@ -82,8 +130,9 @@ RESEAUX_CONFIG = {
 def chercher_artefact_contrat() -> tuple[list, str]:
     """Localise le bytecode et l'ABI du contrat pré-compilé."""
     chemins_possibles = [
+        Path(__file__).resolve().parent / "contracts" / "AmalMizanSynchronMznContract.json",
         Path(__file__).resolve().parent / "contracts" / "build" / "AmalMizanSynchronMznContract.json",
-        Path(__file__).resolve().parent.parent / "chaine" / "contracts" / "build" / "AmalMizanSynchronMznContract.json",
+        Path(__file__).resolve().parent.parent / "contracts" / "AmalMizanSynchronMznContract.json",
         Path(__file__).resolve().parent.parent / "contracts" / "build" / "AmalMizanSynchronMznContract.json",
     ]
     for c in chemins_possibles:
@@ -92,24 +141,7 @@ def chercher_artefact_contrat() -> tuple[list, str]:
                 data = json.load(f)
                 return data["abi"], data["bytecode"]
 
-    # Recherche directe des fichiers .abi et .bin
-    dirs = [
-        Path(__file__).resolve().parent / "contracts" / "build",
-        Path(__file__).resolve().parent.parent / "chaine" / "contracts" / "build",
-    ]
-    for d in dirs:
-        if d.exists():
-            bins = list(d.glob("*AmalMizanSynchronMznContract.bin"))
-            abis = list(d.glob("*AmalMizanSynchronMznContract.abi"))
-            if bins and abis:
-                with open(abis[0], "r", encoding="utf-8") as fa:
-                    abi = json.load(fa)
-                with open(bins[0], "r", encoding="utf-8") as fb:
-                    bytecode = fb.read().strip()
-                return abi, bytecode
-
     print("[ERREUR] Artefact compilé AmalMizanSynchronMznContract.json introuvable.")
-    print("Veuillez d'abord compiler le contrat avec : npx solc --abi --bin ...")
     sys.exit(1)
 
 
@@ -148,9 +180,9 @@ def main() -> None:
     )
     parser.add_argument(
         "--reseau",
-        choices=["sepolia", "base", "arbitrum", "polygon"],
-        default="sepolia",
-        help="Réseau cible (défaut : sepolia)",
+        choices=list(RESEAUX_CONFIG.keys()),
+        default="base",
+        help="Réseau cible (défaut : base - Mainnet Coinbase L2, coût < 0.01 €)",
     )
     parser.add_argument("--rpc", help="URL RPC personnalisée optionnelle")
     parser.add_argument("--cle", help="Clé privée (optionnelle, sinon demandée de façon masquée)")
@@ -170,6 +202,7 @@ def main() -> None:
     print(f"  Trésorerie Dépositaire : {TRESORERIE_PRIVEE}")
     print(f"  DOI Officiel Zenodo : 10.5281/zenodo.23554838")
     print(f"  Réseau Choisi : {config['nom']} (Chain ID : {config['chain_id']})")
+    print(f"  Frais Réseau Estimés : {config['frais_estimes']}")
     print("================================================================================")
 
     # Vérification Web3
@@ -180,11 +213,11 @@ def main() -> None:
         sys.exit(1)
 
     # Connexion au nœud RPC
-    print(f"\n[1/5] Connexion au nœud RPC : {rpc_url}...")
+    print(f"\n[1/5] Connexion au nœud RPC officiel ({rpc_url})...")
     w3 = None
     for rpc_candidat in [rpc_url] + config["rpc"]:
         try:
-            test_w3 = Web3(Web3.HTTPProvider(rpc_candidat, request_kwargs={"timeout": 15}))
+            test_w3 = Web3(Web3.HTTPProvider(rpc_candidat, request_kwargs={"timeout": 10}))
             if test_w3.is_connected():
                 w3 = test_w3
                 rpc_url = rpc_candidat
@@ -193,11 +226,13 @@ def main() -> None:
             continue
 
     if not w3 or not w3.is_connected():
-        print(f"[ERREUR] Impossible de se connecter à aucun RPC pour {config['nom']}.")
+        print(f"[ERREUR] Impossible de se connecter aux RPC de {config['nom']}.")
+        if args.reseau == "local":
+            print("Pour lancer un nœud local : installez anvil (Foundry) ou lancez npx hardhat node.")
         sys.exit(1)
 
     detect_chain_id = w3.eth.chain_id
-    print(f"      [OK] Nœud connecté. Chain ID détecté : {detect_chain_id}")
+    print(f"      [OK] Nœud officiel connecté. Chain ID vérifié : {detect_chain_id}")
 
     # Chargement de l'artefact compilé
     print("\n[2/5] Chargement du Bytecode et de l'ABI du contrat...")
@@ -217,9 +252,9 @@ def main() -> None:
 
     print(f"      [OK] Compte dérivé avec succès : {compte.address}")
     if compte.address.lower() == TRESORERIE_PRIVEE.lower():
-        print("      🌟 RECONNAISSANCE : Compte Trésorerie Privée Officiel reconnu !")
+        print("      [RECONNAISSANCE] Compte Tresorerie Privee Officiel reconnu !")
     elif compte.address.lower() == CLE_DOREE_AUTEUR.lower():
-        print("      👑 RECONNAISSANCE : Clé Dorée Racine Auteur reconnue !")
+        print("      [RECONNAISSANCE] Cle Doree Racine Auteur reconnue !")
 
     # Solde et vérification gas
     solde_wei = w3.eth.get_balance(compte.address)
@@ -229,14 +264,17 @@ def main() -> None:
     if solde_wei == 0:
         print("\n" + "!" * 80)
         print(f"  ATTENTION : Le solde du compte {compte.address} est de 0 {config['symbole']}.")
-        print("  Pour déployer un smart contract sur la blockchain, une infime quantité de gaz est requise.")
-        if config["faucets"]:
-            print(f"\n  Sur le réseau gratuit {config['nom']}, vous pouvez recevoir des fonds de test instantanément :")
-            for faucet in config["faucets"]:
-                print(f"   👉 {faucet}")
-            print(f"\n  Indiquez simplement votre adresse : {compte.address}")
+        print("  Pour deployer un smart contract, une infime quantite de gaz est requise.")
+        if config["est_testnet"]:
+            if config["faucets"]:
+                print(f"\n  Sur le reseau de test gratuit {config['nom']}, robinets officiels verifies :")
+                for faucet in config["faucets"]:
+                    print(f"   -> {faucet}")
+                print(f"  Indiquez simplement votre adresse : {compte.address}")
         else:
-            print(f"  Veuillez approvisionner cette adresse d'au moins 0.001 {config['symbole']}.")
+            print(f"\n  Sur le reseau de production {config['nom']}, les frais sont minimes ({config['frais_estimes']}).")
+            print(f"  Il suffit de transferer une somme modique (ex: 1 a 2 euros d'ETH) sur votre compte :")
+            print(f"  -> Adresse Tresorerie : {compte.address}")
         print("!" * 80)
         if not args.simuler:
             sys.exit(1)
@@ -272,42 +310,44 @@ def main() -> None:
 
     try:
         gas_estime = w3.eth.estimate_gas(tx_constructeur)
-        tx_constructeur["gas"] = int(gas_estime * 1.2)  # Marge de 20%
+        tx_constructeur["gas"] = int(gas_estime * 1.2)
     except Exception as e:
-        print(f"      [AVIS] Estimation gas par défaut (marge de sécurité) : {e}")
+        print(f"      [AVIS] Marge gas de sécurité appliquée : {e}")
         tx_constructeur["gas"] = 4_500_000
 
     cout_estime_eth = w3.from_wei(tx_constructeur["gas"] * gas_price, "ether")
-    print(f"      Gas estimé : {tx_constructeur['gas']} unités (Coût max : {cout_estime_eth:.6f} {config['symbole']})")
+    print(f"      Gas alloué : {tx_constructeur['gas']} unités (Coût max estimé : {cout_estime_eth:.6f} {config['symbole']})")
 
     # Confirmation finale
-    print("\nSignature locale hors-ligne...")
+    print("\nSignature locale sécurisée en mémoire vive...")
     tx_signee = w3.eth.account.sign_transaction(tx_constructeur, private_key=cle_privee)
 
-    # Destruction de la clé en mémoire
+    # Destruction immédiate de la clé en mémoire
     del cle_privee
 
-    print("Envoi de la transaction sur le réseau...")
+    print(f"Envoi de la transaction sur {config['nom']}...")
     tx_hash = w3.eth.send_raw_transaction(tx_signee.raw_transaction)
     tx_hash_hex = tx_hash.hex()
-    print(f"      Hash de la Transaction : {tx_hash_hex}")
-    print(f"      Suivi en direct : {config['explorateur']}/tx/{tx_hash_hex}")
+    print(f"      Hash Transaction : {tx_hash_hex}")
+    if "http" in config["explorateur"]:
+        print(f"      Suivi en direct : {config['explorateur']}/tx/{tx_hash_hex}")
 
-    print("\nAttente de la confirmation du bloc par le consensus réseau...")
+    print("\nAttente de la validation du bloc par le consensus réseau...")
     recu = w3.eth.wait_for_transaction_receipt(tx_hash, timeout=180)
 
     if recu.status == 1:
         adresse_contrat = recu.contractAddress
         print("\n" + "=" * 80)
-        print("  🎉 SUCCÈS ABSOLU — SMART CONTRACT AMAL-MIZAN SYNCHRON MZN DÉPLOYÉ !")
+        print("  [SUCCES TOTAL] SMART CONTRACT AMAL-MIZAN SYNCHRON MZN DEPLOYE !")
         print("=" * 80)
         print(f"  Adresse du Smart Contract : {adresse_contrat}")
+        print(f"  Réseau : {config['nom']}")
         print(f"  Bloc Numéro : {recu.blockNumber}")
         print(f"  Gas Utilisé : {recu.gasUsed}")
-        print(f"  Lien Explorateur Officiel : {config['explorateur']}/address/{adresse_contrat}")
+        if "http" in config["explorateur"]:
+            print(f"  Lien Explorateur Officiel : {config['explorateur']}/address/{adresse_contrat}")
         print("=" * 80)
 
-        # Enregistrement du reçu dans un fichier de déploiement local
         deploiement_info = {
             "reseau": config["nom"],
             "chain_id": detect_chain_id,

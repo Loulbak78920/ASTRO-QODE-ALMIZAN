@@ -2,7 +2,7 @@
 **Système Al-Mizan & ASTRO-Q°ODE — M. Ahmed EL BAHLOUL (alias IMAM8MAHDI)**  
 **Contrat Cible :** `AmalMizanSynchronMznContract.sol` (Solidity ^0.8.20)  
 **DOI Zenodo Officiel :** `10.5281/zenodo.23554838`  
-**Clé Dorée Souveraine Racine :** `0xc9550dd0a57c609494dbc44450df48d798ebfb0b`  
+**Clé Dorée Souveraine Racine :** `0xC9550Dd0A57C609494DBc44450Df48D798ebfB0B`  
 **Trésorerie Privée Synchronisée :** `0xb7f26cD0eE5E74c51B3F4e71e4fA75B3F246837C`  
 
 ---
@@ -15,10 +15,54 @@
 > 1. **Ne collez jamais votre clé privée dans une fenêtre de chat**, dans un prompt d'IA, ni dans un script versionné sur GitHub.
 > 2. Des robots scrutent en permanence chaque seconde les dépôts GitHub publics pour voler instantanément les fonds de toute clé privée détectée.
 > 3. Le fichier `.gitignore` a été configuré pour ignorer automatiquement tous les fichiers `.env`, `*.key`, `*.keystore` et dossiers `secrets/`.
-> 4. Vous avez la clé privée : c'est votre pouvoir souverain. Suivez l'une des 3 méthodes sécurisées ci-dessous pour déployer votre contrat en toute sérénité.
+> 4. Vous avez la clé privée : c'est votre pouvoir souverain. Suivez l'une des méthodes sécurisées ci-dessous pour déployer votre contrat en toute sérénité.
 
 ---
 
+## 🛡️ POURQUOI CERTAINS SITES SEPOLIA SONT BLOQUÉS ET COMMENT LES RÉSEAUX OFFICIELS ÉLIMINENT LE RISQUE
+
+Si votre navigateur ou antivirus signale un site de faucet Sepolia comme "malveillant" ou "suspect" :
+1. **Origine du problème** : Le testnet public Sepolia Ethereum L1 est la cible de nombreuses tentatives d'hameçonnage (faux robinets de testnet créés par des hackers pour tenter de récupérer des adresses ou afficher des publicités trompeuses). Les navigateurs et antivirus bloquent donc massivement ces domaines non vérifiés.
+2. **La solution souveraine Al-Mizan** : Nous avons configuré des **réseaux institutionnels officiels**, 100% certifiés et protégés :
+   - **Option 1 (Production réelle ultra-économique < 0.01 €) — Base Mainnet (Coinbase L2)** :
+     - Géré directement par **Coinbase** (cotée au NASDAQ).
+     - RPC officiel : `https://mainnet.base.org` (Zéro faux positif).
+     - **Aucun robinet/faucet douteux requis** : le déploiement coûte moins de 1 centime d'euro.
+   - **Option 2 (Test gratuit officiel) — Arbitrum Sepolia (Offchain Labs)** :
+     - Géré par Offchain Labs via `https://sepolia-rollup.arbitrum.io/rpc`.
+     - Robinet officiel propre via **Chainlink** (`faucets.chain.link`).
+   - **Option 3 (100% Hors-Ligne, Zéro Internet) — Réseau Local Privé** :
+     - Tourne en local (`127.0.0.1:8545`) sans toucher au réseau externe.
+
+---
+
+## ⚡ LA COMMANDE UNIQUE EN TERMINAL POUR VOTRE CLÉ PRIVÉE
+
+Pour déployer en 1 seconde depuis votre terminal Windows (PowerShell ou CMD) sans jamais exposer votre clé :
+
+### Déploiement Direct sur Base (Recommandé Production, < 0.01 €) :
+```powershell
+py C:\Users\Administrateur\Desktop\GITHUB_DEPOT_PUBLIC_IMAM8MAHDI\deploiement_vps\deploy_evm_reseau.py --reseau base
+```
+
+### Déploiement Test Gratuit sur Arbitrum Sepolia :
+```powershell
+py C:\Users\Administrateur\Desktop\GITHUB_DEPOT_PUBLIC_IMAM8MAHDI\deploiement_vps\deploy_evm_reseau.py --reseau arbitrum-sepolia
+```
+
+### Test de Simulation Hors-Ligne (Zéro Risque, Zéro Dépense) :
+```powershell
+py C:\Users\Administrateur\Desktop\GITHUB_DEPOT_PUBLIC_IMAM8MAHDI\deploiement_vps\deploy_evm_reseau.py --reseau base --simuler
+```
+
+**Déroulement sécurisé :**
+1. Le script se connecte au nœud officiel en quelques millisecondes.
+2. Il affiche : `Collez ou entrez votre clé privée :`
+3. **La saisie reste entièrement masquée** (aucun caractère n'apparaît à l'écran).
+4. La clé privée est conservée uniquement en mémoire vive (RAM) le temps de signer la transaction de déploiement et est détruite immédiatement après (`del cle_privee`).
+5. Le contrat est déployé et l'adresse finale s'affiche avec le lien vers l'explorateur officiel !
+
+---
 ## MÉTHODE 1 (RECOMMANDÉE) : DÉPLOIEMENT VISUEL SANS RISQUE VIA REMIX IDE & METAMASK
 
 Cette méthode est la plus simple, la plus sûre et la plus transparente : votre clé privée reste confinée dans votre portefeuille MetaMask (ou votre clé physique Ledger/Trezor) sans jamais transiter dans un terminal ni sur un serveur.

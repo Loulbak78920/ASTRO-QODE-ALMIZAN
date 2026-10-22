@@ -1,8 +1,8 @@
 {
   "sceaux": {
     "sceau_suite_logique_v4": {
-      "timestamp": "2026-10-22T10:35:16",
-      "empreinte_sha256": "a4c52f75bf38e0aff19424e89f04a358e060940c99606f5286ad222b647bffb3",
+      "timestamp": "2026-10-22T11:12:18",
+      "empreinte_sha256": "f33277afcb59aec73efa0fc4d7439480f88d500593f44ff039b2b1edcaf6762a",
       "chemin": "C:\\Users\\Administrateur\\Desktop\\GITHUB_DEPOT_PUBLIC_IMAM8MAHDI\\memoire_aq\\sceau_suite_logique_v4.json"
     },
     "sceau_cli_astro_qode_v4": {
@@ -11,17 +11,17 @@
       "chemin": "C:\\Users\\Administrateur\\Desktop\\IMAM8MAHDI\\ASTRO-Q°ODE_SYSTEME\\memoire_aq\\sceau_cli_astro_qode_v4.json"
     },
     "sceau_matrice_unisson_or_argent_v5": {
-      "timestamp": "2026-10-22T10:35:16",
-      "empreinte_sha256": "24f73754e0f0e9187832bc1786935304b83434d710b12b371a5b269f9dbce702",
+      "timestamp": "2026-10-22T11:12:18",
+      "empreinte_sha256": "0482ced043b6c22761abe5128ca45a2b74519d417bc4074675c5c6b689fc25c1",
       "chemin": "C:\\Users\\Administrateur\\Desktop\\GITHUB_DEPOT_PUBLIC_IMAM8MAHDI\\memoire_aq\\sceau_matrice_unisson_or_argent_v5.json"
     },
     "sceau_bloc_synchron_mzn_v6": {
-      "timestamp": "2026-10-22T10:35:17",
-      "empreinte_sha256": "445d68dba8d49bcb05f17ed5e9c0c9b900aaf7abc3094437427458e394b9cba6",
+      "timestamp": "2026-10-22T11:12:19",
+      "empreinte_sha256": "09309da22f9503e9cd8b0058849a68df54e889f0a4697d665184938d60e5b4af",
       "chemin": "C:\\Users\\Administrateur\\Desktop\\GITHUB_DEPOT_PUBLIC_IMAM8MAHDI\\memoire_aq\\sceau_bloc_synchron_mzn_v6.json"
     }
   },
-  "derniere_mise_a_jour": "2026-10-22T10:35:17",
+  "derniere_mise_a_jour": "2026-10-22T11:12:19",
   "nb_sceaux": 4,
   "qubit_physique_local": false
 }

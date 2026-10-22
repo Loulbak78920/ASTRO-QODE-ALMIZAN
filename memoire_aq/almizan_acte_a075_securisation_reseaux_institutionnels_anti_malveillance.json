@@ -1,0 +1,39 @@
+{
+  "code_acte": "A075",
+  "titre": "ACTE SCELLÉ A075 — SÉCURISATION DES RÉSEAUX INSTITUTIONNELS (BASE COINBASE, ARBITRUM OFFCHAIN LABS) ET PROTECTION ANTI-MALVEILLANCE",
+  "date_scellement": "2026-10-22T09:05:00+00:00",
+  "cycle_harmonique": "Cycle 15 Phases — Phase 15 Scellée",
+  "statut": "SCELLÉ_IMMUABLE_ET_AUTHENTIFIÉ",
+  "auteur_souverain": {
+    "nom": "M. Ahmed EL BAHLOUL",
+    "alias": "IMAM8MAHDI / M. Almizan Elbahloul",
+    "cle_doree_racine": "0xC9550Dd0A57C609494DBc44450Df48D798ebfB0B",
+    "tresorerie_privee_depositaire": "0xb7f26cD0eE5E74c51B3F4e71e4fA75B3F246837C",
+    "doi_zenodo": "10.5281/zenodo.23554838"
+  },
+  "diagnostic_utilisateur": {
+    "incident": "Blocage des faucets Sepolia tiers signales comme suspects/malveillants par filtres web",
+    "resolution": "Adoption stricte de RPCs institutionnels souverains (Base Coinbase L2, Arbitrum Offchain Labs) et mode hors-ligne"
+  },
+  "reseaux_institutionnels_valides": {
+    "base_mainnet": {
+      "nom": "Base Mainnet (Coinbase L2)",
+      "rpc": "https://mainnet.base.org",
+      "chain_id": 8453,
+      "cout_reel": "< 0.01 €"
+    },
+    "arbitrum_sepolia": {
+      "nom": "Arbitrum Sepolia Testnet (Offchain Labs)",
+      "rpc": "https://sepolia-rollup.arbitrum.io/rpc",
+      "chain_id": 421614,
+      "cout_reel": "0.00 € (Chainlink Faucet vérifié)"
+    },
+    "local_hors_ligne": {
+      "nom": "Réseau Local Privé (100% Hors-Ligne)",
+      "rpc": "http://127.0.0.1:8545",
+      "chain_id": 31337,
+      "cout_reel": "0.00 € (Zéro Internet)"
+    }
+  },
+  "empreinte_sha256_script_deploy": "EB2DA6E8861CADBBB7CC0BF17715439E3B45148842925EF18EF15022186267E4"
+}
