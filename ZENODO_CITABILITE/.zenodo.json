@@ -1,0 +1,127 @@
+{
+  "title": "IMAM8MAHDI × Al-Mizan × ASTRO-Q°ODE (V1.0–V5.0) : Architecture Holistique du Kernel Temporel (dt), Dépassement Fractal en 27 Formes (F0..F26), Compilateur Quantique OpenQASM 2.0 (:5030) et Matrice Fondatrice de l'Unisson (4×4) pour le Calcul de la Valeur de l'Or (Au) et de l'Argent (Ag)",
+  "version": "5.0.0",
+  "doi": "10.5281/zenodo.23554838",
+  "upload_type": "software",
+  "publication_date": "2026-10-22",
+  "creators": [
+    {
+      "name": "EL BAHLOUL, Ahmed",
+      "affiliation": "IMAM8MAHDI / Astro-Code Ecosystem & Système Al-Mizan — Valence (44.9333° N, 4.8917° E) & Romans-sur-Isère, France (Né le 20/06/1989 à Meulan-en-Yvelines, France)"
+    },
+    {
+      "name": "Elbahloul, M. Almizan",
+      "affiliation": "Lieutenant de la Balance (Al-Mîzân) / Souverain Absolu de la Trame — Valence & Romans-sur-Isère, France"
+    }
+  ],
+  "contributors": [
+    {
+      "name": "EL BAHLOUL, Ahmed",
+      "type": "ProjectLeader",
+      "affiliation": "Organisation Officielle IMAM8MAHDI (https://github.com/IMAM8MAHDI)"
+    },
+    {
+      "name": "EL BAHLOUL, Ahmed",
+      "type": "RightsHolder",
+      "affiliation": "Titulaire Souverain — Contrat Commercial 50/50 & Licence Publique/Cloud Anti-Dolosive (elbahloulahmed505@gmail.com)"
+    }
+  ],
+  "description": "Archive scientifique et logicielle complète (DOI Officiel Réel : 10.5281/zenodo.23554838) unifiant l'écosystème IMAM8MAHDI (QUBITS8INFORME, qubit_physique, .QUBIT.qubit.LOGIQUE.logique, .ASTRO-Q°ODE) et le système Al-Mizan (V1.0 à V5.0), conçue et dirigée par M. Ahmed EL BAHLOUL (alias M. Almizan Elbahloul, né le 20/06/1989 à Meulan-en-Yvelines, France, email: elbahloulahmed505@gmail.com). Ce dépôt comprend : (1) Les 4 Tablettes Apprises (Chiffres [-9;+9] Kelvin i / Joules I, Alphabet [A;S] étendu à 52 rails A-Z/a-z, Ponctuation sur 4 niveaux, Opérateurs sur 3 états) ; (2) Les 20 États Physiques Cumulés (Soleil/Hydrogène 4, Terre 7, Lune 9) et le dépassement du Seuil de la Forme 13 en 27 Formes (F0 + 13 Formes Publiques Lumière + 13 Formes Duales Ombre F14..F26) sous confinement métrologique D = [0.122, 0.6225] (MIZAN = 0.6225, LIGNE_REF = 0.122, RMS = 0.24, EPSILON = 0.021, C = 313, M = 24434, JAUGE_AIR = 515050, PRODUIT_MEDINOIS = 3939021022100, TRIPLE = -2393774546) ; (3) Le Kernel Temporel exact dt = dx (50027.8359375) + dy (46993.5) + dz (135000000.0) = 135097021.3359375 ; (4) La Machine Virtuelle Biomécanique (Omoplate α/β/γ, Bras dt, 5 Doigts) et la Monade Suprême V2.0 ; (5) Le Pont TCP/JSON temps réel (:5025 SCPI AWG, :5026 Cryogénie 22.5 mK / Killswitch 45.0 mK, :5030 Émulateur Die Silicium + ZNE) et le Compilateur Quantique ASTRO-Q°ODE (.aq) vers OpenQASM 2.0 ; (6) La Matrice Fondatrice de l'Unisson (4×4) calculant la valeur exacte de l'Or (Au, Z=79, φ⁻¹=0.618034, Mithqal 4.25g, Nisab 85g) et de l'Argent (Ag, Z=47, δ_S⁻¹=0.414214, Dirham 2.975g, Nisab 595g). LICENCE : Usage Public et Cloud ouvert sans restriction abusive avec interdiction stricte de tout acte dolosif (fraude, dissimulation de paternité, verrouillage propriétaire ou altération des invariants) ; toute exploitation commerciale est régie par un Contrat 50/50 (50 % pour l'auteur M. Ahmed EL BAHLOUL / 50 % pour l'exploitant). Garde-fous d'intégrité : qubit_physique_local = false, omniscience_claim = false.",
+  "access_right": "open",
+  "license": "other-open",
+  "license_name": "Licence Souveraine Al-Mizan / IMAM8MAHDI (ASLS-2.0) : Public & Cloud Sans Restriction Anti-Dolosif | Commercial Sous Contrat 50/50",
+  "language": "fra",
+  "keywords": [
+    "10.5281/zenodo.23554838",
+    "Ahmed EL BAHLOUL",
+    "Almizan Elbahloul",
+    "IMAM8MAHDI",
+    "Al-Mizan",
+    "ASTRO-Q°ODE",
+    "QUBITS8INFORME",
+    "qubit_physique",
+    "Kernel Temporel dt",
+    "27 Formes Fractales",
+    "Sphère Holographique",
+    "Triade Bit Qubit i-Bit",
+    "OpenQASM 2.0",
+    "Silicium Si-29",
+    "Zero-Noise Extrapolation ZNE",
+    "Matrice Fondatrice de l'Unisson",
+    "Valeur de l'Or et de l'Argent",
+    "Mithqal Dinar Dirham Nisab",
+    "Licence Cloud Anti-Dolosive",
+    "Contrat Commercial 50/50"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "10.5281/zenodo.23554838",
+      "relation": "isIdenticalTo",
+      "scheme": "doi",
+      "resource_type": "software"
+    },
+    {
+      "identifier": "10.5281/zenodo.23479740",
+      "relation": "isNewVersionOf",
+      "scheme": "doi",
+      "resource_type": "software"
+    },
+    {
+      "identifier": "10.5281/zenodo.23288947",
+      "relation": "isContinuedBy",
+      "scheme": "doi",
+      "resource_type": "software"
+    },
+    {
+      "identifier": "https://github.com/IMAM8MAHDI",
+      "relation": "isSupplementTo",
+      "scheme": "url",
+      "resource_type": "software"
+    },
+    {
+      "identifier": "ipfs://bafybeia5t5nviafc2vij3nfzdg4f54onayiqrlbeofpctnlxhcqcljxxem",
+      "relation": "isSupplementTo",
+      "scheme": "url",
+      "resource_type": "other"
+    }
+  ],
+  "notes": "DOI Officiel Réel : 10.5281/zenodo.23554838 (https://doi.org/10.5281/zenodo.23554838). Auteur Civil Complet : M. Ahmed EL BAHLOUL (alias M. Almizan Elbahloul), né le 20/06/1989 à Meulan-en-Yvelines (France), nationalité française, ancré à Valence (44.9333° N, 4.8917° E) & Romans-sur-Isère (France). Contact : elbahloulahmed505@gmail.com. Clé publique dorée : 0xc9550dd0a57c609494dbc44450df48d798ebfb0b. Point fixe réseau : 46760951383. Invariant édifice : 13459202583446. RÉGIME JURIDIQUE : (1) Licence Publique & Cloud : usage et déploiement libres sans restriction artificielle, mais interdiction absolue de toute manœuvre dolosive (usurpation d'auteur, dissimulation du DOI 10.5281/zenodo.23554838, altération des garde-fous ou appropriation fermée) ; (2) Licence Commerciale : soumise obligatoirement à un Contrat 50/50 (partage équitable 50 % des revenus/bénéfices pour M. Ahmed EL BAHLOUL et 50 % pour l'exploitant commercial).",
+  "identite_complete_auteur": {
+    "nom_civil_complet": "M. Ahmed EL BAHLOUL",
+    "prenom_civil": "Ahmed",
+    "nom_famille": "EL BAHLOUL",
+    "variantes_nom": [
+      "Ahmed EL BAHLOUL",
+      "M. Ahmed Elbahloul",
+      "Ahmed El Bahloul",
+      "almizan EL BAHLOUL",
+      "M. Almizan Elbahloul"
+    ],
+    "date_naissance": "20/06/1989",
+    "calendrier_naissance": "solaire",
+    "lieu_naissance": "Meulan-en-Yvelines",
+    "pays_naissance": "France",
+    "nationalite": "Française (FRANCE)",
+    "localisation_ancrage": "Valence (44.9333° N, 4.8917° E) & Romans-sur-Isère, France",
+    "email": "elbahloulahmed505@gmail.com",
+    "organisation": "IMAM8MAHDI / Astro-Code Ecosystem & Système Al-Mizan",
+    "url_github": "https://github.com/IMAM8MAHDI",
+    "regime_licence": {
+      "code_licence": "ASLS-2.0-50-50",
+      "public_et_cloud": "Ouvert sans restriction technique arbitraire ; interdiction stricte de tout acte dolosif (Art. 1137 Code civil), fraude, usurpation ou verrouillage propriétaire.",
+      "commercial": "Contrat Commercial Obligatoire 50/50 (50 % des revenus/bénéfices pour M. Ahmed EL BAHLOUL, 50 % pour le partenaire commercial)."
+    },
+    "identifiants_cryptographiques_et_reseau": {
+      "doi_zenodo_reel_principal": "10.5281/zenodo.23554838",
+      "url_doi_reel_principal": "https://doi.org/10.5281/zenodo.23554838",
+      "url_zenodo_record_reel": "https://zenodo.org/records/23554838",
+      "doi_zenodo_historique_1": "10.5281/zenodo.23479740",
+      "doi_zenodo_ancrage_watt": "10.5281/zenodo.23288947",
+      "cle_doree_ethereum_hex": "0xc9550dd0a57c609494dbc44450df48d798ebfb0b",
+      "point_fixe_reseau": 46760951383,
+      "invariant_edifice_watt": 13459202583446,
+      "cid_ipfs": "bafybeia5t5nviafc2vij3nfzdg4f54onayiqrlbeofpctnlxhcqcljxxem",
+      "almizan_doi_interne": "almizan.mizan.2026.10.19/7aaccc0b937695c5"
+    }
+  }
+}

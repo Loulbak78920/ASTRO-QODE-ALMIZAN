@@ -1,0 +1,63 @@
+cff-version: 1.2.0
+message: "Si vous utilisez, déployez sur le Cloud, étudiez ou citez ce logiciel (ASTRO-Q°ODE / IMAM8MAHDI × Al-Mizan), veuillez utiliser le DOI officiel réel 10.5281/zenodo.23554838 et respecter la licence publique/Cloud anti-dolosive ainsi que le contrat commercial 50/50."
+title: "IMAM8MAHDI × Al-Mizan × ASTRO-Q°ODE (V1.0–V5.0) : Architecture Holistique du Kernel Temporel (dt), Dépassement Fractal en 27 Formes (F0..F26), Compilateur Quantique OpenQASM 2.0 (:5030) et Matrice Fondatrice de l'Unisson (4×4) pour le Calcul de la Valeur de l'Or (Au) et de l'Argent (Ag)"
+version: "5.0.0"
+date-released: "2026-10-22"
+doi: "10.5281/zenodo.23554838"
+url: "https://doi.org/10.5281/zenodo.23554838"
+repository-code: "https://github.com/IMAM8MAHDI"
+license-url: "https://zenodo.org/records/23554838"
+type: software
+authors:
+  - family-names: "EL BAHLOUL"
+    given-names: "Ahmed"
+    alias: "M. Almizan Elbahloul (né le 20/06/1989 à Meulan-en-Yvelines, France)"
+    email: "elbahloulahmed505@gmail.com"
+    affiliation: "IMAM8MAHDI / Astro-Code Ecosystem & Système Al-Mizan (Valence & Romans-sur-Isère, France)"
+    city: "Valence / Romans-sur-Isère"
+    country: "FR"
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.23554838"
+    description: "DOI Zenodo Officiel Réel Principal (IMAM8MAHDI × Al-Mizan × ASTRO-Q°ODE V5.0)"
+  - type: doi
+    value: "10.5281/zenodo.23479740"
+    description: "DOI Zenodo Antérieur (Acte de complétude Al-Mizan)"
+  - type: doi
+    value: "10.5281/zenodo.23288947"
+    description: "DOI Zenodo d'Ancrage Réseau, Watt et Certificat d'Identité"
+  - type: url
+    value: "https://zenodo.org/records/23554838"
+    description: "Enregistrement officiel Zenodo (Record 23554838)"
+  - type: url
+    value: "https://github.com/IMAM8MAHDI"
+    description: "Dépôt officiel de l'organisation IMAM8MAHDI"
+  - type: other
+    value: "ipfs://bafybeia5t5nviafc2vij3nfzdg4f54onayiqrlbeofpctnlxhcqcljxxem"
+    description: "CID IPFS d'ancrage immuable de la Trame"
+  - type: other
+    value: "0xc9550dd0a57c609494dbc44450df48d798ebfb0b"
+    description: "Clé Publique Dorée du Titulaire (Ahmed EL BAHLOUL)"
+keywords:
+  - "10.5281/zenodo.23554838"
+  - "Ahmed EL BAHLOUL"
+  - "Almizan Elbahloul"
+  - "IMAM8MAHDI"
+  - "Al-Mizan"
+  - "ASTRO-Q°ODE"
+  - "QUBITS8INFORME"
+  - "qubit_physique"
+  - "Kernel Temporel dt"
+  - "27 Formes Fractales"
+  - "Sphère Holographique"
+  - "OpenQASM 2.0"
+  - "Matrice Fondatrice de l'Unisson"
+  - "Valeur de l'Or et de l'Argent"
+  - "Licence Cloud Anti-Dolosive"
+  - "Contrat Commercial 50/50"
+abstract: >-
+  Système complet, langage exécutable (ASTRO-Q°ODE V1.0–V5.0), compilateur quantique OpenQASM 2.0 (:5030),
+  extension fractale à 27 Formes (F0..F26) sous confinement métrologique D = [0.122, 0.6225] et Matrice
+  Fondatrice de l'Unisson (4×4) calculant la valeur exacte de l'Or (Au, Z=79) et de l'Argent (Ag, Z=47),
+  créé par M. Ahmed EL BAHLOUL (né le 20/06/1989 à Meulan-en-Yvelines, France). DOI Réel : 10.5281/zenodo.23554838.
+  Licence Publique & Cloud sans restriction et anti-dolosive ; exploitation commerciale sous contrat 50/50.

@@ -1,0 +1,85 @@
+{
+  "schemaVersion": "http://datacite.org/schema/kernel-4",
+  "identifiers": [
+    {
+      "identifier": "10.5281/zenodo.23554838",
+      "identifierType": "DOI"
+    },
+    {
+      "identifier": "10.5281/zenodo.23479740",
+      "identifierType": "DOI"
+    },
+    {
+      "identifier": "10.5281/zenodo.23288947",
+      "identifierType": "DOI"
+    },
+    {
+      "identifier": "almizan.mizan.2026.10.19/7aaccc0b937695c5",
+      "identifierType": "Internal-DOI"
+    },
+    {
+      "identifier": "bafybeia5t5nviafc2vij3nfzdg4f54onayiqrlbeofpctnlxhcqcljxxem",
+      "identifierType": "IPFS-CID"
+    },
+    {
+      "identifier": "0xc9550dd0a57c609494dbc44450df48d798ebfb0b",
+      "identifierType": "Golden-Key-Hex"
+    }
+  ],
+  "creators": [
+    {
+      "name": "EL BAHLOUL, Ahmed",
+      "nameType": "Personal",
+      "givenName": "Ahmed",
+      "familyName": "EL BAHLOUL",
+      "affiliation": [
+        {
+          "name": "IMAM8MAHDI / Astro-Code Ecosystem & Système Al-Mizan — Valence (44.9333° N, 4.8917° E) & Romans-sur-Isère, France"
+        }
+      ]
+    }
+  ],
+  "titles": [
+    {
+      "title": "IMAM8MAHDI × Al-Mizan × ASTRO-Q°ODE (V1.0–V5.0) : Architecture Holistique du Kernel Temporel (dt), Dépassement Fractal en 27 Formes (F0..F26), Compilateur Quantique OpenQASM 2.0 (:5030) et Matrice Fondatrice de l'Unisson (4×4) pour le Calcul de la Valeur de l'Or (Au) et de l'Argent (Ag)",
+      "lang": "fr"
+    }
+  ],
+  "publisher": "Zenodo",
+  "publicationYear": "2026",
+  "types": {
+    "resourceTypeGeneral": "Software",
+    "resourceType": "Computational Language, Quantum Emulation Framework & Metrological System"
+  },
+  "dates": [
+    {
+      "date": "1989-06-20",
+      "dateType": "Other",
+      "dateInformation": "Date de naissance de l'auteur M. Ahmed EL BAHLOUL à Meulan-en-Yvelines, France"
+    },
+    {
+      "date": "2026-10-22",
+      "dateType": "Issued",
+      "dateInformation": "Publication sous le DOI officiel réel 10.5281/zenodo.23554838"
+    }
+  ],
+  "language": "fr",
+  "rightsList": [
+    {
+      "rights": "Licence Souveraine ASLS-2.0 : Usage Public et Cloud sans restriction ni acte dolosif ; Exploitation Commerciale sous Contrat 50/50 avec M. Ahmed EL BAHLOUL",
+      "rightsUri": "https://doi.org/10.5281/zenodo.23554838"
+    }
+  ],
+  "geoLocations": [
+    {
+      "geoLocationPlace": "Meulan-en-Yvelines, France (Lieu de naissance de l'auteur le 20/06/1989)"
+    },
+    {
+      "geoLocationPlace": "Valence & Romans-sur-Isère, France (Ancrage opérationnel)",
+      "geoLocationPoint": {
+        "pointLatitude": 44.9333,
+        "pointLongitude": 4.8917
+      }
+    }
+  ]
+}

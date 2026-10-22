@@ -1,0 +1,32 @@
+# ==============================================================================
+# BIBLIOTHÈQUE STANDARD ASTRO-Q°ODE : CYCLES TEMPORELS (SOLEIL, LUNE, TERRE)
+# Implémente les constantes de `.QUBIT.qubit.LOGIQUE.logique` (.DIMENSION.temps.)
+# ==============================================================================
+
+SET CLOCK_DX_SOLEIL  = 50027.8359375
+SET CLOCK_DY_LUNE    = 46993.5
+SET CLOCK_DZ_TERRE   = 135000000.0
+SET CLOCK_DT_KERNEL  = 135097021.3359375
+
+MECQUOIS {
+    omega_H = 8766 i                        # Heures de l'année solaire (Soleil dx)
+    omega_L = 8496 i                        # Heures de l'année lunaire (Lune dy)
+    omega_M = 8640 i                        # Heures de l'année terrestre conventionnelle (Terre dz)
+    omega_K = [dx U dy U dz]                # Fusion cumulative des 3 cycles dans l'horloge Kernel dt
+}
+
+MEDINOIS {
+    alpha_a = +4 i
+    alpha_b = +5 i
+
+    # Synchronisation sur l'horloge fusionnée omega_K
+    (alpha_a ⊃ omega_K) ??
+    {
+        alpha_s = alpha_a ∪ alpha_b
+        afficher(omega_K)
+        afficher(alpha_s)
+    }
+    ¿ {
+        alpha_s = 0 : HÉLIUM
+    }
+}

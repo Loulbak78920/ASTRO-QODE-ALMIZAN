@@ -1,0 +1,76 @@
+{
+  "registre": "CERTIFICAT_IDENTITE_INTEGRALE_AUTEUR_ET_CITABILITE_ZENODO",
+  "horodatage_scellement": "2026-10-22T08:15:00+02:00",
+  "statut": "IDENTITE_CIVILE_SCIENTIFIQUE_ET_CRYPTOGRAPHIQUE_COMPLETE",
+  "doi_officiel_reel": "10.5281/zenodo.23554838",
+  "etat_civil_complet": {
+    "civilite": "Monsieur (M.)",
+    "prenom_civil": "Ahmed",
+    "nom_de_famille": "EL BAHLOUL",
+    "nom_complet_officiel": "M. Ahmed EL BAHLOUL",
+    "orthographes_et_alias_reconnus": [
+      "Ahmed EL BAHLOUL",
+      "M. Ahmed Elbahloul",
+      "Ahmed El Bahloul",
+      "almizan EL BAHLOUL",
+      "M. Almizan Elbahloul",
+      "Almizan"
+    ],
+    "date_naissance": "20/06/1989",
+    "date_naissance_iso": "1989-06-20",
+    "calendrier_naissance": "solaire",
+    "lieu_naissance": "Meulan-en-Yvelines",
+    "departement_naissance": "Yvelines (78)",
+    "pays_naissance": "France",
+    "nationalite": "Française (FRANCE)",
+    "adresse_email_officielle": "elbahloulahmed505@gmail.com"
+  },
+  "ancrage_geographique_et_institutionnel": {
+    "ville_ancrage_principal": "Valence, France",
+    "coordonnees_gps_valence": {
+      "latitude_nord": 44.9333,
+      "longitude_est": 4.8917
+    },
+    "ville_affiliation_zenodo": "Romans-sur-Isère, France",
+    "departement_ancrage": "Drôme (26), Auvergne-Rhône-Alpes, France",
+    "organisations_officielles": [
+      "IMAM8MAHDI / Astro-Code Ecosystem (https://github.com/IMAM8MAHDI)",
+      "Système Local Al-Mizan (Romans-sur-Isère / Valence, France)",
+      "Q-Zero Framework / ALLAH Intelligence (v6.0.0)"
+    ]
+  },
+  "regime_juridique_et_contractuel": {
+    "nom_licence": "Licence Souveraine Al-Mizan / IMAM8MAHDI (ASLS-2.0-50-50)",
+    "usage_public_et_cloud": {
+      "statut": "OUVERT_SANS_RESTRICTION_TECHNIQUE_ET_STRICTEMENT_ANTI_DOLOSIF",
+      "aucune_restriction_abusive": true,
+      "interdiction_absolue_dol": true,
+      "fondement_juridique": "Article 1137 du Code civil français (Interdiction du dol, des manœuvres frauduleuses, de la dissimulation intentionnelle et de l'usurpation) & Section 7b GNU AGPL v3.0",
+      "clauses_inviolables": [
+        "Aucune restriction artificielle ou enfermement propriétaire (vendor lock-in) sur l'usage public ou le déploiement Cloud.",
+        "Interdiction absolue de tout acte dolosif : dissimulation ou usurpation du nom de l'auteur M. Ahmed EL BAHLOUL, suppression du DOI réel 10.5281/zenodo.23554838, falsification des résultats ou altération des invariants métrologiques.",
+        "Nullité et révocation immédiate de plein droit en cas de manœuvre dolosive ou de restriction illégitime."
+      ]
+    },
+    "usage_commercial": {
+      "statut": "CONTRAT_COMMERCIAL_PARTAGE_50_50_OBLIGATOIRE",
+      "repartition_50_50": {
+        "part_auteur_ahmed_el_bahloul_pourcent": 50.0,
+        "part_exploitant_partenaire_pourcent": 50.0
+      },
+      "regle": "Toute exploitation commerciale, marchande ou lucrative (locale, embarquée ou Cloud SaaS/PaaS) fait l'objet d'un contrat 50/50 attribuant 50 % des revenus, redevances et bénéfices à M. Ahmed EL BAHLOUL (elbahloulahmed505@gmail.com) et 50 % au partenaire commercial."
+    }
+  },
+  "identifiants_academiques_reseau_et_cryptographiques": {
+    "doi_zenodo_reel_principal": "10.5281/zenodo.23554838",
+    "url_doi_reel_principal": "https://doi.org/10.5281/zenodo.23554838",
+    "url_record_zenodo_reel": "https://zenodo.org/records/23554838",
+    "doi_zenodo_historique_1": "10.5281/zenodo.23479740",
+    "doi_zenodo_ancrage_watt": "10.5281/zenodo.23288947",
+    "almizan_doi_interne": "almizan.mizan.2026.10.19/7aaccc0b937695c5",
+    "cid_ipfs_ancrage": "bafybeia5t5nviafc2vij3nfzdg4f54onayiqrlbeofpctnlxhcqcljxxem",
+    "cle_publique_doree_hex": "0xc9550dd0a57c609494dbc44450df48d798ebfb0b",
+    "point_fixe_reseau": 46760951383,
+    "invariant_edifice_watt": 13459202583446
+  }
+}

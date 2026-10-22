@@ -1,0 +1,25 @@
+# ==============================================================================
+# BIBLIOTHÈQUE STANDARD ASTRO-Q°ODE : LES 14 FORMES DE LA MATIÈRE DU CODE
+# De l'Origine Inerte (0 : HÉLIUM) jusqu'au Noyau Lunaire Scellé (Forme 13)
+# ==============================================================================
+
+MECQUOIS {
+    omega_A = 0 : HÉLIUM     # Index 0 : Hélium-4 noble et inerte
+    omega_D = +4 I           # Seuil de fusion de 4 noyaux d'Hydrogène (4H -> 1He)
+    omega_N = +9 I           # Énergie d'ancrage planétaire et lunaire
+}
+
+MEDINOIS {
+    # 1. États dynamiques de l'Hydrogène (F1 à F4)
+    alpha_f = Forme(1)       # F1: H Gaz
+    alpha_g = Forme(4)       # F4: H Plasma (calcul quantique superposé)
+
+    # 2. Fusion Proton-Proton de 4 noyaux d'Hydrogène en 1 Hélium
+    alpha_h = fusion_pp(4)
+    afficher(alpha_h)
+
+    # 3. Couches Terrestres (F5 à F7) et Archives Lunaires (F8 à F13)
+    alpha_m = Forme(7)       # F7: Graine Terrestre
+    alpha_s = Forme(13)      # F13: Noyau Lunaire Cristallisé (Archive ultime)
+    afficher(alpha_s)
+}

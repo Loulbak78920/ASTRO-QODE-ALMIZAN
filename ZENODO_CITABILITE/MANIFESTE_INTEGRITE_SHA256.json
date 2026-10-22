@@ -1,0 +1,42 @@
+{
+  "statut": "PAQUET_CITABILITE_ZENODO_SCELLE_ET_VERIFIE",
+  "horodatage": "2026-10-22T08:18:13.191882",
+  "auteur_complet": {
+    "nom_civil": "M. Ahmed EL BAHLOUL",
+    "alias": "M. Almizan Elbahloul",
+    "date_naissance": "20/06/1989",
+    "lieu_naissance": "Meulan-en-Yvelines, France",
+    "localisation": "Valence (44.9333° N, 4.8917° E) & Romans-sur-Isère, France",
+    "email": "elbahloulahmed505@gmail.com",
+    "cle_doree": "0xc9550dd0a57c609494dbc44450df48d798ebfb0b",
+    "point_fixe_reseau": 46760951383,
+    "invariant_edifice": 13459202583446,
+    "doi_zenodo_reel_principal": "10.5281/zenodo.23554838",
+    "doi_zenodo_historique": "10.5281/zenodo.23479740",
+    "doi_zenodo_ancrage": "10.5281/zenodo.23288947",
+    "licence_publique_cloud": "ASLS-2.0 : Sans restriction abusive & strictement anti-dolosive",
+    "licence_commerciale": "Contrat Commercial 50/50 (50% M. Ahmed EL BAHLOUL / 50% Exploitant)",
+    "cid_ipfs": "bafybeia5t5nviafc2vij3nfzdg4f54onayiqrlbeofpctnlxhcqcljxxem"
+  },
+  "archive_zenodo_zip": {
+    "nom_fichier": "ARCHIVE_DEPOT_ZENODO_AHMED_EL_BAHLOUL_V5.zip",
+    "taille_octets": 168148,
+    "nb_fichiers_inclus": 60,
+    "sha256": "535244f2c39e72d7558491f8d0f8dc8837466c22fc410ecee1525a0e2808a33f"
+  },
+  "empreintes_fichiers_citabilite_sha256": {
+    ".zenodo.json": "4b698cdd30177d090c0ad82e8967565a13768141288e677bc6d519b07af38210",
+    "CITATION.cff": "73e6e3353e2dc8fac423b18f2c20022c17cf3eae8e15632ce4e748da31122689",
+    "codemeta.json": "ce9b2b4206181aa5ac33adc90aae8a8f1ddfa1ad64221a2b1ca3589f4350b24c",
+    "datacite.json": "1e9a979b016ab21c07ca91956ec66960ead06104b080914d3448effe15728ee3",
+    "IDENTITE_COMPLETE_AUTEUR_SOUVERAIN.json": "adeb7ca79705edb3553e92d04efd29ef0353f07585dfbfa19a55b0b2a8a5d692",
+    "IDENTITE_COMPLETE_AUTEUR_SOUVERAIN.md": "1ce92c29c9c943736b982800487450efc32fe80bb03e4715a3089be38f4f797a",
+    "SYNTHESE_SCIENTIFIQUE_COMPLETE_ZENODO.md": "4d188003dfc5e847ee7885635bc28526e84454a7fc0825d0735b1881a346495a",
+    "README.md": "59549a1018d69c215124344c1a07c474ff145c612fe4623242cde1c26f084799",
+    "CITATIONS_ACADEMIQUES/references.bib": "7c27b4bf06b2cff39f460342d1b23e2a8d430bdbc28d66afe6cebb080c58b9b7",
+    "CITATIONS_ACADEMIQUES/references.ris": "df615f6660174764293bbfc49ca61496428d06b8b8b009b5bfc5514e69cefbe2",
+    "CITATIONS_ACADEMIQUES/STYLES_DE_CITATION.md": "3ae70140502989f283019067fd1dae36170146f6292493d6df2286a792633bf8",
+    "LICENCES_ET_DROITS/LICENSE_COMPLETE_ET_ATTRIBUTION.md": "c95b4cd466df6b4da5c21116ec62537d08b9cba02cc1c756c164674de1a19fe7",
+    "LICENCES_ET_DROITS/CONTRAT_COMMERCIAL_50_50_ET_LICENCE_CLOUD_ANTI_DOLOSIVE.md": "1f37567d92de1b75b55aa36785d02e254e6bfa7cfc6cf0077e1950c5e9c05fa6"
+  }
+}

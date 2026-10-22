@@ -1,0 +1,58 @@
+# ==============================================================================
+# BIBLIOTHÈQUE STANDARD ASTRO-Q°ODE : MATRICE FONDATRICE DE L'UNISSON (V5.0)
+# CALCUL DE LA VALEUR DE L'OR (Au) ET DE L'ARGENT (Ag)
+# ==============================================================================
+# Ce programme scelle la Matrice Fondatrice de l'Unisson (4x4) et calcule la
+# valeur exacte de l'Or (Au, Z=79, Soleil dx, φ⁻¹=0.618034, Mithqal 4.25g, Nisab 85g)
+# et de l'Argent (Ag, Z=47, Lune dy, δ_S⁻¹=0.414214, Dirham 2.975g, Nisab 595g).
+# ==============================================================================
+
+SET CLOCK_DX_SOLEIL = 50027.8359375
+SET CLOCK_DY_LUNE   = 46993.5
+SET CLOCK_DZ_TERRE  = 135000000
+SET CLOCK_DT_KERNEL = 135097021.3359375
+
+MECQUOIS {
+    # Constantes immuables du Pôle Or (Au) et du Pôle Argent (Ag)
+    omega_Z_OR_AU           = 79 I
+    omega_Z_ARGENT_AG       = -47 i
+    omega_NISAB_OR_G        = 85.0 I
+    omega_NISAB_ARGENT_G    = -595.0 i
+    omega_CONJUGUE_OR       = 0.618034 I
+    omega_CONJUGUE_ARGENT   = -0.414214 i
+    omega_MIZAN_PLAFOND     = 0.6225 I
+    omega_MONAD_SOUL        = [dx U dy U dz]
+}
+
+MEDINOIS {
+    # 1. Génération de la Matrice Fondatrice de l'Unisson (4x4) sur l'étalon Nisab (85g Or / 595g Argent)
+    alpha_matrice_unisson = matrice_unisson(85.0);
+
+    # 2. Calcul de la Valeur de l'Or (85g = 20 Mithqal/Dinars) et de l'Argent (595g = 200 Dirhams)
+    alpha_valeur_or_nisab     = valeur_or(85.0);
+    alpha_valeur_argent_nisab = valeur_argent(595.0);
+
+    # 3. Calcul unitaire pour 1 Mithqal d'Or (4.25g) et 1 Dirham d'Argent (2.975g)
+    alpha_un_mithqal_or    = valeur_or(4.25);
+    alpha_un_dirham_argent = valeur_argent(2.975);
+
+    # 4. Vérification de l'Unisson Harmonique Or ⊕ Argent sous la bride Al-Mizan (0.6225)
+    alpha_centre_unisson = (0.618034 I + 0.414214 I) / 2;
+    alpha_monade_unisson = Monad(alpha_centre_unisson);
+
+    ( alpha_monade_unisson >>= (lambda point_omega {
+        (point_omega ⊃ omega_MIZAN_PLAFOND) ?? {
+            return Monad(point_omega);
+        } ¿ {
+            return 0 : HÉLIUM;
+        }
+    }) ) ??;
+
+    (( alpha_monade_unisson ));
+
+    # 5. Scellement cryptographique SHA-256 de la Matrice Fondatrice de l'Unisson
+    alpha_sceau_unisson = sceller_sha256("sceau_matrice_unisson_or_argent_v5");
+
+    afficher("Matrice Fondatrice de l'Unisson (4x4) : Valeur de l'Or (Au) et de l'Argent (Ag) calculée et scellée.");
+    return 0 : HÉLIUM;
+}

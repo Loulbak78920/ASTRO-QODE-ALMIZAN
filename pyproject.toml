@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "imam8mahdi-astro-qode-almizan"
+version = "5.0.0"
+description = "IMAM8MAHDI × Al-Mizan × ASTRO-Q°ODE (V1.0–V5.0) : Kernel Temporel (dt), 27 Formes Fractales (F0..F26), Compilateur Quantique OpenQASM 2.0 (:5030) et Matrice Fondatrice de l'Unisson (4×4) Or & Argent"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "ASLS-2.0-50/50 (Public & Cloud Anti-Dolosive / Commercial 50-50 Contract)"}
+authors = [
+  {name = "M. Ahmed EL BAHLOUL (alias M. Almizan Elbahloul)", email = "elbahloulahmed505@gmail.com"}
+]
+keywords = [
+  "10.5281/zenodo.23554838",
+  "Ahmed EL BAHLOUL",
+  "IMAM8MAHDI",
+  "Al-Mizan",
+  "ASTRO-Q°ODE",
+  "OpenQASM 2.0",
+  "27 Formes",
+  "Matrice Fondatrice Unisson Or Argent"
+]
+
+[project.urls]
+Homepage = "https://github.com/IMAM8MAHDI"
+Repository = "https://github.com/IMAM8MAHDI"
+DOI = "https://doi.org/10.5281/zenodo.23554838"
+Zenodo = "https://zenodo.org/records/23554838"
+
+[project.scripts]
+astro-qode = "astro_qode_cli:main"
+
+[tool.setuptools.packages.find]
+include = ["lang*", "bibliotheques*", "outils*", "tests*"]

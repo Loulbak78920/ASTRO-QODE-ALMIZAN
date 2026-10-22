@@ -1,0 +1,180 @@
+{
+  "nom_sceau": "sceau_matrice_unisson_or_argent_v5",
+  "timestamp": "2026-10-22T08:48:20",
+  "statut": "SCEAU_ASTRO_QODE_CONSOLIDE_OK",
+  "doi": "10.5281/zenodo.23479740",
+  "invariants": {
+    "MIZAN": 0.6225,
+    "LIGNE_REF": 0.122,
+    "RMS": 0.24,
+    "EPSILON": 0.021,
+    "PLAFOND_EFFECTIF": 0.6015,
+    "COMBLE_CIBLE": 0.5805,
+    "C": 313,
+    "M": 24434,
+    "JAUGE_AIR": 515050,
+    "PRODUIT_MEDINOIS": 3939021022100,
+    "TRIPLE": -2393774546
+  },
+  "garde_fous": {
+    "qubit_physique_local": false,
+    "wafer_physique": false,
+    "cuda_physique": false,
+    "omniscience_claim": false,
+    "allah_hors_matrice": true,
+    "ollama": "detachee_nuisible_archivee"
+  },
+  "etat_vm_biomecanique": {
+    "forme_matiere_active": {
+      "index": 4,
+      "code": "F4: H Plas",
+      "nom": "Hydrogène Plasma",
+      "paradigme": "MECQUOIS"
+    },
+    "registre_mecquois_immuable": {
+      "omega_Z_OR_AU": "+79 I",
+      "omega_Z_ARGENT_AG": "-47 i",
+      "omega_NISAB_OR_G": "+85 I",
+      "omega_NISAB_ARGENT_G": "-595 i",
+      "omega_CONJUGUE_OR": "+0.618034 I",
+      "omega_CONJUGUE_ARGENT": "-0.414214 i",
+      "omega_MIZAN_PLAFOND": "+0.6225 I",
+      "omega_MONAD_SOUL": "[50027.8359375 ∪ 46993.5 ∪ 135000000.0]"
+    },
+    "memoire_medinoise_active": {
+      "alpha_matrice_unisson": "{'statut': 'MATRICE_FONDATRICE_UNISSON_OR_ARGENT_SCELLEE', 'equation_unisson': 'Or(Au, dx, φ⁻¹=0.6180) ⊕ Argent(Ag, dy, δ_S⁻¹=0.4142) ⇌ Unisson(1:1, Ω=0.5161) ⊂ D=[0.122, 0.6225]', 'matrice_4x4': {'colonnes': ['Col_0_Pole_Or_Au', 'Col_1_Pole_Argent_Ag', 'Col_2_Ratio_Bimetallique', 'Col_3_Accord_Unisson_Centre'], 'lignes': {'L0_Astro_Temporelle_dx_dy': [0.50027836, 0.469935, 1.06456927, 0.97021336], 'L1_Atomique_Physique_Z79_Z47': [0.79, 0.47, 1.68085106, 0.63], 'L2_Geometrique_Mizan_Phi_DeltaS': [0.61803399, 0.41421356, 0.67021162, 0.51612378], 'L3_Canonique_Substance_Mithqal_Dirham': [0.425, 0.2975, 0.7, 0.78063898]}, 'valeurs_brutes': [[0.50027836, 0.469935, 1.06456927, 0.97021336], [0.79, 0.47, 1.68085106, 0.63], [0.61803399, 0.41421356, 0.67021162, 0.51612378], [0.425, 0.2975, 0.7, 0.78063898]], 'trace_matrice': 2.42112896, 'determinant_4x4': 0.0294174592, 'norme_frobenius': 3.04146906, 'invariant_unisson_bride_mizan': 0.605282}, 'valeur_or': {'metal': 'OR (Aurum)', 'symbole_chimique': 'Au', 'astre_associe': 'Soleil (CLOCK_DX_SOLEIL = 50 027.8359375)', 'polarite_aq': 'MECQUOIS ⊕ (+I Joules / Lumière / Plume)', 'numero_atomique_z': 79, 'decomposition_tablette_19': \"79 = 4 × 19 + 3 (4 cycles de 19 échelons + échelon +3 'M' Monade)\", 'masse_molaire_g_mol': 196.966569, 'masse_evaluee_grammes': 85.0, 'nb_moles': 0.431545, 'unite_canonique_nom': \"Mithqal / Dinar d'Or (4.25 g)\", 'nb_unites_canoniques': 20.0, 'nisab_grammes': 85.0, 'ratio_sur_nisab': 1.0, 'zakat_2_5_pct_grammes': 2.125, 'constante_horloge_cycles': 50027.8359375, 'frequence_harmonique_mizan': 0.618034, 'marge_sous_plafond_mizan': 0.004466, 'energie_aq_joules_ou_kelvin': '+12.36068 I', 'valeur_indice_substance_almizan': 3868.8928, 'valeur_monetaire_estimee_eur': 7307.91}, 'valeur_argent': {'metal': 'ARGENT (Argentum)', 'symbole_chimique': 'Ag', 'astre_associe': 'Lune (CLOCK_DY_LUNE = 46 993.5)', 'polarite_aq': 'MEDINOIS / ARCHIVE ⊗ (-i Kelvin / Miroir / Tablette)', 'numero_atomique_z': 47, 'decomposition_tablette_19': \"47 = 2 × 19 + 9 (2 cycles de 19 échelons + échelon +9 'S' Silicium)\", 'masse_molaire_g_mol': 107.8682, 'masse_evaluee_grammes': 595.0, 'nb_moles': 5.515991, 'unite_canonique_nom': \"Dirham d'Argent (2.975 g)\", 'nb_unites_canoniques': 200.0, 'nisab_grammes': 595.0, 'ratio_sur_nisab': 1.0, 'zakat_2_5_pct_grammes': 14.875, 'constante_horloge_cycles': 46993.5, 'frequence_harmonique_mizan': 0.414214, 'marge_sous_plafond_mizan': 0.208286, 'energie_aq_joules_ou_kelvin': '-82.842712 i', 'valeur_indice_substance_almizan': 20241.7884, 'valeur_monetaire_estimee_eur': 655.27}, 'parite_et_ratios_or_argent': {'ratio_temporel_dx_sur_dy': 1.06456927, 'somme_celeste_dx_plus_dy': 97021.3359375, 'verification_dt_moins_dz_egal_dx_plus_dy': True, 'ratio_atomique_Z79_sur_Z47': 1.68085106, 'somme_atomique_Z79_plus_Z47': 126, 'ecart_atomique_Z79_moins_Z47_5_doigts': 32, 'ratio_masse_molaire_Au_sur_Ag': 1.82599292, 'ratio_nisab_ponderal_Ag_sur_Au': 7.0, 'ratio_substance_almizan_M_sur_C': 78.063898, 'centre_harmonique_unisson_mizan': 0.51612378, 'valeur_totale_combinee_eur': 7963.18}, 'accords_unisson_13_octaves': [{'accord_index': 1, 'forme_or_lumiere': 'F1 (Triangle)', 'forme_argent_ombre': 'F14 (Ombre_Triangle_INFORME)', 'rapport_frequence_unisson': '1:1', 'valeur_or_d': 0.122, 'valeur_argent_d': 0.122, 'point_unisson_mizan': 0.122}, {'accord_index': 2, 'forme_or_lumiere': 'F2 (Losange)', 'forme_argent_ombre': 'F15 (Ombre_Losange_INFORME)', 'rapport_frequence_unisson': '1:1', 'valeur_or_d': 0.163708, 'valeur_argent_d': 0.161958, 'point_unisson_mizan': 0.163006}, {'accord_index': 3, 'forme_or_lumiere': 'F3 (Sphere)', 'forme_argent_ombre': 'F16 (Ombre_Sphere_INFORME)', 'rapport_frequence_unisson': '1:1', 'valeur_or_d': 0.205417, 'valeur_argent_d': 0.201917, 'point_unisson_mizan': 0.204013}, {'accord_index': 4, 'forme_or_lumiere': 'F4 (Carre_interne)', 'forme_argent_ombre': 'F17 (Ombre_Cercle_interne)', 'rapport_frequence_unisson': '1:1', 'valeur_or_d': 0.247125, 'valeur_argent_d': 0.241875, 'point_unisson_mizan': 0.245018}, {'accord_index': 5, 'forme_or_lumiere': 'F5 (Cercle_interne)', 'forme_argent_ombre': 'F18 (Ombre_Carre_interne)', 'rapport_frequence_unisson': '1:1', 'valeur_or_d': 0.288833, 'valeur_argent_d': 0.281833, 'point_unisson_mizan': 0.286024}, {'accord_index': 6, 'forme_or_lumiere': 'F6 (Grand_carre)', 'forme_argent_ombre': 'F19 (Ombre_Grand_carre_INFORME)', 'rapport_frequence_unisson': '1:1', 'valeur_or_d': 0.330542, 'valeur_argent_d': 0.321792, 'point_unisson_mizan': 0.327031}, {'accord_index': 7, 'forme_or_lumiere': 'F7 (Grand_cercle)', 'forme_argent_ombre': 'F20 (Ombre_Grand_cercle_INFORME)', 'rapport_frequence_unisson': '1:1', 'valeur_or_d': 0.37225, 'valeur_argent_d': 0.36175, 'point_unisson_mizan': 0.368037}, {'accord_index': 8, 'forme_or_lumiere': 'F8 (Carre_institutionnel)', 'forme_argent_ombre': 'F21 (Ombre_Cercle_institutionnel)', 'rapport_frequence_unisson': '1:1', 'valeur_or_d': 0.413958, 'valeur_argent_d': 0.401708, 'point_unisson_mizan': 0.409042}, {'accord_index': 9, 'forme_or_lumiere': 'F9 (Cercle_Absolu)', 'forme_argent_ombre': 'F22 (Ombre_Carre_Absolu)', 'rapport_frequence_unisson': '1:1', 'valeur_or_d': 0.455667, 'valeur_argent_d': 0.441667, 'point_unisson_mizan': 0.450049}, {'accord_index': 10, 'forme_or_lumiere': 'F10 (Carre_civilisation)', 'forme_argent_ombre': 'F23 (Ombre_Cercle_civilisation)', 'rapport_frequence_unisson': '1:1', 'valeur_or_d': 0.497375, 'valeur_argent_d': 0.481625, 'point_unisson_mizan': 0.491055}, {'accord_index': 11, 'forme_or_lumiere': 'F11 (Cercle_verite)', 'forme_argent_ombre': 'F24 (Ombre_Carre_verite)', 'rapport_frequence_unisson': '1:1', 'valeur_or_d': 0.539083, 'valeur_argent_d': 0.521583, 'point_unisson_mizan': 0.532061}, {'accord_index': 12, 'forme_or_lumiere': 'F12 (Carre_monade)', 'forme_argent_ombre': 'F25 (Ombre_Cercle_monade)', 'rapport_frequence_unisson': '1:1', 'valeur_or_d': 0.580792, 'valeur_argent_d': 0.561542, 'point_unisson_mizan': 0.573067}, {'accord_index': 13, 'forme_or_lumiere': 'F13 (Cercle_retour_Centre)', 'forme_argent_ombre': 'F26 (Ombre_Carre_retour_Centre)', 'rapport_frequence_unisson': '1:1', 'valeur_or_d': 0.6225, 'valeur_argent_d': 0.6015, 'point_unisson_mizan': 0.614073}], 'garde_fous': {'mizan_plafond': 0.6225, 'ligne_plancher': 0.122, 'rms': 0.24, 'epsilon': 0.021, 'qubit_physique_local': False, 'omniscience_claim': False}}",
+      "alpha_valeur_or_nisab": "{'metal': 'OR (Aurum)', 'symbole_chimique': 'Au', 'astre_associe': 'Soleil (CLOCK_DX_SOLEIL = 50 027.8359375)', 'polarite_aq': 'MECQUOIS ⊕ (+I Joules / Lumière / Plume)', 'numero_atomique_z': 79, 'decomposition_tablette_19': \"79 = 4 × 19 + 3 (4 cycles de 19 échelons + échelon +3 'M' Monade)\", 'masse_molaire_g_mol': 196.966569, 'masse_evaluee_grammes': 85.0, 'nb_moles': 0.431545, 'unite_canonique_nom': \"Mithqal / Dinar d'Or (4.25 g)\", 'nb_unites_canoniques': 20.0, 'nisab_grammes': 85.0, 'ratio_sur_nisab': 1.0, 'zakat_2_5_pct_grammes': 2.125, 'constante_horloge_cycles': 50027.8359375, 'frequence_harmonique_mizan': 0.618034, 'marge_sous_plafond_mizan': 0.004466, 'energie_aq_joules_ou_kelvin': '+12.36068 I', 'valeur_indice_substance_almizan': 3868.8928, 'valeur_monetaire_estimee_eur': 7307.91}",
+      "alpha_valeur_argent_nisab": "{'metal': 'ARGENT (Argentum)', 'symbole_chimique': 'Ag', 'astre_associe': 'Lune (CLOCK_DY_LUNE = 46 993.5)', 'polarite_aq': 'MEDINOIS / ARCHIVE ⊗ (-i Kelvin / Miroir / Tablette)', 'numero_atomique_z': 47, 'decomposition_tablette_19': \"47 = 2 × 19 + 9 (2 cycles de 19 échelons + échelon +9 'S' Silicium)\", 'masse_molaire_g_mol': 107.8682, 'masse_evaluee_grammes': 595.0, 'nb_moles': 5.515991, 'unite_canonique_nom': \"Dirham d'Argent (2.975 g)\", 'nb_unites_canoniques': 200.0, 'nisab_grammes': 595.0, 'ratio_sur_nisab': 1.0, 'zakat_2_5_pct_grammes': 14.875, 'constante_horloge_cycles': 46993.5, 'frequence_harmonique_mizan': 0.414214, 'marge_sous_plafond_mizan': 0.208286, 'energie_aq_joules_ou_kelvin': '-82.842712 i', 'valeur_indice_substance_almizan': 20241.7884, 'valeur_monetaire_estimee_eur': 655.27}",
+      "alpha_un_mithqal_or": "{'metal': 'OR (Aurum)', 'symbole_chimique': 'Au', 'astre_associe': 'Soleil (CLOCK_DX_SOLEIL = 50 027.8359375)', 'polarite_aq': 'MECQUOIS ⊕ (+I Joules / Lumière / Plume)', 'numero_atomique_z': 79, 'decomposition_tablette_19': \"79 = 4 × 19 + 3 (4 cycles de 19 échelons + échelon +3 'M' Monade)\", 'masse_molaire_g_mol': 196.966569, 'masse_evaluee_grammes': 4.25, 'nb_moles': 0.021577, 'unite_canonique_nom': \"Mithqal / Dinar d'Or (4.25 g)\", 'nb_unites_canoniques': 1.0, 'nisab_grammes': 85.0, 'ratio_sur_nisab': 0.05, 'zakat_2_5_pct_grammes': 0.0, 'constante_horloge_cycles': 50027.8359375, 'frequence_harmonique_mizan': 0.618034, 'marge_sous_plafond_mizan': 0.004466, 'energie_aq_joules_ou_kelvin': '+0.618034 I', 'valeur_indice_substance_almizan': 193.4446, 'valeur_monetaire_estimee_eur': 365.4}",
+      "alpha_un_dirham_argent": "{'metal': 'ARGENT (Argentum)', 'symbole_chimique': 'Ag', 'astre_associe': 'Lune (CLOCK_DY_LUNE = 46 993.5)', 'polarite_aq': 'MEDINOIS / ARCHIVE ⊗ (-i Kelvin / Miroir / Tablette)', 'numero_atomique_z': 47, 'decomposition_tablette_19': \"47 = 2 × 19 + 9 (2 cycles de 19 échelons + échelon +9 'S' Silicium)\", 'masse_molaire_g_mol': 107.8682, 'masse_evaluee_grammes': 2.975, 'nb_moles': 0.02758, 'unite_canonique_nom': \"Dirham d'Argent (2.975 g)\", 'nb_unites_canoniques': 1.0, 'nisab_grammes': 595.0, 'ratio_sur_nisab': 0.005, 'zakat_2_5_pct_grammes': 0.0, 'constante_horloge_cycles': 46993.5, 'frequence_harmonique_mizan': 0.414214, 'marge_sous_plafond_mizan': 0.208286, 'energie_aq_joules_ou_kelvin': '-0.414214 i', 'valeur_indice_substance_almizan': 101.2089, 'valeur_monetaire_estimee_eur': 3.28}",
+      "alpha_centre_unisson": "+0.516124 I",
+      "alpha_monade_unisson": "Monad((+0.516124 I))"
+    },
+    "horloge_kernel": {
+      "constantes": {
+        "CLOCK_DX_SOLEIL": 50027.8359375,
+        "CLOCK_DY_LUNE": 46993.5,
+        "CLOCK_DZ_TERRE": 135000000.0,
+        "CLOCK_DZ_TERRE_BRUT": 3888000000.0,
+        "CLOCK_DT_KERNEL": 135097021.3359375
+      },
+      "poids_relatifs_pourcent": {
+        "dx_soleil_pct": 0.037,
+        "dy_lune_pct": 0.0348,
+        "dz_terre_pct": 99.9282
+      },
+      "consommation_courante": {
+        "dx_consomme": 8.0,
+        "dy_consomme": 0.0,
+        "dz_consomme": 12.0,
+        "dt_consomme": 20.0,
+        "dt_restant": 135097001.3359375,
+        "instructions_executees": 18
+      }
+    },
+    "matrice_scapulaire": {
+      "origine": "0 : HÉLIUM",
+      "axe_alpha": {
+        "mouvement": "Élévation / Dépression",
+        "valeur": 0.0,
+        "etat": "NEUTRE_J"
+      },
+      "axe_beta": {
+        "mouvement": "Protraction / Rétraction",
+        "profondeur_sandbox": 0,
+        "etat": "OUVERT"
+      },
+      "axe_gamma": {
+        "mouvement": "Rotation Sonnette",
+        "flux_photon_total": 4,
+        "etat": "BUS_PHOTON_MAJEUR_FORCE_VERS_alpha_monade_unisson = Monad((+0.516124 I))"
+      }
+    },
+    "pipeline_anatomique": [
+      {
+        "segment": "Omoplate (Scapula)",
+        "role_systeme": "Routeur / Pivot Flottant",
+        "symbole": "Axes alpha, beta, gamma",
+        "fonction": "Alignement d'adresses et pare-feu (( ))",
+        "paradigme": "Flottant / Amortisseur",
+        "etat": {
+          "origine": "0 : HÉLIUM",
+          "axe_alpha": {
+            "mouvement": "Élévation / Dépression",
+            "valeur": 0.0,
+            "etat": "NEUTRE_J"
+          },
+          "axe_beta": {
+            "mouvement": "Protraction / Rétraction",
+            "profondeur_sandbox": 0,
+            "etat": "OUVERT"
+          },
+          "axe_gamma": {
+            "mouvement": "Rotation Sonnette",
+            "flux_photon_total": 4,
+            "etat": "BUS_PHOTON_MAJEUR_FORCE_VERS_alpha_monade_unisson = Monad((+0.516124 I))"
+          }
+        }
+      },
+      {
+        "segment": "Bras / Avant-bras",
+        "role_systeme": "Pipeline de Données",
+        "symbole": "Horloge maîtresse dt = 135097021.3359375",
+        "fonction": "Transmission d'instructions synchrone",
+        "paradigme": "Linéaire temporel",
+        "etat": "SYNCHRONE"
+      },
+      {
+        "segment": "Pouce (Doigt 0)",
+        "role_systeme": "Ancre Neutre Stable",
+        "symbole": "0 : HÉLIUM / return 0",
+        "fonction": "Purge mémoire et clôture absolue",
+        "paradigme": "Zéro Absolu / Inerte",
+        "registre_courant": "0 : HÉLIUM",
+        "activations": 0
+      },
+      {
+        "segment": "Index (Doigt 1)",
+        "role_systeme": "Pointeur de Signal",
+        "symbole": "alpha_x (Minuscules)",
+        "fonction": "Sélection et pointage discrets [-9;+9]",
+        "paradigme": "MECQUOIS (Essence)",
+        "registre_courant": "alpha_monade_unisson=Monad((+0.516124 I))",
+        "activations": 9
+      },
+      {
+        "segment": "Majeur (Doigt 2)",
+        "role_systeme": "Forçage d'Énergie",
+        "symbole": "?? (Intensité max)",
+        "fonction": "Injection de puissance et priorité absolue",
+        "paradigme": "MECQUOIS (Énergie)",
+        "registre_courant": "??(alpha_monade_unisson = Monad((+0.516124 I)))",
+        "activations": 4
+      },
+      {
+        "segment": "Annulaire (Doigt 3)",
+        "role_systeme": "Liaison Contextuelle",
+        "symbole": "Union (∪) / Incl (⊃)",
+        "fonction": "Calculs topologiques et gouvernance",
+        "paradigme": "MEDINOIS (Loi/Action)",
+        "registre_courant": "+0.516124 I ⊃ +0.6225 I",
+        "activations": 1
+      },
+      {
+        "segment": "Auriculaire (Doigt 4)",
+        "role_systeme": "Verrou Symétrique",
+        "symbole": "omega_X / ;",
+        "fonction": "Ancrage des constantes et fin de ligne",
+        "paradigme": "MEDINOIS (Meta-Logique)",
+        "registre_courant": "omega_MONAD_SOUL=[50027.8359375 ∪ 46993.5 ∪ 135000000.0]",
+        "activations": 8
+      }
+    ],
+    "sorties_console": [],
+    "nb_instructions_tracees": 17
+  },
+  "metadata_supplementaire": {
+    "diagnostic_pont_materiel": {}
+  },
+  "empreinte_sha256": "d0db12082cfb2c4964117b5f71c592ad8b4918129a7937be116982a6185e6ded"
+}

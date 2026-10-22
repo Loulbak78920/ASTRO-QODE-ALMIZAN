@@ -1,0 +1,72 @@
+{
+  "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
+  "@type": "SoftwareSourceCode",
+  "identifier": "https://doi.org/10.5281/zenodo.23554838",
+  "name": "IMAM8MAHDI × Al-Mizan × ASTRO-Q°ODE_SYSTEME (V1.0–V5.0)",
+  "version": "5.0.0",
+  "dateCreated": "2026-10-19",
+  "datePublished": "2026-10-22",
+  "dateModified": "2026-10-22",
+  "programmingLanguage": [
+    "ASTRO-Q°ODE (.aq)",
+    "Python 3.14",
+    "OpenQASM 2.0"
+  ],
+  "operatingSystem": [
+    "Windows",
+    "Linux",
+    "macOS"
+  ],
+  "codeRepository": "https://github.com/IMAM8MAHDI",
+  "license": "https://doi.org/10.5281/zenodo.23554838",
+  "conditionsOfAccess": "Licence Publique & Cloud sans restriction abusive et strictement anti-dolosive. Exploitation commerciale soumise à un Contrat 50/50 avec l'auteur M. Ahmed EL BAHLOUL.",
+  "author": [
+    {
+      "@type": "Person",
+      "givenName": "Ahmed",
+      "familyName": "EL BAHLOUL",
+      "alternateName": [
+        "M. Ahmed Elbahloul",
+        "Ahmed El Bahloul",
+        "M. Almizan Elbahloul",
+        "almizan EL BAHLOUL"
+      ],
+      "birthDate": "1989-06-20",
+      "birthPlace": {
+        "@type": "Place",
+        "name": "Meulan-en-Yvelines, France"
+      },
+      "nationality": {
+        "@type": "Country",
+        "name": "France"
+      },
+      "email": "elbahloulahmed505@gmail.com",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "IMAM8MAHDI / Astro-Code Ecosystem & Système Al-Mizan (Valence & Romans-sur-Isère, France)",
+        "url": "https://github.com/IMAM8MAHDI"
+      }
+    }
+  ],
+  "SameAs": [
+    "https://doi.org/10.5281/zenodo.23554838",
+    "https://zenodo.org/records/23554838",
+    "https://doi.org/10.5281/zenodo.23479740",
+    "https://doi.org/10.5281/zenodo.23288947",
+    "https://github.com/IMAM8MAHDI"
+  ],
+  "keywords": [
+    "10.5281/zenodo.23554838",
+    "Ahmed EL BAHLOUL",
+    "IMAM8MAHDI",
+    "Al-Mizan",
+    "ASTRO-Q°ODE",
+    "Quantum Computing Emulation",
+    "OpenQASM 2.0",
+    "27 Fractal Forms",
+    "Unison Founding Matrix Gold Silver",
+    "Anti-Dolosive Public Cloud License",
+    "50/50 Commercial Contract"
+  ],
+  "description": "Architecture logicielle, mathématique, physique et métrologique complète unifiant IMAM8MAHDI et Al-Mizan (V1.0–V5.0) par M. Ahmed EL BAHLOUL (né le 20/06/1989 à Meulan-en-Yvelines, France). DOI Réel : 10.5281/zenodo.23554838. Licence Publique & Cloud sans restriction et anti-dolosive ; contrat commercial 50/50."
+}

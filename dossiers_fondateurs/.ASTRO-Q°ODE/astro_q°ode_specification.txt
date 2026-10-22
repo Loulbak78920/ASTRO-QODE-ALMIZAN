@@ -1,0 +1,90 @@
+# ==============================================================================
+# SPÉCIFICATION OFFICIELLE DU LANGAGE : ASTRO-CODE (V1.0)
+# Système Ésotérique et Quantique basé sur la Matrice Logique Complexe
+# Intégration des Constantes Astrologiques, Physiques, Mecquoises et Médinoises
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. CONSTANTES TEMPORELLES D'HORLOGE (KERNEL TICK RATES)
+# ------------------------------------------------------------------------------
+# Ces valeurs définissent le nombre maximal de cycles alloués par Namespace.
+SET CLOCK_DX_SOLEIL  = 50027.8359375
+SET CLOCK_DY_LUNE    = 46993.5
+SET CLOCK_DZ_TERRE   = 135000000.0
+SET CLOCK_DT_KERNEL  = 135097021.3359375 # Horloge centrale (Somme cumulative)
+
+# ------------------------------------------------------------------------------
+# 2. LES DEUX PARADIGMES FONCTIONNELS (NAMESPACES MAJEURS)
+# ------------------------------------------------------------------------------
+
+MECQUOIS {
+    # PARADIGME : Déclaratif / Ontologique / Essentiel
+    # RÔLE      : Définition de la foi du code, initialisation immuable.
+    # NIVEAUX   : Niveau 1 (Signal / Thermodynamique) & Niveau 2 (Énergie / Cinétique)
+    
+    TYPES [
+        THERMODYNAMIQUE : Entier dans [-9 ; +9] avec suffixe 'i' (Unité: Kelvin)
+        CINETIQUE       : Flottant mesurant le coût avec suffixe 'I' (Unité: Joules)
+        CONSTANTE_GLOBALE : Identifié par l'alphabet majuscule [A ; S] prefixé par 'omega_'
+    ]
+    
+    PROPRIÉTÉS [
+        IMMUABLE       : Toutes les structures déclarées ici ne peuvent être réécrites.
+        CONTEMPLATIF   : Aucun effet de bord ou calcul dynamique n'est autorisé.
+    ]
+}
+
+MEDINOIS {
+    # PARADIGME : Impératif / Législatif / Exécutif
+    # RÔLE      : Application des lois, gestion des relations et de l'action.
+    # NIVEAUX   : Niveau 3 (Relation / Contexte) & Niveau 4 (Méta / Symétrie)
+    
+    TYPES [
+        VARIABLE_LOCALE : Identifié par l'alphabet minuscule [a ; s] prefixé par 'alpha_'
+        STRUCTURE_LOI   : Blocs conditionnels régissant la vie de la mémoire vive.
+    ]
+    
+    OPERATEURS_NIVEAU_3 [
+        AND   : &&  # Logique de vérité pure
+        OR    : ||  # Logique de choix alternative
+        NOT   : !   # Inversion logique
+    ]
+    
+    OPERATEURS_NIVEAU_4 [
+        UNION : ∪  # Fusion de contextes ou d'ensembles
+        INCL  : ⊃  # Vérification de l'inclusion large (Gouvernance)
+        STRICT: ⊂  # Vérification de l'inclusion stricte
+    ]
+}
+
+# ------------------------------------------------------------------------------
+# 3. GRAMMAIRE TYPOGRAPHIQUE ET SÉCURITÉ
+# ------------------------------------------------------------------------------
+# Modificateurs d'intensité et d'isolement
+MODIFICATEUR_FORCE     : "??" # Doublement d'intensité (Affectation ou exécution impérative)
+CONTENEUR_SANDBOX      : "( ... )" # Isolation sémantique complète (Sécurité / Try-Catch)
+INVERSION_CULTURELLE   : "¿"  # Alternative d'état ou exception système
+
+# ==============================================================================
+# EXEMPLE DE SCRIPT VALIDE EN ASTRO-CODE
+# ==============================================================================
+MECQUOIS {
+    omega_A = +5 I     # Déclaration de la constante globale énergétique A (5 Joules)
+    omega_S = 8766 i   # Constante de temps du Soleil intégrée à l'ontologie
+}
+
+MEDINOIS {
+    alpha_c = -3 i     # Initialisation de la variable locale thermique c (-3 Kelvin)
+    
+    # Si la variable locale est incluse ou interagit avec la constante globale
+    (alpha_c ⊃ omega_A) ?? 
+    {
+        # Appliquer la loi d'Union (Mise à jour législative de l'état)
+        alpha_c = alpha_c ∪ +2 i
+    }
+    
+    # En cas d'exception non gérée, utiliser l'inversion culturelle
+    ¿ {
+        alpha_c = 0 i
+    }
+}

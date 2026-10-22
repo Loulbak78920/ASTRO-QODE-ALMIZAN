@@ -1,0 +1,33 @@
+# ==============================================================================
+# BIBLIOTHÈQUE STANDARD ASTRO-Q°ODE : PRÉLUDE ONTOLOGIQUE (V1.0 & V2.0)
+# Définit les constantes fondamentales MECQUOISES et les lois de base MEDINOISES
+# ==============================================================================
+
+SET CLOCK_DX_SOLEIL  = 50027.8359375
+SET CLOCK_DY_LUNE    = 46993.5
+SET CLOCK_DZ_TERRE   = 135000000.0
+SET CLOCK_DT_KERNEL  = 135097021.3359375
+
+MECQUOIS {
+    # Pôles extrêmes et point d'équilibre J (0 i) de la Tablette Alphabet [-9 ; +9]
+    omega_A = -9 I        # Pôle Sud Cinétique (-9 Joules)
+    omega_E = -5 I        # Palier Cinétique intermédiaire
+    omega_J = 0 i         # Point d'équilibre neutre J (0 Kelvin)
+    omega_O = +5 I        # Palier Énergétique positif (+5 Joules)
+    omega_S = +9 I        # Pôle Nord Cinétique (+9 Joules)
+}
+
+MEDINOIS {
+    alpha_c = -3 i        # Signal thermique local initial (-3 Kelvin)
+    alpha_j = 0 i         # Pointeur d'équilibre local
+
+    # Vérification de la gouvernance ontologique (Inclusion large ⊃)
+    (alpha_c ⊃ omega_O) ??
+    {
+        alpha_c = alpha_c ∪ +2 i
+        afficher(alpha_c)
+    }
+    ¿ {
+        alpha_c = 0 : HÉLIUM
+    }
+}

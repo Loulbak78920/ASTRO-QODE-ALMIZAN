@@ -1,0 +1,13 @@
+* text=auto eol=lf
+*.aq text eol=lf
+*.py text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.cff text eol=lf
+*.bib text eol=lf
+*.ris text eol=lf
+*.bat text eol=crlf
+*.pdf binary
+*.jpg binary
+*.png binary
+*.zip binary

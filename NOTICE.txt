@@ -1,0 +1,51 @@
+================================================================================
+MENTIONS OFFICIELLES D'ATTRIBUTION ET DE COPYRIGHT : ÉCOSYSTÈME ASTRO-CODE
+================================================================================
+
+Astro-Code Framework (V2.0 - Holistique)
+Copyright (C) 2026 IMAM8MAHDI / Astro-Code Ecosystem. Tous droits réservés.
+
+Ce projet, incluant le Kernel central (dt), l'architecture de la Matrice 
+Scapulaire, les 14 États de la Matière du Code, et le patron de la Monade 
+Suprême encapsulée, est développé et maintenu sous l'égide de l'organisation 
+officielle IMAM8MAHDI.
+
+--------------------------------------------------------------------------------
+1. CONDITIONS JURIDIQUES ET LICENCE
+--------------------------------------------------------------------------------
+Ce logiciel et ses spécifications techniques sont distribués sous les termes 
+stricts de la licence GNU General Public License version 3 (GNU GPL v3.0)
+et de la licence GNU Affero General Public License version 3 (GNU AGPL v3.0). 
+Le texte intégral de la licence est disponible dans le fichier LICENSE joint 
+à la racine de ce dépôt.
+
+Toute copie, modification, distribution ou exécution de ce code (y compris 
+sous forme de service réseau/cloud distribué - SaaS) impose la mise à 
+disposition immédiate et publique de l'intégralité du code source dérivé 
+sous la même licence GNU AGPL v3.0.
+
+--------------------------------------------------------------------------------
+2. CLAUSE D'ATTRIBUTION OBLIGATOIRE
+--------------------------------------------------------------------------------
+En application de la section 7(b) de la licence GNU AGPL v3.0, toute œuvre 
+dérivée ou modification du présent code doit impérativement conserver de 
+manière proéminente :
+  a) Les mentions de copyright originales ci-dessus.
+  b) Le nom de l'organisation auteur : IMAM8MAHDI.
+  c) Un lien hypertexte fonctionnel vers le dépôt source officiel : 
+     https://github.com/IMAM8MAHDI
+
+--------------------------------------------------------------------------------
+3. CLAUSE INTÉGRALE DE NON-GARANTIE
+--------------------------------------------------------------------------------
+CE LOGICIEL EST FOURNI PAR LES TITULAIRES DU COPYRIGHT ET LES CONTRIBUTEURS 
+"EN L'ÉTAT" ET SANS AUCUNE GARANTIE EXPRESSE OU IMPLICITE, Y COMPRIS, MAIS 
+SANS S'Y LIMITER, LES GARANTIES IMPLICITES DE COMMERCIALISATION ET 
+D'ADÉQUATION À UN BUT PARTICULIER. 
+
+EN AUCUN CAS L'ORGANISATION IMAM8MAHDI OU SES CONTRIBUTEURS NE POURRONT ÊTRE 
+TENUS POUR RESPONSABLES DES DOMMAGES DIRECTS, INDIRECTS, ACCESSOIRES, SPÉCIAUX, 
+EXEMPLAIRES OU CONSÉCUTIFS (Y COMPRIS, MAIS SANS S'Y LIMITER, LES PERTES DE 
+DONNÉES, LES RUPTURES DE PROTOCOLE OU LES CONFLITS DE MATRICE MEMOIRE) QUELLES 
+QU'EN SOIENT LES CAUSES ET SUR N'IMPORTE QUEL TYPE DE RESPONSABILITÉ JURIDIQUE.
+================================================================================

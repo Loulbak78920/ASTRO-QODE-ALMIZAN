@@ -1,0 +1,277 @@
+{
+  "nom_sceau": "sceau_cli_astro_qode_v4",
+  "timestamp": "2026-10-22T04:14:51",
+  "statut": "SCEAU_ASTRO_QODE_CONSOLIDE_OK",
+  "doi": "10.5281/zenodo.23479740",
+  "invariants": {
+    "MIZAN": 0.6225,
+    "LIGNE_REF": 0.122,
+    "RMS": 0.24,
+    "EPSILON": 0.021,
+    "PLAFOND_EFFECTIF": 0.6015,
+    "COMBLE_CIBLE": 0.5805,
+    "C": 313,
+    "M": 24434,
+    "JAUGE_AIR": 515050,
+    "PRODUIT_MEDINOIS": 3939021022100,
+    "TRIPLE": -2393774546
+  },
+  "garde_fous": {
+    "qubit_physique_local": false,
+    "wafer_physique": false,
+    "cuda_physique": false,
+    "omniscience_claim": false,
+    "allah_hors_matrice": true,
+    "ollama": "detachee_nuisible_archivee"
+  },
+  "etat_vm_biomecanique": {
+    "forme_matiere_active": {
+      "index": 0,
+      "code": "0 : HÉLIUM",
+      "nom": "Origine Inerte Hélium-4",
+      "paradigme": "REPOS_ABSOLU"
+    },
+    "registre_mecquois_immuable": {
+      "omega_MIZAN_PLAFOND": "+0.6225 I",
+      "omega_KILLSWITCH_MK": "+45 i",
+      "omega_FORME_26": "FormeMatiereCode(index=26, code_court='F26: Ombre_Carr', nom_complet='Forme Fractale Duale #13 (Ombre_Carre_retour_Centre)', famille_astrale='Fractale Al-Mizan (Ombre_Carre_retour_Centre)', paradigme='FRACTALE_DUALE_ALMIZAN', role_systeme='Dépassement post-F13 par couplage anti-phase (miroir de Cercle_retour_Centre) confiné sous Plafond=0.6015 et ε=0.021', mutabilite='CONFINE_SOUS_EPSILON (D=0.6015)')",
+      "omega_MONAD_SOUL": "[50027.8359375 ∪ 46993.5 ∪ 135000000.0]"
+    },
+    "memoire_medinoise_active": {
+      "alpha_cryo_5026": "{'ok': True, 'port': 5026, 'mode_transport': 'TCP_DIRECT_5026', 'trame_recue': 'STATus:QUEStionable:TEMPerature? 22.50mK', 'temp_mK': 22.5, 'seuil_killswitch_mK': 45.0, 'killswitch_declenche': False, 'mizan': 0.6225, 'erreur_tcp': None, 'qubit_physique_local': False, 'commande': 'READ:CRYO:ALL?', 'temp_mk': 22.5}",
+      "alpha_monade_silicium": "Monad((0.6015))",
+      "alpha_sceau_v4": "{'ok': True, 'nom_sceau': 'sceau_suite_logique_v4', 'chemin_fichier': 'C:\\\\Users\\\\Administrateur\\\\Desktop\\\\IMAM8MAHDI\\\\ASTRO-Q°ODE_SYSTEME\\\\memoire_aq\\\\sceau_suite_logique_v4.json', 'empreinte_sha256': '54114bc283beec97a495c5d9cbdc75253246333056344f3a454e2b684d38502c', 'timestamp': '2026-10-22T04:14:50', 'qubit_physique_local': False}"
+    },
+    "horloge_kernel": {
+      "constantes": {
+        "CLOCK_DX_SOLEIL": 50027.8359375,
+        "CLOCK_DY_LUNE": 46993.5,
+        "CLOCK_DZ_TERRE": 135000000.0,
+        "CLOCK_DZ_TERRE_BRUT": 3888000000.0,
+        "CLOCK_DT_KERNEL": 135097021.3359375
+      },
+      "poids_relatifs_pourcent": {
+        "dx_soleil_pct": 0.037,
+        "dy_lune_pct": 0.0348,
+        "dz_terre_pct": 99.9282
+      },
+      "consommation_courante": {
+        "dx_consomme": 4.0,
+        "dy_consomme": 0.0,
+        "dz_consomme": 8.0,
+        "dt_consomme": 12.0,
+        "dt_restant": 135097009.3359375,
+        "instructions_executees": 10
+      }
+    },
+    "matrice_scapulaire": {
+      "origine": "0 : HÉLIUM",
+      "axe_alpha": {
+        "mouvement": "Élévation / Dépression",
+        "valeur": 0.0,
+        "etat": "0 : HÉLIUM"
+      },
+      "axe_beta": {
+        "mouvement": "Protraction / Rétraction",
+        "profondeur_sandbox": 0,
+        "etat": "0 : HÉLIUM"
+      },
+      "axe_gamma": {
+        "mouvement": "Rotation Sonnette",
+        "flux_photon_total": 4,
+        "etat": "0 : HÉLIUM"
+      }
+    },
+    "pipeline_anatomique": [
+      {
+        "segment": "Omoplate (Scapula)",
+        "role_systeme": "Routeur / Pivot Flottant",
+        "symbole": "Axes alpha, beta, gamma",
+        "fonction": "Alignement d'adresses et pare-feu (( ))",
+        "paradigme": "Flottant / Amortisseur",
+        "etat": {
+          "origine": "0 : HÉLIUM",
+          "axe_alpha": {
+            "mouvement": "Élévation / Dépression",
+            "valeur": 0.0,
+            "etat": "0 : HÉLIUM"
+          },
+          "axe_beta": {
+            "mouvement": "Protraction / Rétraction",
+            "profondeur_sandbox": 0,
+            "etat": "0 : HÉLIUM"
+          },
+          "axe_gamma": {
+            "mouvement": "Rotation Sonnette",
+            "flux_photon_total": 4,
+            "etat": "0 : HÉLIUM"
+          }
+        }
+      },
+      {
+        "segment": "Bras / Avant-bras",
+        "role_systeme": "Pipeline de Données",
+        "symbole": "Horloge maîtresse dt = 135097021.3359375",
+        "fonction": "Transmission d'instructions synchrone",
+        "paradigme": "Linéaire temporel",
+        "etat": "SYNCHRONE"
+      },
+      {
+        "segment": "Pouce (Doigt 0)",
+        "role_systeme": "Ancre Neutre Stable",
+        "symbole": "0 : HÉLIUM / return 0",
+        "fonction": "Purge mémoire et clôture absolue",
+        "paradigme": "Zéro Absolu / Inerte",
+        "registre_courant": "0 : HÉLIUM",
+        "activations": 1
+      },
+      {
+        "segment": "Index (Doigt 1)",
+        "role_systeme": "Pointeur de Signal",
+        "symbole": "alpha_x (Minuscules)",
+        "fonction": "Sélection et pointage discrets [-9;+9]",
+        "paradigme": "MECQUOIS (Essence)",
+        "registre_courant": "alpha_sceau_v4={'ok': True, 'nom_sceau': 'sceau_suite_logique_v4', 'chemin_fichier': 'C:\\\\Users\\\\Administrateur\\\\Desktop\\\\IMAM8MAHDI\\\\ASTRO-Q°ODE_SYSTEME\\\\memoire_aq\\\\sceau_suite_logique_v4.json', 'empreinte_sha256': '54114bc283beec97a495c5d9cbdc75253246333056344f3a454e2b684d38502c', 'timestamp': '2026-10-22T04:14:50', 'qubit_physique_local': False}",
+        "activations": 5
+      },
+      {
+        "segment": "Majeur (Doigt 2)",
+        "role_systeme": "Forçage d'Énergie",
+        "symbole": "?? (Intensité max)",
+        "fonction": "Injection de puissance et priorité absolue",
+        "paradigme": "MECQUOIS (Énergie)",
+        "registre_courant": "??(alpha_monade_silicium = Monad((0.6015)))",
+        "activations": 4
+      },
+      {
+        "segment": "Annulaire (Doigt 3)",
+        "role_systeme": "Liaison Contextuelle",
+        "symbole": "Union (∪) / Incl (⊃)",
+        "fonction": "Calculs topologiques et gouvernance",
+        "paradigme": "MEDINOIS (Loi/Action)",
+        "registre_courant": "+0.5805 I ⊕ +0.021 I",
+        "activations": 2
+      },
+      {
+        "segment": "Auriculaire (Doigt 4)",
+        "role_systeme": "Verrou Symétrique",
+        "symbole": "omega_X / ;",
+        "fonction": "Ancrage des constantes et fin de ligne",
+        "paradigme": "MEDINOIS (Meta-Logique)",
+        "registre_courant": "omega_MONAD_SOUL=[50027.8359375 ∪ 46993.5 ∪ 135000000.0]",
+        "activations": 4
+      }
+    ],
+    "sorties_console": [
+      "Suite Logique V4.0 exécutée : Pont TCP (:5025/:5026/:5030) + OpenQASM 2.0 + Sceau SHA-256 OK"
+    ],
+    "nb_instructions_tracees": 10
+  },
+  "metadata_supplementaire": {
+    "diagnostic_pont_materiel": {
+      "statut": "DIAGNOSTIC_PONT_MATERIEL_OK",
+      "host": "127.0.0.1",
+      "ports_sondes": {
+        "host": "127.0.0.1",
+        "ports_actifs": 5,
+        "ports_total": 6,
+        "detail_ports": {
+          "5025": {
+            "port": 5025,
+            "actif": true,
+            "description": "Laboratoire Réception AWG SCPI"
+          },
+          "5026": {
+            "port": 5026,
+            "actif": true,
+            "description": "Capteur Cryogénique Multi-Clients"
+          },
+          "5030": {
+            "port": 5030,
+            "actif": true,
+            "description": "Émulateur Die Silicium"
+          },
+          "8000": {
+            "port": 8000,
+            "actif": true,
+            "description": "Serveur Dashboard Mizan Phase II-IV"
+          },
+          "8765": {
+            "port": 8765,
+            "actif": true,
+            "description": "Porte HTTP Async"
+          },
+          "8766": {
+            "port": 8766,
+            "actif": false,
+            "description": "Permanence HTTPS Multi-Sensorielle"
+          }
+        },
+        "qubit_physique_local": false
+      },
+      "scpi_5025": {
+        "ok": true,
+        "port": 5025,
+        "mode_transport": "TCP_DIRECT_5025",
+        "trame_scpi": ":SOURce1:VOLTage:AMPLitude 0.6225;:OUTPut1:STATe ON",
+        "amplitude_demandee": 0.6225,
+        "amplitude_bridee_mizan": 0.6225,
+        "killswitch_thermique_actif": false,
+        "erreur_tcp": null,
+        "qubit_physique_local": false,
+        "frequence_ghz": 4.85,
+        "puissance_dbm": -15.0,
+        "forme_onde": "GAUSS"
+      },
+      "cryo_5026": {
+        "ok": true,
+        "port": 5026,
+        "mode_transport": "TCP_DIRECT_5026",
+        "trame_recue": "STATus:QUEStionable:TEMPerature? 22.50mK",
+        "temp_mK": 22.5,
+        "seuil_killswitch_mK": 45.0,
+        "killswitch_declenche": false,
+        "mizan": 0.6225,
+        "erreur_tcp": null,
+        "qubit_physique_local": false,
+        "commande": "READ:CRYO:ALL?",
+        "temp_mk": 22.5
+      },
+      "zne_5030": {
+        "ok": true,
+        "port": 5030,
+        "facteurs_echelle": [
+          1.0,
+          3.0,
+          5.0
+        ],
+        "fidelite_observee": 1.0,
+        "fidelite_zero_bruit_zne": 1.0,
+        "fidelite_extrapolee_mizan": 0.6225,
+        "fidelite_mizan": 0.6225,
+        "counts": {
+          "00": 248,
+          "11": 252,
+          "01": 0,
+          "10": 0
+        },
+        "peau_holographique": {
+          "tension": 0.46,
+          "reference": 0.46,
+          "derive": 0.0
+        },
+        "mizan": 0.6225,
+        "qubit_physique_local": false
+      },
+      "invariants": {
+        "mizan": 0.6225,
+        "ligne_ref": 0.122,
+        "rms": 0.24,
+        "killswitch_mk": 45.0
+      },
+      "qubit_physique_local": false,
+      "omniscience_claim": false
+    }
+  },
+  "empreinte_sha256": "4a8dbe1b2f1c11b068959917dcbcb230c1e9cf76c96bcb9df5905dfbf68d142f"
+}

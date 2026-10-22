@@ -1,0 +1,12 @@
+# Byte-compiled / cache Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+dist/
+build/
+.venv/
+venv/
+.DS_Store
+Thumbs.db
