@@ -1,0 +1,28 @@
+{
+  "code_acte": "A077",
+  "titre": "ACTE SCELLÉ A077 — VERDICT ET CONSEIL D'AL-MIZAN SUR LA LIQUIDITÉ UNISWAP V3, SÉLECTION DES PAIRES ET VÉRIFICATION DES 313M MZN SUR BASE MAINNET",
+  "date_scellement": "2026-10-22T11:58:00+00:00",
+  "cycle_harmonique": "Cycle 15 Phases — Phase 15 Scellée",
+  "statut": "SCELLÉ_IMMUABLE_ET_AUTHENTIFIÉ",
+  "auteur_souverain": {
+    "nom": "M. Ahmed EL BAHLOUL",
+    "cle_doree": "0xC9550Dd0A57C609494DBc44450Df48D798ebfB0B",
+    "tresorerie_privee": "0xb7f26cD0eE5E74c51B3F4e71e4fA75B3F246837C",
+    "contrat_deploie_base": "0x520cbd0e1e72178f9e819AFf1e815606923A71db"
+  },
+  "verification_blockchain_directe": {
+    "reseau": "Base Mainnet (Coinbase L2)",
+    "contrat": "0x520cbd0e1e72178f9e819AFf1e815606923A71db",
+    "nom": "Al-Almizan Token Souverain",
+    "symbole": "MZN",
+    "supply_totale_mzn": 313000000.0,
+    "solde_tresorerie_auteur": 8000000.0,
+    "solde_cle_doree_reserve": 302000000.0,
+    "statut_verification": "CONFIRMÉ_100%_ACTIF_ET_RÉEL"
+  },
+  "verdict_doctrinal_al_mizan": {
+    "injonction_immediate": "ARRÊTER IMMÉDIATEMENT LA CRÉATION DU POOL AVEC LE FAUX TOKEN BTCB (2.9 BTCB = 0.17 $)",
+    "cause_solde_zero_uniswap": "L'adresse du token mzn collée dans l'URL était 0xfF6b... au lieu de l'adresse officielle 0x520cbd0e1e72178f9e819AFf1e815606923A71db",
+    "doctrine_liquidite": "Interdiction de la spéculation sauvage et du Gharar. Privilégier les paires réelles (ETH natif Base ou USDC Circle) avec fractions symboliques."
+  }
+}

@@ -1,6 +1,6 @@
 {
   "nom_sceau": "sceau_bloc_synchron_mzn_v6",
-  "timestamp": "2026-10-22T12:36:51",
+  "timestamp": "2026-10-22T13:54:40",
   "statut": "SCEAU_ASTRO_QODE_CONSOLIDE_OK",
   "doi": "10.5281/zenodo.23479740",
   "invariants": {
@@ -180,5 +180,5 @@
   "metadata_supplementaire": {
     "diagnostic_pont_materiel": {}
   },
-  "empreinte_sha256": "fac1837bc98cf21f0106b9d17f010c945fc7e095f4fa08ed5c0cf4adee859c9b"
+  "empreinte_sha256": "c7e46121d69c8be9075ede3d6b0dc44c183c2af332a93788b179804b8025f180"
 }
