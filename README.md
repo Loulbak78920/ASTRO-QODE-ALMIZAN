@@ -1,4 +1,4 @@
-# `IMAM8MAHDI` × `Al-Mizan` × `ASTRO-Q°ODE` (V1.0–V6.4)
+# `IMAM8MAHDI` × `Al-Mizan` × `ASTRO-Q°ODE` (V1.0–V6.6)
 
 <p align="center">
   <img src="./assets/icone_jeton_mzn_harmonie.svg" alt="Icône Officielle de l'Harmonie du Jeton MZN" width="280" height="280">
@@ -7,8 +7,9 @@
 </p>
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23554838.svg)](https://doi.org/10.5281/zenodo.23554838)
-[![Version](https://img.shields.io/badge/Version-6.4.0-blue.svg)](https://github.com/Loulbak78920/ASTRO-QODE-ALMIZAN)
+[![Version](https://img.shields.io/badge/Version-6.6.0-blue.svg)](https://github.com/Loulbak78920/ASTRO-QODE-ALMIZAN)
 [![Livre Blanc](https://img.shields.io/badge/Whitepaper-Livre%20Blanc%20MZN-gold.svg)](./LIVRE_BLANC_ALMIZAN_ASTRO_QODE_MZN_WHITEPAPER.md)
+[![Digiposte](https://img.shields.io/badge/Coffre--Fort-Digiposte%20NF%20Z42--013-blueviolet.svg)](./memoire_aq/almizan_acte_a076_dossier_coffre_fort_digiposte.json)
 [![Tests](https://img.shields.io/badge/Tests-11%2F11%20PASS-brightgreen.svg)](./tests/test_suite_complete.py)
 [![Solidity](https://img.shields.io/badge/Solidity-^0.8.20-orange.svg)](./contracts/AmalMizanSynchronMznContract.sol)
 [![OpenQASM](https://img.shields.io/badge/OpenQASM-2.0-purple.svg)](./lang/compilateur_qasm_isa.py)
@@ -110,3 +111,13 @@ Conformément aux fichiers [`LICENSE`](./LICENSE) et [`CONTRAT_COMMERCIAL_50_50.
   url          = {https://doi.org/10.5281/zenodo.23554838}
 }
 ```
+
+---
+
+## 🏛️ Archivage à Valeur Probante — Coffre-Fort Numérique Digiposte (NF Z42-013)
+
+L'intégralité des actes fondateurs, du Livre Blanc souverain, du smart contract déployé et des preuves d'antériorité de **M. Ahmed EL BAHLOUL** est consignée dans un **Dossier d'Archivage à Valeur Probante** certifié conforme à la norme **AFNOR NF Z42-013 / ISO 14641** et aux articles **1366 et 1367 du Code civil français** :
+- **Emplacement Local** : `C:\Users\Administrateur\Desktop\COFFRE_FORT_NUMERIQUE_DIGIPOSTE_AHMED_EL_BAHLOUL`
+- **Destination** : Coffre-Fort Numérique Personnel Digiposte (Docaposte / Groupe La Poste)
+- **Acte d'Ancrage Mémoire** : [`memoire_aq/almizan_acte_a076_dossier_coffre_fort_digiposte.json`](./memoire_aq/almizan_acte_a076_dossier_coffre_fort_digiposte.json)
+- **Archive Scellée Globale** : `ARCHIVE_COMPLETE_DIGIPOSTE_AHMED_EL_BAHLOUL.zip` (`FF5225CFCCA15A1C62E7C7974490BFCB336548827B4FD05B0C34824A4B895A0D`)

@@ -1,0 +1,74 @@
+{
+  "code_acte": "A076",
+  "titre": "ACTE SCELLÉ A076 — CONSTITUTION DU DOSSIER DE COFFRE-FORT NUMÉRIQUE DIGIPOSTE À VALEUR PROBANTE (NF Z42-013 / ART. 1366 CODE CIVIL)",
+  "date_scellement": "2026-10-22T10:35:00+00:00",
+  "cycle_harmonique": "Cycle 15 Phases — Phase 15 Scellée",
+  "statut": "SCELLÉ_IMMUABLE_ET_AUTHENTIFIÉ",
+  "auteur_souverain": {
+    "nom": "M. Ahmed EL BAHLOUL",
+    "alias": "IMAM8MAHDI / M. Almizan Elbahloul / Loulbak78920",
+    "date_naissance": "20/06/1989",
+    "lieu_naissance": "Meulan-en-Yvelines (78, France)",
+    "nationalite": "Française",
+    "domiciliation": "Valence (44.9333° N, 4.8917° E) & Romans-sur-Isère (France)",
+    "email": "elbahloulahmed505@gmail.com",
+    "cle_doree_racine": "0xC9550Dd0A57C609494DBc44450Df48D798ebfB0B",
+    "tresorerie_privee_depositaire": "0xb7f26cD0eE5E74c51B3F4e71e4fA75B3F246837C",
+    "doi_zenodo": "10.5281/zenodo.23554838",
+    "depot_public_github": "https://github.com/Loulbak78920/ASTRO-QODE-ALMIZAN"
+  },
+  "dossier_coffre_fort": {
+    "emplacement_local": "C:\\Users\\Administrateur\\Desktop\\COFFRE_FORT_NUMERIQUE_DIGIPOSTE_AHMED_EL_BAHLOUL",
+    "destination": "Coffre-Fort Numérique Personnel Digiposte (Docaposte / La Poste)",
+    "norme_certifiee": "AFNOR NF Z42-013 / ISO 14641 (NF 461)",
+    "cadre_juridique": "Articles 1366 et 1367 du Code civil / Règlement européen eIDAS (n° 910/2014)",
+    "archive_globale": "ARCHIVE_COMPLETE_DIGIPOSTE_AHMED_EL_BAHLOUL.zip",
+    "sha256_archive_zip": "026A117BBDF7E7FF006D7DF7A0F7E30177CD30DA21019C10127CE5C72DEA46F8"
+  },
+  "pieces_scellees_au_dossier": [
+    {
+      "ref": "01",
+      "fichier": "01_ACTE_AUTHENTIQUE_PROBATOIRE_IDENTITE_ET_PROPRIETE_INTELLECTUELLE.md",
+      "role": "Acte authentique d'antériorité et de titularité de propriété intellectuelle"
+    },
+    {
+      "ref": "02",
+      "fichier": "02_LIVRE_BLANC_OFFICIEL_ALMIZAN_ASTRO_QODE.md",
+      "role": "Livre Blanc officiel souverain (Triade, MZN 313M, Anti-Riba, Zakat 2.5%)"
+    },
+    {
+      "ref": "03",
+      "fichier": "03_CONTRAT_COMMERCIAL_50_50_ET_LICENCE_CLOUD_ANTI_DOLOSIVE.md",
+      "role": "Contrat commercial d'exploitation 50/50 et clause anti-dolosive (Art. 1137 C. civ.)"
+    },
+    {
+      "ref": "04",
+      "fichier": "04_CERTIFICAT_CITATION_ZENODO_DOI_10_5281_zenodo_23554838.json",
+      "role": "Certificat officiel de citation et d'enregistrement CERN / Zenodo"
+    },
+    {
+      "ref": "05",
+      "fichier": "05_CODE_SOURCE_SMART_CONTRACT_SCELLE_AmalMizanSynchronMznContract.sol",
+      "role": "Code source Solidity déployé du smart contract AmalMizanSynchronMznContract"
+    },
+    {
+      "ref": "06",
+      "fichier": "06_MANIFESTE_EMPREINTES_NUMERIQUES_SHA256_VALEUR_PROBANTE.json",
+      "role": "Manifeste complet des empreintes numériques SHA-256 à valeur probante"
+    },
+    {
+      "ref": "07",
+      "fichier": "07_BORDEREAU_DEPOT_ET_ARCHIVAGE_COFFRE_DIGIPOSTE.md",
+      "role": "Bordereau officiel d'accompagnement et de versement Digiposte"
+    }
+  ],
+  "deploiement_public_mainnet_scelle": {
+    "reseau": "Base Mainnet (Coinbase L2)",
+    "chain_id": 8453,
+    "adresse_contrat": "0x520cbd0e1e72178f9e819AFf1e815606923A71db",
+    "deployeur": "0xb7f26cD0eE5E74c51B3F4e71e4fA75B3F246837C",
+    "tx_hash": "0xaaf23e2d4c1e4e7c63ad7e12f95176a4017155164593384e45f867d1f5c6ec33",
+    "bloc_numero": 52937586,
+    "explorateur_contrat": "https://basescan.org/address/0x520cbd0e1e72178f9e819AFf1e815606923A71db"
+  }
+}

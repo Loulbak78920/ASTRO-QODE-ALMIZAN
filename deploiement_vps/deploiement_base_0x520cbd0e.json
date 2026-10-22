@@ -1,0 +1,10 @@
+{
+  "reseau": "Base Mainnet (Coinbase L2 Officiel)",
+  "chain_id": 8453,
+  "adresse_contrat": "0x520cbd0e1e72178f9e819AFf1e815606923A71db",
+  "deployeur": "0xb7f26cD0eE5E74c51B3F4e71e4fA75B3F246837C",
+  "tx_hash": "aaf23e2d4c1e4e7c63ad7e12f95176a4017155164593384e45f867d1f5c6ec33",
+  "bloc_numero": 52937586,
+  "horodatage_utc": "2026-10-22T10:21:58Z",
+  "doi": "10.5281/zenodo.23554838"
+}
