@@ -81,6 +81,18 @@ from bibliotheques.lib_matrice_unisson_or_argent import (
     Z_ARGENT_AG,
     Z_OR_AU,
 )
+from bibliotheques.lib_bloc_synchron_mzn import (
+    CITE_GALAXY_MOBILE,
+    CITE_PC_TERRESTRE,
+    CITE_QISTAS_CIVIQUE,
+    CAISSE_ZAKAT_CIVIQUE,
+    FONDS_SOUVERAIN_RESERVE,
+    DT_KERNEL,
+    SUPPLY_TOTAL_MZN,
+    ZAKAT_RATE,
+    NISAB_LOGIQUE_MZN,
+    MoteurGrandLivreSynchronMZN,
+)
 from bibliotheques.lib_pont_materiel_emule import PORTS_LOCAUX_ALMIZAN, PontMaterielEmuleAlmizan
 from bibliotheques.lib_physique import (
     ETATS_HYDROGENE,
@@ -220,10 +232,10 @@ class TestSystemeCompletAstroQode(unittest.TestCase):
             self.assertEqual(res.memoire_medinoise["alpha_c"], SignalKelvin(-1.0))
 
     def test_06_execution_monade_supreme_v2_et_stdlib(self) -> None:
-        """Exécute les 7 scripts `.aq` de la bibliothèque standard (V1, V2, V3 Al-Mizan, V4 Suite Logique et V5 Unisson Or/Argent)."""
+        """Exécute les 8 scripts `.aq` de la bibliothèque standard (V1, V2, V3 Al-Mizan, V4 Suite Logique, V5 Unisson Or/Argent, V6 Bloc Synchron MZN)."""
         dossier_stdlib = RACINE_SYSTEME / "bibliotheques" / "stdlib_aq"
         fichiers_aq = sorted(dossier_stdlib.glob("*.aq"))
-        self.assertEqual(len(fichiers_aq), 7)
+        self.assertEqual(len(fichiers_aq), 8)
 
         for fichier in fichiers_aq:
             source = fichier.read_text(encoding="utf-8")
@@ -403,6 +415,80 @@ class TestSystemeCompletAstroQode(unittest.TestCase):
         self.assertIn("MATRICE FONDATRICE DE L'UNISSON (4×4)", txt)
         self.assertIn("OR (Aurum)", txt)
         self.assertIn("ARGENT (Argentum)", txt)
+
+    def test_11_bloc_synchron_mzn_et_smart_contract(self) -> None:
+        """Vérifie le Bloc Synchron MZN, le Grand Livre, le Smart Contract Solidity et le script V6."""
+        # 1. Vérification du moteur Grand Livre Synchrone MZN
+        moteur = MoteurGrandLivreSynchronMZN()
+        self.assertEqual(moteur.balances[CITE_PC_TERRESTRE], 3_000_000.0)
+        self.assertEqual(moteur.balances[CITE_GALAXY_MOBILE], 8_000_000.0)
+        self.assertEqual(moteur.balances[FONDS_SOUVERAIN_RESERVE], 302_000_000.0)
+        self.assertEqual(SUPPLY_TOTAL_MZN, 313_000_000.0)
+
+        # 2. Vérification du Bloc 0 Génèse Synchrone
+        bloc_0 = moteur.blocs[0]
+        self.assertEqual(bloc_0.height, 0)
+        self.assertEqual(bloc_0.kernel_dt, DT_KERNEL)
+        self.assertGreater(len(bloc_0.bloc_hash), 32)
+        self.assertEqual(bloc_0.invariants["constante_c"], 313)
+        self.assertEqual(bloc_0.invariants["mizan"], 0.6225)
+        self.assertFalse(bloc_0.invariants["qubit_physique_local"])
+
+        # 3. Exécution d'un transfert ordinaire (0% friction)
+        tx1 = moteur.effectuer_transfert(CITE_PC_TERRESTRE, CITE_QISTAS_CIVIQUE, 25_000.0, commentaire="Dotation opérationnelle")
+        self.assertEqual(tx1.montant_mzn, 25_000.0)
+        self.assertEqual(tx1.friction_pct, 0.0)
+        self.assertGreater(len(tx1.hash_preuve), 32)
+
+        # 4. Exécution d'un don Sadaqa (friction 0%)
+        tx_sad = moteur.envoyer_sadaqa(CITE_GALAXY_MOBILE, CITE_QISTAS_CIVIQUE, 10_000.0, "Don pur Sadaqa")
+        self.assertEqual(tx_sad.type_tx, "SADAQA")
+        self.assertEqual(tx_sad.friction_pct, 0.0)
+
+        # 5. Calcul et prélèvement automatique de la Zakat 2.5% (1/40) sur solde > Nisab
+        tx_zak = moteur.prelever_zakat(CITE_GALAXY_MOBILE)
+        self.assertIsNotNone(tx_zak)
+        self.assertEqual(tx_zak.type_tx, "ZAKAT")
+        self.assertEqual(tx_zak.destinataire, CAISSE_ZAKAT_CIVIQUE)
+        self.assertAlmostEqual(tx_zak.montant_mzn, (8_000_000.0 - 10_000.0) * ZAKAT_RATE, places=2)
+
+        # 6. Scellement d'un acte en NFT sous horodatage Kernel dt
+        nft1 = moteur.sceller_acte_nft("A071_CIVIQUE", "7F82A31B89FC45098D1244E367291A8090C8B1E34720914F571829B0D8A29145", "Acte Civique Permanent")
+        self.assertEqual(nft1.token_id, 2)
+        self.assertEqual(nft1.epoch_kernel_dt, DT_KERNEL)
+
+        # 7. Production d'un nouveau bloc synchron (Height 1) et vérification d'intégrité
+        bloc_1 = moteur.produire_bloc_synchron()
+        self.assertEqual(bloc_1.height, 1)
+        self.assertEqual(bloc_1.prev_hash, bloc_0.bloc_hash)
+        self.assertGreater(len(bloc_1.merkle_root_txs), 32)
+        self.assertGreater(len(bloc_1.merkle_root_sceaux), 32)
+
+        ok_int, msg_int = moteur.verifier_integrite_chaine()
+        self.assertTrue(ok_int, msg=msg_int)
+
+        # 8. Vérification de la présence et du contenu du Smart Contract Solidity
+        chemin_sol = RACINE_SYSTEME / "contracts" / "AmalMizanSynchronMznContract.sol"
+        self.assertTrue(chemin_sol.exists())
+        sol_content = chemin_sol.read_text(encoding="utf-8")
+        self.assertIn("contract AmalMizanSynchronMznContract", sol_content)
+        self.assertIn("M. Ahmed EL BAHLOUL", sol_content)
+        self.assertIn("0xc9550dd0a57c609494dbc44450df48d798ebfb0b", sol_content.lower())
+        self.assertIn("10.5281/zenodo.23554838", sol_content)
+        self.assertIn("313_000_000", sol_content)
+        self.assertIn("calculerPartageCommercial5050", sol_content)
+        self.assertIn("calculerZakatEligible", sol_content)
+        self.assertIn("enregistrerBlocSynchron", sol_content)
+
+        # 9. Exécution native du script ASTRO-Q°ODE bloc_synchron_mzn_v6.aq
+        chemin_aq = RACINE_SYSTEME / "bibliotheques" / "stdlib_aq" / "bloc_synchron_mzn_v6.aq"
+        self.assertTrue(chemin_aq.exists())
+        interp = InterpreteurAstroQode()
+        res_aq = interp.executer_source(chemin_aq.read_text(encoding="utf-8"))
+        self.assertTrue(res_aq.succes, msg=f"Erreur aq: {res_aq.erreur}")
+        self.assertEqual(str(res_aq.valeur_finale), "0 : HÉLIUM")
+        self.assertIn("sceau_bloc_synchron_mzn_v6", str(res_aq.memoire_medinoise["alpha_sceau_synchron"]))
+
 
 
 def executer_tous_les_tests() -> bool:

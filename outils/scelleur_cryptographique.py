@@ -135,7 +135,8 @@ class ScelleurMemoireAstroQode:
         details: List[Dict[str, object]] = []
         nb_valides = 0
         fichiers = sorted(
-            p for p in DOSSIER_MEMOIRE_AQ.glob("*.json") if p.name != FICHIER_INDEX_SCEAUX.name
+            p for p in DOSSIER_MEMOIRE_AQ.glob("*.json")
+            if p.name != FICHIER_INDEX_SCEAUX.name and p.name != "ledger_synchron_mzn.json"
         )
 
         for f in fichiers:

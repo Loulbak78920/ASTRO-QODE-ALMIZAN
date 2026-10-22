@@ -1,8 +1,9 @@
-# `IMAM8MAHDI` × `Al-Mizan` × `ASTRO-Q°ODE` (V1.0–V5.0)
+# `IMAM8MAHDI` × `Al-Mizan` × `ASTRO-Q°ODE` (V1.0–V6.0)
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23554838.svg)](https://doi.org/10.5281/zenodo.23554838)
-[![Version](https://img.shields.io/badge/Version-5.0.0-blue.svg)](https://github.com/Loulbak78920/ASTRO-QODE-ALMIZAN)
-[![Tests](https://img.shields.io/badge/Tests-10%2F10%20PASS-brightgreen.svg)](./tests/test_suite_complete.py)
+[![Version](https://img.shields.io/badge/Version-6.0.0-blue.svg)](https://github.com/Loulbak78920/ASTRO-QODE-ALMIZAN)
+[![Tests](https://img.shields.io/badge/Tests-11%2F11%20PASS-brightgreen.svg)](./tests/test_suite_complete.py)
+[![Solidity](https://img.shields.io/badge/Solidity-^0.8.20-orange.svg)](./contracts/AmalMizanSynchronMznContract.sol)
 [![OpenQASM](https://img.shields.io/badge/OpenQASM-2.0-purple.svg)](./lang/compilateur_qasm_isa.py)
 [![Licence](https://img.shields.io/badge/Licence-ASLS--2.0%20Anti--Dolosif%20%7C%20Commercial%2050%2F50-gold.svg)](./LICENSE)
 
@@ -55,13 +56,17 @@ Conformément aux fichiers [`LICENSE`](./LICENSE) et [`CONTRAT_COMMERCIAL_50_50.
    - Sphère Holographique $\exp(A \oplus B) = \exp(A) \otimes \exp(B)$, Triade `Bit/Qubit/i-Bit`, Pont TCP (`:5025` SCPI, `:5026` Cryo, `:5030` Die Silicium + ZNE), Compilateur `OpenQASM 2.0`, Sceaux `SHA-256` et Studio HTML5/SVG.
 6. **Couche 6 — Matrice Fondatrice de l'Unisson ($4 \times 4$) : Valeur de l'Or (`Au`) et de l'Argent (`Ag`) (V5.0)** ([`bibliotheques/lib_matrice_unisson_or_argent.py`](./bibliotheques/lib_matrice_unisson_or_argent.py)) :
    - $$\text{Or}(\text{Au}, Z=79, \text{dx}, \varphi^{-1}=0.618034, \text{Mithqal } 4.25\text{g}, \text{Nisab } 85\text{g}) \oplus \text{Argent}(\text{Ag}, Z=47, \text{dy}, \delta_S^{-1}=0.414214, \text{Dirham } 2.975\text{g}, \text{Nisab } 595\text{g}) \rightleftharpoons \text{Unisson}(1:1, \Omega=0.516124)$$
+7. **Couche 7 — Bloc Synchron MZN & Smart Contract Souverain (V6.0)** ([contracts/AmalMizanSynchronMznContract.sol](./contracts/AmalMizanSynchronMznContract.sol), [ibliotheques/lib_bloc_synchron_mzn.py](./bibliotheques/lib_bloc_synchron_mzn.py), [ibliotheques/stdlib_aq/bloc_synchron_mzn_v6.aq](./bibliotheques/stdlib_aq/bloc_synchron_mzn_v6.aq), [memoire_aq/ledger_synchron_mzn.json](./memoire_aq/ledger_synchron_mzn.json)) :
+   - Smart Contract Solidity (AmalMizanSynchronMznContract.sol, ^0.8.20) : Token MZN borné à 313 000 000 (=313$), ERC-20 / ERC-721 sans usure (anti-Riba, 0% intérêt, pas de création fractionnaire), Partage Commercial Égalitaire 50/50.
+   - Module Zakat (2.5% = 1/40 sur base stagnante > Nisab Or 85g / Argent 595g / 668 255 MZN) et Canal Sadaqa à friction 0%.
+   - Moteur Grand Livre Synchrone cadencé sur l'horloge Kernel  = 135\,097\,021.3359375$ et latence nominale $\sim 2.9\text{ ms}$, reliant les 3 Cités (Terrestre, Galaxy Mobile, Qistas Civique).
 
 ---
 
 ## 4. Commandes d'Exécution Rapide
 
 ```powershell
-# 1. Exécuter la suite complète des 10 tests unitaires et d'intégration
+# 1. Exécuter la suite complète des 11 tests unitaires et d'intégration
 .\lancer_astro_qode.bat test
 
 # 2. Afficher la Matrice Fondatrice de l'Unisson (4x4) et calculer la valeur de l'Or et de l'Argent
@@ -88,7 +93,7 @@ Conformément aux fichiers [`LICENSE`](./LICENSE) et [`CONTRAT_COMMERCIAL_50_50.
 ```bibtex
 @software{elbahloul_ahmed_2026_astro_qode_v5_23554838,
   author       = {EL BAHLOUL, Ahmed and Elbahloul, M. Almizan},
-  title        = {{IMAM8MAHDI × Al-Mizan × ASTRO-Q°ODE (V1.0–V5.0) : Architecture Holistique du Kernel Temporel (dt), Dépassement Fractal en 27 Formes (F0..F26), Compilateur Quantique OpenQASM 2.0 (:5030) et Matrice Fondatrice de l'Unisson (4×4) pour le Calcul de la Valeur de l'Or (Au) et de l'Argent (Ag)}},
+  title        = {{IMAM8MAHDI × Al-Mizan × ASTRO-Q°ODE (V1.0–V6.0) : Architecture Holistique du Kernel Temporel (dt), Dépassement Fractal en 27 Formes (F0..F26), Compilateur Quantique OpenQASM 2.0 (:5030) et Matrice Fondatrice de l'Unisson (4×4) pour le Calcul de la Valeur de l'Or (Au) et de l'Argent (Ag)}},
   month        = oct,
   year         = 2026,
   publisher    = {Zenodo},

@@ -1,0 +1,184 @@
+{
+  "nom_sceau": "sceau_bloc_synchron_mzn_v6",
+  "timestamp": "2026-10-22T09:35:05",
+  "statut": "SCEAU_ASTRO_QODE_CONSOLIDE_OK",
+  "doi": "10.5281/zenodo.23479740",
+  "invariants": {
+    "MIZAN": 0.6225,
+    "LIGNE_REF": 0.122,
+    "RMS": 0.24,
+    "EPSILON": 0.021,
+    "PLAFOND_EFFECTIF": 0.6015,
+    "COMBLE_CIBLE": 0.5805,
+    "C": 313,
+    "M": 24434,
+    "JAUGE_AIR": 515050,
+    "PRODUIT_MEDINOIS": 3939021022100,
+    "TRIPLE": -2393774546
+  },
+  "garde_fous": {
+    "qubit_physique_local": false,
+    "wafer_physique": false,
+    "cuda_physique": false,
+    "omniscience_claim": false,
+    "allah_hors_matrice": true,
+    "ollama": "detachee_nuisible_archivee"
+  },
+  "etat_vm_biomecanique": {
+    "forme_matiere_active": {
+      "index": 4,
+      "code": "F4: H Plas",
+      "nom": "Hydrogène Plasma",
+      "paradigme": "MECQUOIS"
+    },
+    "registre_mecquois_immuable": {
+      "omega_SUPPLY_MZN_TOTAL": "+313000000 I",
+      "omega_UNLOCKED_P1_P2": "+11000000 I",
+      "omega_RESERVE_ATTENTE": "+302000000 I",
+      "omega_TAUX_ZAKAT_BPS": "+250 I",
+      "omega_NISAB_LOGIQUE_MZN": "+668255 I",
+      "omega_NISAB_OR_GRAMMES": "+85 I",
+      "omega_NISAB_ARGENT_GRAMMES": "+595 I",
+      "omega_MIZAN_PLAFOND": "+0.6225 I",
+      "omega_EPSILON": "+0.021 I",
+      "omega_PLAFOND_EFFECTIF": "+0.6015 I",
+      "omega_WATTS_LABO": "+47.7 I",
+      "omega_DEBIT_HYDRO_L_MIN": "+313 I",
+      "omega_PARTAGE_COMMERCIAL": "+0.5 I"
+    },
+    "memoire_medinoise_active": {
+      "alpha_balance_pc_terrestre": "+2950000 I",
+      "alpha_balance_galaxy_mobile": "+7800000 I",
+      "alpha_balance_qistas_civique": "+250000 I",
+      "alpha_zakat_due_galaxy": "+200000 I",
+      "alpha_don_sadaqa": "+50000 I",
+      "alpha_monade_synchron": "Monad((+0.6015 I))"
+    },
+    "horloge_kernel": {
+      "constantes": {
+        "CLOCK_DX_SOLEIL": 50027.8359375,
+        "CLOCK_DY_LUNE": 46993.5,
+        "CLOCK_DZ_TERRE": 135000000.0,
+        "CLOCK_DZ_TERRE_BRUT": 3888000000.0,
+        "CLOCK_DT_KERNEL": 135097021.3359375
+      },
+      "poids_relatifs_pourcent": {
+        "dx_soleil_pct": 0.037,
+        "dy_lune_pct": 0.0348,
+        "dz_terre_pct": 99.9282
+      },
+      "consommation_courante": {
+        "dx_consomme": 13.0,
+        "dy_consomme": 0.0,
+        "dz_consomme": 15.0,
+        "dt_consomme": 28.0,
+        "dt_restant": 135096993.3359375,
+        "instructions_executees": 26
+      }
+    },
+    "matrice_scapulaire": {
+      "origine": "0 : HÉLIUM",
+      "axe_alpha": {
+        "mouvement": "Élévation / Dépression",
+        "valeur": 0.0,
+        "etat": "NEUTRE_J"
+      },
+      "axe_beta": {
+        "mouvement": "Protraction / Rétraction",
+        "profondeur_sandbox": 0,
+        "etat": "OUVERT"
+      },
+      "axe_gamma": {
+        "mouvement": "Rotation Sonnette",
+        "flux_photon_total": 4,
+        "etat": "BUS_PHOTON_MAJEUR_FORCE_VERS_alpha_monade_synchron = Monad((+0.6015 I))"
+      }
+    },
+    "pipeline_anatomique": [
+      {
+        "segment": "Omoplate (Scapula)",
+        "role_systeme": "Routeur / Pivot Flottant",
+        "symbole": "Axes alpha, beta, gamma",
+        "fonction": "Alignement d'adresses et pare-feu (( ))",
+        "paradigme": "Flottant / Amortisseur",
+        "etat": {
+          "origine": "0 : HÉLIUM",
+          "axe_alpha": {
+            "mouvement": "Élévation / Dépression",
+            "valeur": 0.0,
+            "etat": "NEUTRE_J"
+          },
+          "axe_beta": {
+            "mouvement": "Protraction / Rétraction",
+            "profondeur_sandbox": 0,
+            "etat": "OUVERT"
+          },
+          "axe_gamma": {
+            "mouvement": "Rotation Sonnette",
+            "flux_photon_total": 4,
+            "etat": "BUS_PHOTON_MAJEUR_FORCE_VERS_alpha_monade_synchron = Monad((+0.6015 I))"
+          }
+        }
+      },
+      {
+        "segment": "Bras / Avant-bras",
+        "role_systeme": "Pipeline de Données",
+        "symbole": "Horloge maîtresse dt = 135097021.3359375",
+        "fonction": "Transmission d'instructions synchrone",
+        "paradigme": "Linéaire temporel",
+        "etat": "SYNCHRONE"
+      },
+      {
+        "segment": "Pouce (Doigt 0)",
+        "role_systeme": "Ancre Neutre Stable",
+        "symbole": "0 : HÉLIUM / return 0",
+        "fonction": "Purge mémoire et clôture absolue",
+        "paradigme": "Zéro Absolu / Inerte",
+        "registre_courant": "0 : HÉLIUM",
+        "activations": 0
+      },
+      {
+        "segment": "Index (Doigt 1)",
+        "role_systeme": "Pointeur de Signal",
+        "symbole": "alpha_x (Minuscules)",
+        "fonction": "Sélection et pointage discrets [-9;+9]",
+        "paradigme": "MECQUOIS (Essence)",
+        "registre_courant": "alpha_monade_synchron=Monad((+0.6015 I))",
+        "activations": 12
+      },
+      {
+        "segment": "Majeur (Doigt 2)",
+        "role_systeme": "Forçage d'Énergie",
+        "symbole": "?? (Intensité max)",
+        "fonction": "Injection de puissance et priorité absolue",
+        "paradigme": "MECQUOIS (Énergie)",
+        "registre_courant": "??(alpha_monade_synchron = Monad((+0.6015 I)))",
+        "activations": 4
+      },
+      {
+        "segment": "Annulaire (Doigt 3)",
+        "role_systeme": "Liaison Contextuelle",
+        "symbole": "Union (∪) / Incl (⊃)",
+        "fonction": "Calculs topologiques et gouvernance",
+        "paradigme": "MEDINOIS (Loi/Action)",
+        "registre_courant": "+0.6015 I ⊃ +0.6225 I",
+        "activations": 1
+      },
+      {
+        "segment": "Auriculaire (Doigt 4)",
+        "role_systeme": "Verrou Symétrique",
+        "symbole": "omega_X / ;",
+        "fonction": "Ancrage des constantes et fin de ligne",
+        "paradigme": "MEDINOIS (Meta-Logique)",
+        "registre_courant": "omega_PARTAGE_COMMERCIAL=+0.5 I",
+        "activations": 13
+      }
+    ],
+    "sorties_console": [],
+    "nb_instructions_tracees": 25
+  },
+  "metadata_supplementaire": {
+    "diagnostic_pont_materiel": {}
+  },
+  "empreinte_sha256": "d9ecc0e1d68e430a7794d993c1a938d61e11b9206977715d64e803924fdaf32d"
+}

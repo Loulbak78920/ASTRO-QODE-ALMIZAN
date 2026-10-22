@@ -1,0 +1,169 @@
+{
+  "nom": "GRAND_LIVRE_SYNCHRON_MZN",
+  "auteur": "M. Ahmed EL BAHLOUL",
+  "doi": "10.5281/zenodo.23554838",
+  "version": "6.0.0",
+  "derniere_mise_a_jour": "2026-10-22T07:27:57.837637+00:00",
+  "supply_totale_mzn": 313000000.0,
+  "balances_actuelles": {
+    "CITE_PC_TERRESTRE": 2950000.0,
+    "CITE_GALAXY_MOBILE": 7800000.0,
+    "CITE_QISTAS_CIVIQUE": 50000.0,
+    "FONDS_SOUVERAIN_RESERVE": 302000000.0,
+    "CAISSE_ZAKAT_CIVIQUE": 200000.0
+  },
+  "nb_blocs": 2,
+  "dernier_bloc_hash": "5878C40A5E9637DF426DD29A5634C31160C89FB6028A7E4153EE6774D974309E",
+  "blocs": [
+    {
+      "height": 0,
+      "timestamp_utc": "2026-10-22T07:27:57.837051+00:00",
+      "kernel_dt": 135097021.3359375,
+      "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "merkle_root_txs": "0A76583F4FB109479927140D467DF0EE52531CF60ED0AE4D1BA7535AF38EA551",
+      "merkle_root_sceaux": "D1C87562A6C9E0C8C626D9255E3706F864EE29453256578DFC8EFB136C0EB071",
+      "metrologie": {
+        "watts_labo": 47.7,
+        "debit_hydro_l_min": 313,
+        "vigilance": 38.5,
+        "latence_sync_ref_ms": 2.9
+      },
+      "balances_cites": {
+        "CITE_PC_TERRESTRE": 3000000.0,
+        "CITE_GALAXY_MOBILE": 8000000.0,
+        "CITE_QISTAS_CIVIQUE": 0.0,
+        "FONDS_SOUVERAIN_RESERVE": 302000000.0,
+        "CAISSE_ZAKAT_CIVIQUE": 0.0
+      },
+      "invariants": {
+        "mizan": 0.6225,
+        "ligne_ref": 0.122,
+        "epsilon": 0.021,
+        "plafond": 0.6015,
+        "constante_c": 313,
+        "constante_m": 24434,
+        "qubit_physique_local": false,
+        "omniscience_claim": false,
+        "allah_hors_matrice": true,
+        "anti_usure": true,
+        "doi": "10.5281/zenodo.23554838",
+        "auteur": "M. Ahmed EL BAHLOUL"
+      },
+      "transactions": [
+        {
+          "tx_id": "TX_GENESIS_ALLOCATION_P1_P2",
+          "emetteur": "GENESIS_ALLIANCE",
+          "destinataire": "CITE_PC_TERRESTRE",
+          "montant_mzn": 3000000.0,
+          "type_tx": "ALLOCATION_POSTE",
+          "timestamp_utc": "2026-10-22T07:27:57.836884+00:00",
+          "friction_pct": 0.0,
+          "commentaire": "Déblocage validé P1.1 (1M Watt) + P1.2 (2M Inventaire)",
+          "hash_preuve": "40D5EA4B530CEA492F1FB2055261B17A08720800ABAB80717AC29C48B33746A7"
+        },
+        {
+          "tx_id": "TX_GENESIS_ALLOCATION_P2_1",
+          "emetteur": "GENESIS_ALLIANCE",
+          "destinataire": "CITE_GALAXY_MOBILE",
+          "montant_mzn": 8000000.0,
+          "type_tx": "ALLOCATION_POSTE",
+          "timestamp_utc": "2026-10-22T07:27:57.836988+00:00",
+          "friction_pct": 0.0,
+          "commentaire": "Déblocage validé P2.1 (8M UPS Camera)",
+          "hash_preuve": "703803D18362492DFD68D52C917E4A6C2DCC749DD38AA45E25914471B4A59E36"
+        }
+      ],
+      "sceaux": [
+        {
+          "token_id": 1,
+          "code_acte": "A001_GENESIS_SOUVERAIN",
+          "sha256_empreinte": "96660C763BD4E903FEEFA73E8A55C415D98B935E791C8BACAD6D728C905C912F",
+          "description": "Sceau Fondateur de l'Alliance MZN - Informé ⊗ Forme ⊗ Tout",
+          "detenteur": "0xc9550dd0a57c609494dbc44450df48d798ebfb0b",
+          "horodatage_utc": "2026-10-22T07:27:57.837026+00:00",
+          "epoch_kernel_dt": 135097021.3359375
+        }
+      ],
+      "bloc_hash": "2FE5D33023DC5E0600B4EDB59DCE597FC9BB41627511D101122F39E1757E277A"
+    },
+    {
+      "height": 1,
+      "timestamp_utc": "2026-10-22T07:27:57.837243+00:00",
+      "kernel_dt": 135097021.3359375,
+      "prev_hash": "2FE5D33023DC5E0600B4EDB59DCE597FC9BB41627511D101122F39E1757E277A",
+      "merkle_root_txs": "113B7D7680AA222719197F16B29C342054F277FE84D5CBAA9F07D83349D52180",
+      "merkle_root_sceaux": "40621AD0A08830DD09F4C5C64E6E3D678C0A9EE7AFB6A8825014E1CA8148A2A7",
+      "metrologie": {
+        "watts_labo": 47.7,
+        "debit_hydro_l_min": 313,
+        "vigilance": 38.5,
+        "latence_sync_ref_ms": 2.9
+      },
+      "balances_cites": {
+        "CITE_PC_TERRESTRE": 2950000.0,
+        "CITE_GALAXY_MOBILE": 7800000.0,
+        "CITE_QISTAS_CIVIQUE": 50000.0,
+        "FONDS_SOUVERAIN_RESERVE": 302000000.0,
+        "CAISSE_ZAKAT_CIVIQUE": 200000.0
+      },
+      "invariants": {
+        "mizan": 0.6225,
+        "ligne_ref": 0.122,
+        "epsilon": 0.021,
+        "plafond": 0.6015,
+        "constante_c": 313,
+        "constante_m": 24434,
+        "qubit_physique_local": false,
+        "omniscience_claim": false,
+        "allah_hors_matrice": true,
+        "anti_usure": true,
+        "doi": "10.5281/zenodo.23554838",
+        "auteur": "M. Ahmed EL BAHLOUL"
+      },
+      "transactions": [
+        {
+          "tx_id": "TX_3_1792654077837",
+          "emetteur": "CITE_PC_TERRESTRE",
+          "destinataire": "CITE_QISTAS_CIVIQUE",
+          "montant_mzn": 50000.0,
+          "type_tx": "SADAQA",
+          "timestamp_utc": "2026-10-22T07:27:57.837164+00:00",
+          "friction_pct": 0.0,
+          "commentaire": "Dotation initiale Qistas civique friction 0",
+          "hash_preuve": "A12F6D7595A13A634B24E975DF045F45AFBC6E92E1A2F422FBDEC4A44BCD6A34"
+        },
+        {
+          "tx_id": "TX_4_1792654077837",
+          "emetteur": "CITE_GALAXY_MOBILE",
+          "destinataire": "CAISSE_ZAKAT_CIVIQUE",
+          "montant_mzn": 200000.0,
+          "type_tx": "ZAKAT",
+          "timestamp_utc": "2026-10-22T07:27:57.837204+00:00",
+          "friction_pct": 0.0,
+          "commentaire": "Purification Zakat 2.5% (1/40) sur solde stagnant de 8000000.00 MZN (Nisab 668255.0)",
+          "hash_preuve": "7AFC2073A9A1A935E36E2668DEA48834A7EF074B283930151C31400A9ECB4F65"
+        }
+      ],
+      "sceaux": [
+        {
+          "token_id": 2,
+          "code_acte": "A071_ETAT_CIVIL_PERMANENT",
+          "sha256_empreinte": "7F82A31B89FC45098D1244E367291A8090C8B1E34720914F571829B0D8A29145",
+          "description": "Acte d'État Civil Permanent P3/P5 - Auteur M. Ahmed EL BAHLOUL",
+          "detenteur": "0xc9550dd0a57c609494dbc44450df48d798ebfb0b",
+          "horodatage_utc": "2026-10-22T07:27:57.837150+00:00",
+          "epoch_kernel_dt": 135097021.3359375
+        }
+      ],
+      "bloc_hash": "5878C40A5E9637DF426DD29A5634C31160C89FB6028A7E4153EE6774D974309E"
+    }
+  ],
+  "nb_sceaux_enregistres": 2,
+  "nb_transactions_totales": 4,
+  "garde_fous": {
+    "qubit_physique_local": false,
+    "omniscience_claim": false,
+    "allah_hors_matrice": true,
+    "anti_usure": true
+  }
+}

@@ -1,6 +1,6 @@
 {
   "nom_sceau": "sceau_matrice_unisson_or_argent_v5",
-  "timestamp": "2026-10-22T08:58:08",
+  "timestamp": "2026-10-22T09:35:04",
   "statut": "SCEAU_ASTRO_QODE_CONSOLIDE_OK",
   "doi": "10.5281/zenodo.23479740",
   "invariants": {
@@ -176,5 +176,5 @@
   "metadata_supplementaire": {
     "diagnostic_pont_materiel": {}
   },
-  "empreinte_sha256": "222401669b3b294c0391e6347f6513bab5b614c9e2850d70d48425bee8226b4e"
+  "empreinte_sha256": "8cc4065b233f8dc569e78fef714e4d50da7b8794ab8c27574f3734dd2db16d87"
 }

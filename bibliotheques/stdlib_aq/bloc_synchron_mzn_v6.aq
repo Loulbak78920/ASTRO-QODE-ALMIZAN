@@ -1,0 +1,68 @@
+# ==============================================================================
+# BIBLIOTHÈQUE STANDARD ASTRO-Q°ODE : BLOC SYNCHRON MZN & SMART CONTRACT (V6.0)
+# ==============================================================================
+# Auteur Officiel : M. Ahmed EL BAHLOUL (alias IMAM8MAHDI / M. Almizan Elbahloul)
+# Clé Dorée       : 0xc9550dd0a57c609494dbc44450df48d798ebfb0b
+# DOI Zenodo      : 10.5281/zenodo.23554838
+# ==============================================================================
+# Ce programme scelle le Bloc Synchron MZN, l'émission bornée à 313 000 000 MZN,
+# l'anti-usure absolue (0% Riba), la purification par la Zakat (2.5% = 1/40),
+# le canal Sadaqa sans friction (0%) et le Contrat Commercial Égalitaire 50/50.
+# ==============================================================================
+
+SET CLOCK_DX_SOLEIL = 50027.8359375
+SET CLOCK_DY_LUNE   = 46993.5
+SET CLOCK_DZ_TERRE  = 135000000
+SET CLOCK_DT_KERNEL = 135097021.3359375
+
+MECQUOIS {
+    # Constantes monétaires, fiscales et métrologiques scellées
+    omega_SUPPLY_MZN_TOTAL      = 313000000.0 I
+    omega_UNLOCKED_P1_P2        = 11000000.0 I
+    omega_RESERVE_ATTENTE       = 302000000.0 I
+    omega_TAUX_ZAKAT_BPS        = 250 I          # 2.5% = 1/40
+    omega_NISAB_LOGIQUE_MZN     = 668255.0 I
+    omega_NISAB_OR_GRAMMES      = 85.0 I
+    omega_NISAB_ARGENT_GRAMMES  = 595.0 I
+    omega_MIZAN_PLAFOND         = 0.6225 I
+    omega_EPSILON               = 0.021 I
+    omega_PLAFOND_EFFECTIF      = 0.6015 I
+    omega_WATTS_LABO            = 47.7 I
+    omega_DEBIT_HYDRO_L_MIN     = 313 I
+    omega_PARTAGE_COMMERCIAL    = 0.50 I         # Contrat Commercial 50/50
+}
+
+MEDINOIS {
+    # 1. Déploiement et vérification du registre comptable des 3 Cités
+    alpha_balance_pc_terrestre = 3000000.0 I;
+    alpha_balance_galaxy_mobile = 8000000.0 I;
+    alpha_balance_qistas_civique = 0.0 I;
+
+    # 2. Calcul automatisé de la Zakat de purification sur le pôle Galaxy (8M MZN > Nisab)
+    alpha_zakat_due_galaxy = (alpha_balance_galaxy_mobile * 25) / 1000; # 2.5% = 200 000 MZN
+    alpha_balance_galaxy_mobile = alpha_balance_galaxy_mobile - alpha_zakat_due_galaxy;
+    alpha_balance_qistas_civique = alpha_balance_qistas_civique + alpha_zakat_due_galaxy;
+
+    # 3. Transfert volontaire Sadaqa (friction 0%) du PC vers Qistas Civique
+    alpha_don_sadaqa = 50000.0 I;
+    alpha_balance_pc_terrestre = alpha_balance_pc_terrestre - alpha_don_sadaqa;
+    alpha_balance_qistas_civique = alpha_balance_qistas_civique + alpha_don_sadaqa;
+
+    # 4. Vérification de l'Invariant Al-Mizan sous la Monade
+    alpha_monade_synchron = Monad(0.6015 I);
+    ( alpha_monade_synchron >>= (lambda pt {
+        (pt ⊃ omega_MIZAN_PLAFOND) ?? {
+            return Monad(pt);
+        } ¿ {
+            return 0 : HÉLIUM;
+        }
+    }) ) ??;
+
+    (( alpha_monade_synchron ));
+
+    # 5. Scellement du Bloc Synchron MZN sous horloge Kernel dt
+    alpha_sceau_synchron = sceller_sha256("sceau_bloc_synchron_mzn_v6");
+
+    afficher("Bloc Synchron MZN & Smart Contract V6.0 scellés avec succès sous bride Mizan 0.6225.");
+    return 0 : HÉLIUM;
+}
