@@ -1,0 +1,30 @@
+{
+  "code_acte": "A078",
+  "titre": "ACTE SCELLÉ A078 — PROTOCOLE DE DÉPLOIEMENT DE LA LIQUIDITÉ PUBLIQUE MZN SUR UNISWAP V3 (BASE MAINNET)",
+  "date_scellement": "2026-10-22T12:05:00+00:00",
+  "cycle_harmonique": "Cycle 15 Phases — Phase 15 Scellée",
+  "statut": "SCELLÉ_IMMUABLE_ET_AUTHENTIFIÉ",
+  "auteur_souverain": {
+    "nom": "M. Ahmed EL BAHLOUL",
+    "alias": "IMAM8MAHDI / M. Almizan Elbahloul",
+    "cle_doree_racine": "0xC9550Dd0A57C609494DBc44450Df48D798ebfB0B",
+    "tresorerie_privee": "0xb7f26cD0eE5E74c51B3F4e71e4fA75B3F246837C",
+    "contrat_deploie_base": "0x520cbd0e1e72178f9e819AFf1e815606923A71db",
+    "doi_zenodo": "10.5281/zenodo.23554838"
+  },
+  "parametres_liquidite_recommandes": {
+    "plateforme": "Uniswap v3 (Base Mainnet L2)",
+    "paire_officielle": "ETH / MZN",
+    "palier_frais_recommande": "1.00% (ou 0.30%)",
+    "plage_de_prix": "Full Range (Plage Complète)",
+    "dotation_recommandee": "10 000 MZN contre ~0.002 ETH (Préservation de 99.8% de la trésorerie)",
+    "url_preconfigurree": "https://app.uniswap.org/positions/add/new?chain=base&currencyA=ETH&currencyB=0x520cbd0e1e72178f9e819AFf1e815606923A71db"
+  },
+  "doctrine_pesee_juste": {
+    "anti_usure": true,
+    "anti_gharar": true,
+    "frais_recompense_fournisseur": "1% reverse a l auteur a chaque echange",
+    "reserve_protegee": "302 000 000 MZN scelles inalienables"
+  },
+  "empreinte_sha256_guide": "9CA7EA5BA9D153C4BEE4377B1ED9E153156AE184AD671D66A1C9CFF0AB9CBC80"
+}
