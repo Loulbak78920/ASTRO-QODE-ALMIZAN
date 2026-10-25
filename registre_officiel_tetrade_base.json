@@ -1,0 +1,12 @@
+{
+  "date_deploiement_utc": "2026-10-23 09:34:26 UTC",
+  "emetteur": "0xb7f26cD0eE5E74c51B3F4e71e4fA75B3F246837C",
+  "reseau": "Base Mainnet (8453)",
+  "pivot_usdc": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  "tokens": {
+    "MZN": "0x520cbd0e1e72178f9e819AFf1e815606923A71db",
+    "MZN-MAT": "0xD45406EEdc8d9AeD3828c06C3D208804D5b69c2a",
+    "MZN-NRG": "0x38e1757A1971E038c8A6523B008179BEdc9AaAa0",
+    "MZN-PLS": "0x7Cd56CE27E4CE363cDFbd63F4e2713C8eed2cC71"
+  }
+}

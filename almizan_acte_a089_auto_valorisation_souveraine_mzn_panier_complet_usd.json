@@ -1,0 +1,60 @@
+{
+  "code_acte": "A089",
+  "titre": "AUTO-VALORISATION SOUVERAINE DU MZN ET PANIER MULTIDIMENSIONNEL COMPLET DES 5 USD SUR BASE MAINNET",
+  "auteur_souverain": "M. Ahmed EL BAHLOUL (alias IMAM8MAHDI / M. Almizan Elbahloul)",
+  "date_scellement_iso": "2026-10-23T14:43:00+02:00",
+  "statut": "SCELLÉ_EN_MEMOIRE_ET_PREPARE_AU_CONTRAT_MAITRE",
+  "contrat_maitre_actif": "0x520cbd0e1e72178f9e819AFf1e815606923A71db",
+  "chaine": "Base Mainnet (Chain ID 8453)",
+  "cle_doree_racine": "0xC9550Dd0A57C609494DBc44450Df48D798ebfB0B",
+  "tresorerie_depositaire": "0xb7f26cD0eE5E74c51B3F4e71e4fA75B3F246837C",
+  "declaration_souverainete": "Le MZN ne dérive pas sa valeur de l'USDC ni d'aucune monnaie fiduciaire extérieure. Sa valeur est auto-portée, intrinsèque et adossée à la Tétrade des actifs physiques scellés (Matière Silicium/Au/Ag, Énergie Débit/Cryo, Plasma Ionisation/CPMG, Qubit Informationnel). Les 5 USD constituent un miroir de conversion externe et non la source de la valeur.",
+  "cotation_intrinsèque_autonome": {
+    "plancher_substance_usd": 0.0697,
+    "pivot_nominal_usd": 0.1046,
+    "plafond_mizan_usd": 0.1697,
+    "formule": "(C * M) / (|TRIPLE|^(1/3)) * Poids_Harmonique",
+    "invariants": {
+      "C": 313,
+      "M": 24434,
+      "TRIPLE": -2393774546,
+      "LIGNE_REF": 0.122,
+      "FORME": 0.5005,
+      "PLAFOND_MIZAN": 0.6225
+    }
+  },
+  "panier_multidimensionnel_5_usd_base": {
+    "USDC": {
+      "adresse": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "decimales": 6,
+      "role": "Pivot_Reglemente"
+    },
+    "USDT": {
+      "adresse": "0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2",
+      "decimales": 6,
+      "role": "Liquidite_Mondiale_Temps_Reel"
+    },
+    "DAI": {
+      "adresse": "0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb",
+      "decimales": 18,
+      "role": "Collatéral_Decentralise_Surcollat"
+    },
+    "USDbC": {
+      "adresse": "0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA",
+      "decimales": 6,
+      "role": "Memoire_Historique_L2"
+    },
+    "USDS": {
+      "adresse": "0x820C137fa70C8691f0e44Dc420a5e53c168921Dc",
+      "decimales": 18,
+      "role": "Rendement_Autonome_Ecosystemique"
+    }
+  },
+  "tetrade_cosmique": {
+    "MZN": "0x520cbd0e1e72178f9e819AFf1e815606923A71db",
+    "MZN_MAT": "0xD45406EEdc8d9AeD3828c06C3D208804D5b69c2a",
+    "MZN_NRG": "0x38e1757A1971E038c8A6523B008179BEdc9AaAa0",
+    "MZN_PLS": "0x7Cd56CE27E4CE363cDFbd63F4e2713C8eed2cC71"
+  },
+  "empreinte_sha256": "0x3a9d59e35f99292c30076a0fb4b3fcf442e39e0839e3be7506fcbdfb99ee69a8"
+}

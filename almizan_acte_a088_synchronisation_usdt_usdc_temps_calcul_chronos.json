@@ -1,0 +1,46 @@
+{
+  "code_acte": "A088",
+  "titre": "SYNCHRONISATION DUAL-STABLECOIN USDC-USDT ET CALIBRAGE DU TEMPS DE CALCUL CHRONOS",
+  "auteur_souverain": "M. Ahmed EL BAHLOUL (alias IMAM8MAHDI / M. Almizan Elbahloul)",
+  "date_scellement_iso": "2026-10-23T14:35:00+02:00",
+  "statut": "SCELLÉ_EN_MEMOIRE_ET_PREPARE_AU_CONTRAT_MAITRE",
+  "contrat_maitre_actif": "0x520cbd0e1e72178f9e819AFf1e815606923A71db",
+  "chaine": "Base Mainnet (Chain ID 8453)",
+  "cle_doree_racine": "0xC9550Dd0A57C609494DBc44450Df48D798ebfB0B",
+  "tresorerie_depositaire": "0xb7f26cD0eE5E74c51B3F4e71e4fA75B3F246837C",
+  "dual_stablecoin_chronos": {
+    "usdc": {
+      "adresse": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "symbole": "USDC",
+      "decimales": 6,
+      "role": "Pivot_Fiduciaire_Primaire_Americain"
+    },
+    "usdt": {
+      "adresse": "0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2",
+      "symbole": "USDT",
+      "decimales": 6,
+      "role": "Pivot_Fiduciaire_Secondaire_Mondial"
+    },
+    "pool_uniswap_v3_reference": {
+      "adresse": "0xd56da2b74ba826f19015e6b7dd9dae1903e85da1",
+      "frais": "0.01% (fee 100)",
+      "tick_nominal": 16,
+      "ratio_parite_nominal": 1.001678
+    }
+  },
+  "metriques_temps_de_calcul": {
+    "horloge_quantique_chronos": "TEMPS_DE_BLOC_BASE_2S_CALIBRE",
+    "ligne_reference": 0.122,
+    "forme": 0.5005,
+    "plafond_mizan": 0.6225,
+    "stabilite_temporelle_garantie_pct": 99.8322,
+    "role_systeme": "Synchronisation de la dérive temporelle pour le calcul d'arbitrage instantané et de liquidité globale de la Tétrade MZN"
+  },
+  "tetrade_cosmique_reelle": {
+    "MZN": "0x520cbd0e1e72178f9e819AFf1e815606923A71db",
+    "MZN_MAT": "0xD45406EEdc8d9AeD3828c06C3D208804D5b69c2a",
+    "MZN_NRG": "0x38e1757A1971E038c8A6523B008179BEdc9AaAa0",
+    "MZN_PLS": "0x7Cd56CE27E4CE363cDFbd63F4e2713C8eed2cC71"
+  },
+  "empreinte_sha256": "0x73d325e6488d1d860e6f21c27ea2a3e0b741d408ebca9c323ee7963ecfae4e1a"
+}
