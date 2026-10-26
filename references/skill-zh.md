@@ -354,7 +354,7 @@ py -3 "C:/Users/Administrateur/.qoder/skills/commit-skill-work/scripts/find_stal
   --search-root "C:/Users/Administrateur/.qoder/skills"
 ```
 
-脚本只读，且属于 `commit-skill-work`，不属于被提交的 Skill：`<dossier-skill>` 可能只有 `SKILL.md`，所以上面的路径绝不能由 `<dossier-skill>/scripts/` 推导。它枚举仓库、包含 `.qoder/skills/<nom>` 的 ref，然后通过 `git hash-object --path` 将每个 blob 与源码比较（应用 eol 过滤器）。脚本不执行 `fetch`：`published` 仅表示本地存在 `refs/remotes/` ref，不表示已向服务器查询。
+脚本只读，且属于 `commit-skill-work`，不属于被提交的 Skill：`<dossier-skill>` 可能只有 `SKILL.md`，所以上面的路径绝不能由 `<dossier-skill>/scripts/` 推导。它枚举仓库、包含 `.qoder/skills/<nom>` 的 ref，然后通过 `git hash-object --path` 将每个 blob 与源码比较（应用 eol 过滤器）。脚本不执行 `fetch`：`published` 仅表示本地存在 `refs/remotes/` ref，不表示已向服务器查询。在解释基于活动目录的 `STALE` 之前，记录 `git status --porcelain=v1`，把每个 `HEAD:<chemin-relatif>` 与 `git hash-object --path` 比较：任一 OID 不同即说明 live 含提交后的字节。此时用 `git -C "<depot>" archive HEAD | tar -x -C "<tmp>/<nom-skill>"` 冻结已提交树，并以 `--skill "<tmp>/<nom-skill>"` 对该目录运行脚本：冻结目录必须保留 Skill 名，否则默认 `--dest` 错误并返回假的 `RESULT NONE`（2026-10-26 已验证）；否则显式传 `--dest .qoder/skills/<nom-skill>`。再对 live 以 `--skill "<dossier-skill>"` 运行，分别报告 `source=HEAD <oid>` 与 `source=live <oid>`：基于 live 的 `STALE` 不能证明归档落后于提交；不要归因于当前提交，也不要重新发布。若各处 OID 相等，只运行一次，报告绑定 `HEAD`。
 
 | 输出 | 含义 | 代码 |
 |---|---|---|
@@ -366,7 +366,7 @@ py -3 "C:/Users/Administrateur/.qoder/skills/commit-skill-work/scripts/find_stal
 - `published` 指 `refs/remotes/` 下的 ref；`local` 仅指本地分支或标签。本地领先的归档（`[ahead 1]`）不算已发布。
 - 与最终源码比较，而不是与提交差异比较：归档可能在提交前就已过期。在把原因归给当前提交前，先核对 `git log -1 --format='%h %s' -- ".qoder/skills/<nom>"`。由 `git init` 创建的 per-Skill 仓库会使 `Repositories` 从 N 变为 N+1，但仍为 `RESULT NONE`：脚本只查找 `<repo>/.qoder/skills/<nom>`，而该仓库把 `SKILL.md` 存放在根目录；这不是漏报归档（已观察：26 → 27）。在任何截断前先取退出码：`out=$(…); rc=$?; printf '%s\n' "$out" | tail -40`；`cmd | tail; echo $?` 取到的是 `tail` 的状态，不是脚本的（已观察：`ARCHIVE_EXIT=0`）。
 - 此步骤中绝不复制、提交、合并、推送或删除归档。报告 `Archives : <ref> <commit> STALE (<n>/<N>)`，等待明确指令。重新发布是独立步骤（`publier-skill-qoder-vers-depot-git`），绝不自动执行。
-- 已观察案例（2026-10-26）：相关修改成为提交 `3a47dab` 后，归档 `ddfd179` 变为过期，`3/3 MISMATCH`、`EXIT=1`；本 Skill 的归档 `96fd809` 在加入 `scripts/find_stale_archives.py` 前已有 `2/3` 文件不同。
+- 已观察案例（2026-10-26）：相关修改成为提交 `3a47dab` 后，归档 `ddfd179` 变为过期，`3/3 MISMATCH`、`EXIT=1`；本 Skill 的归档 `96fd809` 在加入 `scripts/find_stale_archives.py` 前已有 `2/3` 文件不同。已观察案例（2026-10-26）：提交 `6de399e` 后对 live 运行归档报告 → `source=bae38e2ec1ef` 与 `source=e0443eea1f31` 分别对应 `SKILL.md` 与 `references/skill-zh.md`，而 `HEAD` 中为 `d74c20555d32` 与 `e712bb4862b1`（会话 `103a50df` 于 23:14:11 写入）；`references/contenu-vers-main.md` 与提交一致（`8b1201348f8d`）。因此该 `STALE` 并不描述归档相对提交的状态。已验证案例（2026-10-26）：对 `HEAD` `b63e199` 的冻结树运行，`source=464081124acb` 与 `source=276fd3f46c86`，仍为同一 `STALE`；冻结目录命名错误时返回假的 `RESULT NONE`。
 
 ## 步骤 10 — 仅在要求时推送
 
@@ -429,7 +429,7 @@ find "C:/Users/Administrateur/.qoder/skills" "<racine-espace>/.qoder/skills" -ma
 | 根提交：`HEAD^{tree}`、`ls-tree -r HEAD`、`ls-files -s` 或 `hash-object --path` 不一致，或提交后 `status` 立即变化 | 此前没有 `HEAD`；hook 或提交期间发生写入 | 核对树与索引的 OID，然后立即重跑 `status`；不能只凭 `log -1 --stat` 下结论 |
 | 清单缺失或被放进 Skill 目录 | 验证未留痕，或清单把自己算入 | 最后一次写入后把清单保存到 Skill 之外；否则从步骤 4 重来 |
 | `RESULT PASS`，但 `Files (N)` 列出 `__pycache__/*.pyc` | 验证器不能证明没有缓存 | 只删除本会话创建的缓存，重跑 QA，要求 `Files (N)` 等于无缓存清单；若缓存预先存在且被保留，则验证无缓存快照 |
-| 提交后归档出现 `MISMATCH`/`MISSING` | 归档副本未重新发布，或在提交前就已过期 | 报告 `STALE` 及 ref/commit；不要自动复制或推送 |
+| 提交后归档出现 `MISMATCH`/`MISSING` | 归档副本未重新发布、提交前已过期，或 live 与 `HEAD` 不同却用 live 计算报告 | 报告 `STALE` 及 ref/commit 与 `source=HEAD <oid>`/`source=live <oid>` 对照；归档比对使用冻结的 `HEAD` 树；不要自动复制或推送 |
 | `find_stale_archives.py` 退出码为 1，或归档只存在于本地 ref `[ahead 1]`，或 `git init` 后 `Repositories` +1 但为 `RESULT NONE` | 检测到过期归档（不是崩溃）、提交未推送，或 per-Skill 仓库没有 `.qoder/skills/<nom>` 路径 | 阅读报告（退出码 2 = 用法/环境）；标记 `local`，不要称为已发布；`cmd` 后接 `tail` 返回的是 `tail` 的状态：截断前先取 `rc=$?` |
 | OID 为空或 `cat-file` 失败，但管道退出码为 0 | 路径未暂存、OID 多行，或缺少 `pipefail` | 先检查 `[ -n "$oid" ]` 与 `git cat-file -e`，再重跑 |
 | 修改后的 Skill 未被解析或找不到 | 运行时索引未重载，或项目级同名遮蔽 | 调用该 Skill，检查两个根，再请用户执行 `/skills reload` |
@@ -452,7 +452,7 @@ find "C:/Users/Administrateur/.qoder/skills" "<racine-espace>/.qoder/skills" -ma
 - [ ] 审阅与提交之间 `HEAD` 前进：提交前固定 `reviewed_oid`，推送前 `HEAD:<chemin>` 等于该 OID，推送已有提交且未新建提交或 amend，远端 OID 已核对。
 - [ ] 根提交：首次提交前先用 `git rev-parse ":<chemin>"` = `git hash-object --path` 校验索引，提交后再校验 `HEAD:<chemin>`；`HEAD^{tree}`、`ls-tree -r HEAD`、`ls-files -s` 与 `hash-object --path` 已与索引核对，随后立即重跑 `status`。
 - [ ] 提交后状态干净，或副作用已解释并单独提交。
-- [ ] 最后一次提交后已检查邻近归档：`NONE`、`FRESH`，或报告了带 ref/commit 的 `STALE`。
+- [ ] 最后一次提交后已检查邻近归档：`NONE`、`FRESH`，或报告了带 ref/commit 的 `STALE`；若 live 与 `HEAD` 不同，报告冻结 `HEAD` 树的结果与 `source=HEAD <oid>`、`source=live <oid>`，不重新归因也不重新发布。
 - [ ] 未自动复制、提交或推送任何归档。
 - [ ] 仅在要求时推送；候选已只读探测（`git ls-remote --heads <url>`：`RC=0`、目标分支不存在），远端 `main` 在 push 前后已记录且未变，remote、分支和哈希均已核对（`pushed_oid` 在 push 前固定并与 `ls-remote` 比对），仅当本地与远端分支名相同时才用 `-u`；无共同祖先时经 `references/contenu-vers-main.md` 将内容应用到 `main`，不检出也不合并。
 - [ ] 已记录 `SKILL.md`、`scripts/` 与 `references/` 的 SHA-256；单独 `Fingerprint` 只覆盖 `SKILL.md`。
