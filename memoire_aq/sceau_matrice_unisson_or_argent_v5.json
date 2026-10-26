@@ -1,6 +1,6 @@
 {
   "nom_sceau": "sceau_matrice_unisson_or_argent_v5",
-  "timestamp": "2026-10-22T14:13:29",
+  "timestamp": "2026-10-26T10:54:22",
   "statut": "SCEAU_ASTRO_QODE_CONSOLIDE_OK",
   "doi": "10.5281/zenodo.23479740",
   "invariants": {
@@ -27,8 +27,8 @@
   "etat_vm_biomecanique": {
     "forme_matiere_active": {
       "index": 4,
-      "code": "F4: H Plas",
-      "nom": "Hydrogène Plasma",
+      "code": "F4: Plas Coe",
+      "nom": "Plasma Cœur de Fusion",
       "paradigme": "MECQUOIS"
     },
     "registre_mecquois_immuable": {
@@ -176,5 +176,5 @@
   "metadata_supplementaire": {
     "diagnostic_pont_materiel": {}
   },
-  "empreinte_sha256": "09f8856c79eaf91e2c990b7599ea075c23fb5aa76afbcffd144b8e8504030380"
+  "empreinte_sha256": "135f05f0ebeba346d61676e0c7ec9a9c42eb1129985fe4803cd25d7b6c65681c"
 }

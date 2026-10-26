@@ -1,6 +1,6 @@
 {
   "nom_sceau": "sceau_bloc_synchron_mzn_v6",
-  "timestamp": "2026-10-22T14:13:30",
+  "timestamp": "2026-10-26T10:54:34",
   "statut": "SCEAU_ASTRO_QODE_CONSOLIDE_OK",
   "doi": "10.5281/zenodo.23479740",
   "invariants": {
@@ -27,8 +27,8 @@
   "etat_vm_biomecanique": {
     "forme_matiere_active": {
       "index": 4,
-      "code": "F4: H Plas",
-      "nom": "Hydrogène Plasma",
+      "code": "F4: Plas Coe",
+      "nom": "Plasma Cœur de Fusion",
       "paradigme": "MECQUOIS"
     },
     "registre_mecquois_immuable": {
@@ -180,5 +180,5 @@
   "metadata_supplementaire": {
     "diagnostic_pont_materiel": {}
   },
-  "empreinte_sha256": "5a2526efe868cf0659d9b44efac7e43d93a821e953cd3c9b037193740a2f36de"
+  "empreinte_sha256": "41714a6e704bc2d6e773dc8ed459d805fc1e6232d73c6b6fc7a2f8c37dcc5b51"
 }

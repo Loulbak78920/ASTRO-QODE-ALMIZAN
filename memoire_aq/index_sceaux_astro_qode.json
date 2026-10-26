@@ -1,9 +1,9 @@
 {
   "sceaux": {
     "sceau_suite_logique_v4": {
-      "timestamp": "2026-10-22T14:13:29",
-      "empreinte_sha256": "4a332fc05a009a91c64aba8c3daf8288d4392a476da3f52ba81436d56d059307",
-      "chemin": "C:\\Users\\Administrateur\\Desktop\\GITHUB_DEPOT_PUBLIC_IMAM8MAHDI\\memoire_aq\\sceau_suite_logique_v4.json"
+      "timestamp": "2026-10-26T10:54:22",
+      "empreinte_sha256": "ae8648141fba9ea4c9f330552911ca2625dc6048a495abcc74c4ead4e3d01412",
+      "chemin": "C:\\Users\\Administrateur\\Desktop\\IMAM8MAHDI\\GITHUB_DEPOT_PUBLIC_IMAM8MAHDI\\memoire_aq\\sceau_suite_logique_v4.json"
     },
     "sceau_cli_astro_qode_v4": {
       "timestamp": "2026-10-22T04:14:51",
@@ -11,17 +11,17 @@
       "chemin": "C:\\Users\\Administrateur\\Desktop\\IMAM8MAHDI\\ASTRO-Q°ODE_SYSTEME\\memoire_aq\\sceau_cli_astro_qode_v4.json"
     },
     "sceau_matrice_unisson_or_argent_v5": {
-      "timestamp": "2026-10-22T14:13:29",
-      "empreinte_sha256": "09f8856c79eaf91e2c990b7599ea075c23fb5aa76afbcffd144b8e8504030380",
-      "chemin": "C:\\Users\\Administrateur\\Desktop\\GITHUB_DEPOT_PUBLIC_IMAM8MAHDI\\memoire_aq\\sceau_matrice_unisson_or_argent_v5.json"
+      "timestamp": "2026-10-26T10:54:22",
+      "empreinte_sha256": "135f05f0ebeba346d61676e0c7ec9a9c42eb1129985fe4803cd25d7b6c65681c",
+      "chemin": "C:\\Users\\Administrateur\\Desktop\\IMAM8MAHDI\\GITHUB_DEPOT_PUBLIC_IMAM8MAHDI\\memoire_aq\\sceau_matrice_unisson_or_argent_v5.json"
     },
     "sceau_bloc_synchron_mzn_v6": {
-      "timestamp": "2026-10-22T14:13:30",
-      "empreinte_sha256": "5a2526efe868cf0659d9b44efac7e43d93a821e953cd3c9b037193740a2f36de",
-      "chemin": "C:\\Users\\Administrateur\\Desktop\\GITHUB_DEPOT_PUBLIC_IMAM8MAHDI\\memoire_aq\\sceau_bloc_synchron_mzn_v6.json"
+      "timestamp": "2026-10-26T10:54:34",
+      "empreinte_sha256": "41714a6e704bc2d6e773dc8ed459d805fc1e6232d73c6b6fc7a2f8c37dcc5b51",
+      "chemin": "C:\\Users\\Administrateur\\Desktop\\IMAM8MAHDI\\GITHUB_DEPOT_PUBLIC_IMAM8MAHDI\\memoire_aq\\sceau_bloc_synchron_mzn_v6.json"
     }
   },
-  "derniere_mise_a_jour": "2026-10-22T14:13:30",
+  "derniere_mise_a_jour": "2026-10-26T10:54:34",
   "nb_sceaux": 4,
   "qubit_physique_local": false
 }

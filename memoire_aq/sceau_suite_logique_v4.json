@@ -1,6 +1,6 @@
 {
   "nom_sceau": "sceau_suite_logique_v4",
-  "timestamp": "2026-10-22T14:13:29",
+  "timestamp": "2026-10-26T10:54:22",
   "statut": "SCEAU_ASTRO_QODE_CONSOLIDE_OK",
   "doi": "10.5281/zenodo.23479740",
   "invariants": {
@@ -27,8 +27,8 @@
   "etat_vm_biomecanique": {
     "forme_matiere_active": {
       "index": 1,
-      "code": "F1: H Gaz",
-      "nom": "Hydrogène Gazeux",
+      "code": "F1: Plas Pho",
+      "nom": "Plasma Photosphérique",
       "paradigme": "MECQUOIS"
     },
     "registre_mecquois_immuable": {
@@ -38,7 +38,7 @@
       "omega_MONAD_SOUL": "[50027.8359375 ∪ 46993.5 ∪ 135000000.0]"
     },
     "memoire_medinoise_active": {
-      "alpha_cryo_5026": "{'ok': True, 'port': 5026, 'mode_transport': 'TCP_DIRECT_5026', 'trame_recue': 'STATus:QUEStionable:TEMPerature? 22.50mK', 'temp_mK': 22.5, 'seuil_killswitch_mK': 45.0, 'killswitch_declenche': False, 'mizan': 0.6225, 'erreur_tcp': None, 'qubit_physique_local': False, 'commande': 'READ:CRYO:ALL?', 'temp_mk': 22.5}",
+      "alpha_cryo_5026": "{'ok': True, 'port': 5026, 'mode_transport': 'NOMINAL_22_5_MK_FALLBACK', 'trame_recue': 'STATus:QUEStionable:TEMPerature? 22.50mK (fallback)', 'temp_mK': 22.5, 'seuil_killswitch_mK': 45.0, 'killswitch_declenche': False, 'mizan': 0.6225, 'erreur_tcp': 'timed out', 'qubit_physique_local': False, 'commande': 'READ:CRYO:ALL?', 'temp_mk': 22.5}",
       "alpha_monade_silicium": "Monad((0.6015))"
     },
     "horloge_kernel": {
@@ -167,5 +167,5 @@
   "metadata_supplementaire": {
     "diagnostic_pont_materiel": {}
   },
-  "empreinte_sha256": "4a332fc05a009a91c64aba8c3daf8288d4392a476da3f52ba81436d56d059307"
+  "empreinte_sha256": "ae8648141fba9ea4c9f330552911ca2625dc6048a495abcc74c4ead4e3d01412"
 }
