@@ -76,7 +76,7 @@ git -C "<depot>" ls-files --error-unmatch -- "<chemin>"
 
 ### 写入前：重新锚定已批准的方案
 
-已批准的方案描述的是撰写时的文件，不是写入时的文件。判断是否仍在写入的证据是磁盘，不是会话状态：每次写入前重新采样目标，并与方案中记录的基线比较。要求 `size`、`mtime` 与 SHA-256 在至少 3 个间隔样本（≥ 6 秒）上完全一致；若目录仍在变化，改用 4 个样本、≥ 20 秒的窗口。`wait_chat_sessions`/`runtimeState` 只是辅助线索：超时停在 `running` 或助手文本，都不能证明发生过写入或没有写入。已观察（2026-10-26）：两次等待在 revision 95→105 时超时（`running`、`lastAssistantText=null`），而 3 个文件已稳定约 75 秒；反过来，同一回合中的「尚未写入」也可能出现在后续写入之前。磁盘稳定：不要因会话状态而阻塞；磁盘仍在变化：等待稳定窗口或冻结快照。
+已批准的方案描述的是撰写时的文件，不是写入时的文件。判断是否仍在写入的证据是磁盘，不是会话状态：每次写入前重新采样目标，并与方案中记录的基线比较。要求 `size`、`mtime` 与 SHA-256 在至少 3 个间隔样本（≥ 6 秒）上完全一致；若目录仍在变化，改用 4 个样本、≥ 20 秒的窗口。`wait_chat_sessions`/`runtimeState` 只是辅助线索：超时停在 `running` 或助手文本，都不能证明发生过写入或没有写入。已观察（2026-10-26）：两次等待在 revision 95→105 时超时（`running`、`lastAssistantText=null`），而 3 个文件已稳定约 75 秒；反过来，同一回合中的「尚未写入」也可能出现在后续写入之前。磁盘稳定：不要因会话状态而阻塞；磁盘仍在变化：等待稳定窗口或冻结快照。为了在不把只读会话误认为作者的情况下指名写入者，用 `scripts/find_writers.py` 扫描会话 JSONL（`<racine-projets>/<projet>/*.jsonl`）：保留 `input.file_path` 指向 Skill 目录的 `tool_use` `Write`/`Edit`，按会话取最大 `timestamp`；`list_chat_sessions.updatedAt` 与 `runtimeState` 不能标示最后一次写入。归因只说明「谁在写」：是否继续仍由磁盘指纹决定。已观察（2026-10-26）：18:23:15（本地）的一次写入被归给 `49d435d9`，而它在 18:30:41 之前没有任何 `Write`/`Edit`；JSONL 显示 `87644a66` 写到 `17:26:48Z`，但其 `updatedAt` 停在 `17:22:01Z`。
 
 ```bash
 stat -c '%s %y' "<fichier>"
@@ -226,7 +226,7 @@ manifest="$(dirname "$snap")/fingerprints-<nom-skill>.txt"
 
 7. 提交并推送后，用 `C:/Users/Administrateur/.qoder/skills/commit-skill-work/scripts/find_stale_archives.py` 分别以 `--skill "<instantané>"` 和 `--skill "<dossier-skill>"` 运行；新 ref 必须为 `FRESH`，旧的 `STALE` 只报告、不重发。两次报告的差异说明提交后又发生了写入。
 
-8. 若提交后 live 发生变化，这些字节属于另一会话：报告它们，不要吸收进提交，也不要改写快照。快照是证据；live 只是某一时刻的观察状态。
+8. 若提交后 live 发生变化，这些字节属于另一会话：报告它们，不要吸收进提交，也不要改写快照。快照是证据；live 只是某一时刻的观察状态。用 JSONL 扫描指名写入者（步骤 4），绝不用 `updatedAt`/`runtimeState`。
 
 暂存后（步骤 6）和提交后（步骤 7），用 OID 校验 blob 身份：索引 OID 必须等于源文件经 `git hash-object --path` 计算的结果，`HEAD` OID 必须等于索引 OID。`Fingerprint` 或干净的 `git status` 都不能证明该身份；只有在没有 eol 过滤器时才要求 SHA-256 字节相等（见步骤 6）。
 
@@ -433,7 +433,7 @@ find "C:/Users/Administrateur/.qoder/skills" "<racine-espace>/.qoder/skills" -ma
 | `find_stale_archives.py` 退出码为 1，或归档只存在于本地 ref `[ahead 1]`，或 `git init` 后 `Repositories` +1 但为 `RESULT NONE` | 检测到过期归档（不是崩溃）、提交未推送，或 per-Skill 仓库没有 `.qoder/skills/<nom>` 路径 | 阅读报告（退出码 2 = 用法/环境）；标记 `local`，不要称为已发布；`cmd` 后接 `tail` 返回的是 `tail` 的状态：截断前先取 `rc=$?` |
 | OID 为空或 `cat-file` 失败，但管道退出码为 0 | 路径未暂存、OID 多行，或缺少 `pipefail` | 先检查 `[ -n "$oid" ]` 与 `git cat-file -e`，再重跑 |
 | 修改后的 Skill 未被解析或找不到 | 运行时索引未重载，或项目级同名遮蔽 | 调用该 Skill，检查两个根，再请用户执行 `/skills reload` |
-| 方案已批准，但写入前大小/mtime/SHA-256 或行数不同；或会话等待超时而磁盘稳定 | 文件自规划后被重写；会话状态不是写入日志 | 重新采样、重读、按精确文本重新锚定、保留并发新增；不要恢复备份；按磁盘指纹判断活动，而不是 `runtimeState`；重新验证最终字节 |
+| 方案已批准，但写入前大小/mtime/SHA-256 或行数不同；或会话等待超时而磁盘稳定 | 文件自规划后被重写；会话状态不是写入日志 | 重新采样、重读、按精确文本重新锚定、保留并发新增；不要恢复备份；按磁盘指纹判断活动，而不是 `runtimeState`；用 JSONL（`Write`/`Edit`）指名写入者，绝不用 `updatedAt`；重新验证最终字节 |
 | 只更新源文件后 QA `RESULT PASS` 但对等 `RESULT FAIL` | 译本被有意保持不动（部分范围） | 分别报告 QA 与对等及差异；不得宣布包已验证；提出同步译本 |
 | 流程中途范围前提变化，或 `Files (N)` QA ≠ 已暂存集合 | 决策基于过期状态（原先排除的文件变为被引用） | 在 `git add` 前停止并重新确认；要求 `Files (N)` = `git diff --cached --name-only` |
 | 两个文件都已修改，但对等仅在 `FAIL inline tokens: missing=[…]` 处 `RESULT FAIL` | 译本把受保护的标识符改写成叙述文字（已观察：`$N` → 「该字面量」） | 不要放宽检查，也不要修改源文件；在译句中恢复逐字相同的 token，再按顺序重跑对等、QA、清单与实际调用 |
@@ -466,7 +466,7 @@ find "C:/Users/Administrateur/.qoder/skills" "<racine-espace>/.qoder/skills" -ma
 - [ ] 已用 `--show-origin` 读取 `core.autocrlf`；已报告检出转换风险。
 - [ ] 重复「TOUT」未再追问第三次，组合已声明。
 - [ ] 已通过实际调用验证修改后的 Skill 可解析；无项目级/用户级同名遮蔽；若调用带参数，调用前后 `SKILL.md` 与 `HEAD` OID 一致（数字位置参数第 1 至第 9 个被替换、末尾追加 `ARGUMENTS: …`；`$N` 字面量不变；不是磁盘）；`/skills reload` 留给用户执行。
-- [ ] 方案已批准：写入前重新采样基线（大小/mtime/SHA-256）；按文本重读锚点；保留并发新增；未恢复任何备份；正文最多 499 行或已先行压缩；`description` 经脚本测量（≤ 1024 字符），`skill-file-qa` 的 N 等于最终文件。
+- [ ] 方案已批准：写入前重新采样基线（大小/mtime/SHA-256）；按文本重读锚点；保留并发新增；未恢复任何备份；正文最多 499 行或已先行压缩；`description` 经脚本测量（≤ 1024 字符），`skill-file-qa` 的 N 等于最终文件；写入者经 JSONL 扫描（`Write`/`Edit`）确认，不用 `updatedAt`/`runtimeState`。
 - [ ] 部分范围（仅源文件）：译本保持不变；QA 与对等分别报告及差异；未宣布包已验证。
 
 ## 报告
@@ -495,3 +495,4 @@ Contrôles rejoués après la dernière écriture : parité <PASS|FAIL|N/A> | QA
 - `scripts/run-fixture.sh`：一次性夹具，重放「采纳并发提交」与「拒绝 stat 相同但内容不同的提交」；只写入临时目录并删除；退出码 0（PASS）、1（FAIL）、2（用法/环境）。
 - `references/skill-zh.md`：完整中文版本，需与法文版保持结构对等；对等规则见 `skill-doc-translation-parity`。
 - `references/contenu-vers-main.md`：当 `git merge-base origin/main HEAD` 为空（历史无共同祖先）时向 `main` 应用内容；诊断、冻结、临时树、基于 `origin/main` 的提交、fast-forward 推送与 blob 核对；绝不检出 `main`，也不做 `--allow-unrelated-histories` 合并。
+- `scripts/find_writers.py`：从会话 JSONL（`Write`/`Edit`、`input.file_path`）只读归因 Skill 的写入者；按会话输出最后一次写入；运行 `py -3 "C:/Users/Administrateur/.qoder/skills/commit-skill-work/scripts/find_writers.py" --target "<dossier-skill>" --jsonl-dir "C:/Users/Administrateur/.qoder/projects/<projet>"`；退出码 0（找到）、1（没有）、2（用法/环境）。
