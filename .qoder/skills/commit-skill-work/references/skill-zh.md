@@ -295,7 +295,7 @@ EOF
 )"
 ```
 
-沿用现有提交消息风格。一个提交只处理一个主题。不要使用 `--no-verify`，不要修改已发布的提交。提交后执行 `git -C "<depot>" status --porcelain=v1` 和 `git -C "<depot>" log -1 --stat`。根提交（此前没有 `HEAD`）在得出结论前先核对树：`git rev-parse "HEAD^{tree}"`、`git ls-tree -r HEAD`、`git ls-files -s` 与 `git hash-object --path` 必须与索引产生相同的 OID，然后立即重跑 `git status --porcelain=v1`；提交后的写入不属于该提交。首次提交前 `HEAD:<chemin-relatif>` 不存在：先用 `git rev-parse ":<chemin-relatif>"` 校验索引并等于 `git hash-object --path`，根提交后再校验 `HEAD:<chemin-relatif>`。完整性由提交后包内（除缓存）`git status --porcelain=v1` 为空证明，而不是 `Files (N)` = 索引：4 个文件的包改动 3 个时，`Files (4)` 与 3 个文件的提交仍算完整（案例 `f8d23ba`，2026-10-26）。
+沿用现有提交消息风格。一个提交只处理一个主题。例外：若另一会话的 hunk 已与本范围文件的改动交织，不得拆分文件，也不得提交与已验证字节不同的 blob：整体采纳全部字节，重跑稳定窗口、对等、`skill-file-qa`、清单与实际调用，然后创建一个提交，其单行消息覆盖两个主题，并在报告中指名写入会话；由其他会话按不同主题改写的文件仍排除在提交外，并声明文件级部分范围（`git diff --cached --name-only` ⊂ `git diff HEAD --name-only`）。已观察（2026-10-26）：`9247c943` 在验证期间于 23:00:52–53（22:00:52Z，mtime 吻合）写入 `SKILL.md` 与 `skill-zh.md`；`git add` 前清单只捕获 `contenu-vers-main.md`（`8062e550`，21:57:47Z），但 QA 揭示了 `SKILL.md`（66900 B、`821f8d8c…`）；交织规则在 `2917d32` 中一并采纳（2 个文件，+12/−12，单行消息覆盖两个主题），`contenu-vers-main.md` 被排除并声明。不要使用 `--no-verify`，不要修改已发布的提交。提交后执行 `git -C "<depot>" status --porcelain=v1` 和 `git -C "<depot>" log -1 --stat`。根提交（此前没有 `HEAD`）在得出结论前先核对树：`git rev-parse "HEAD^{tree}"`、`git ls-tree -r HEAD`、`git ls-files -s` 与 `git hash-object --path` 必须与索引产生相同的 OID，然后立即重跑 `git status --porcelain=v1`；提交后的写入不属于该提交。首次提交前 `HEAD:<chemin-relatif>` 不存在：先用 `git rev-parse ":<chemin-relatif>"` 校验索引并等于 `git hash-object --path`，根提交后再校验 `HEAD:<chemin-relatif>`。完整性由提交后包内（除缓存）`git status --porcelain=v1` 为空证明，而不是 `Files (N)` = 索引：4 个文件的包改动 3 个时，`Files (4)` 与 3 个文件的提交仍算完整（案例 `f8d23ba`，2026-10-26）。
 
 ### 情况：本应有提交但 `git status` 为空
 
@@ -435,7 +435,7 @@ find "C:/Users/Administrateur/.qoder/skills" "<racine-espace>/.qoder/skills" -ma
 | 修改后的 Skill 未被解析或找不到 | 运行时索引未重载，或项目级同名遮蔽 | 调用该 Skill，检查两个根，再请用户执行 `/skills reload` |
 | 方案已批准，但写入前大小/mtime/SHA-256 或行数不同；或会话等待超时而磁盘稳定 | 文件自规划后被重写；会话状态不是写入日志 | 重新采样、重读、按精确文本重新锚定、保留并发新增；不要恢复备份；按磁盘指纹判断活动，而不是 `runtimeState`；用 JSONL（`Write`/`Edit`）指名写入者，绝不用 `updatedAt`；任何编辑前先归类方案覆盖，只编辑 `ABSENT`/`PARTIAL`，每次并发写入后重跑所有门禁；重新验证最终字节 |
 | 只更新源文件后 QA `RESULT PASS` 但对等 `RESULT FAIL` | 译本被有意保持不动（部分范围） | 分别报告 QA 与对等及差异；不得宣布包已验证；提出同步译本 |
-| 流程中途范围前提变化，或 `Files (N)` QA ≠ 无缓存清单，或索引 ≠ `git diff HEAD --name-only` 且未声明部分提交 | 决策基于过期状态（原先排除的文件变为被引用），或未声明部分提交 | 在 `git add` 前停止并重新确认；完整提交：索引 = `git diff HEAD --name-only`、`git diff --name-only` 为空（除缓存），提交后 `git status --porcelain=v1` 为空（除缓存）；`Files (N)` = 无缓存清单，是索引的超集，仅当所有文件都改动时才相等；部分提交已声明：索引 ⊂ `git diff HEAD --name-only`，列出剩余改动；绝不索引未变文件，也不删除预先存在的缓存 |
+| 流程中途范围前提变化，或 `Files (N)` QA ≠ 无缓存清单，或索引 ≠ `git diff HEAD --name-only` 且未声明部分提交 | 决策基于过期状态（原先排除的文件变为被引用），或未声明部分提交，或另一会话的 hunk 已交织进本范围文件 | 在 `git add` 前停止并重新确认；完整提交：索引 = `git diff HEAD --name-only`、`git diff --name-only` 为空（除缓存），提交后 `git status --porcelain=v1` 为空（除缓存）；`Files (N)` = 无缓存清单，是索引的超集，仅当所有文件都改动时才相等；部分提交已声明：索引 ⊂ `git diff HEAD --name-only`，列出剩余改动；同一文件内并发 hunk 无法拆分：整体采纳字节、重跑所有门禁、单行消息覆盖两个主题并指名写入会话，不拆分 hunk，也不恢复写入前版本；绝不索引未变文件，也不删除预先存在的缓存 |
 | 两个文件都已修改，但对等 `FAIL inline tokens: missing=[…]` 和/或 `extra=[…]` 处 `RESULT FAIL` | 译本把受保护的标识符改写成叙述文字，或全文出现次数不一致（token 在多个章节重复、译本增删示例；已观察：`$N` → 「该字面量」） | 不要放宽检查，也不要修改源文件；用 `INLINE_RE` 与 `Counter` 统计两个正文的多重集，逐项补缺并改写多余出现，再按顺序重跑对等、QA、清单与实际调用 |
 
 ## 最终检查清单
@@ -447,7 +447,7 @@ find "C:/Users/Administrateur/.qoder/skills" "<racine-espace>/.qoder/skills" -ma
 - [ ] 已运行测试并记录结果；Skill 改动需 `RESULT PASS`；新的辅助脚本已与独立参考实现交叉核对（每会话最后 `timestamp` 与 `Write`/`Edit` 累计总数一致）并跑过负向矩阵。
 - [ ] `skill-file-qa` 的 `Files (N)` 等于变更后无缓存清单；测试或 `py_compile` 未留下 `__pycache__`/`*.pyc`；完整提交：索引 = `git diff HEAD --name-only`、`git diff --name-only` 为空（除缓存），提交后 `git status --porcelain=v1` 为空（除缓存）；`Files (N)` = 索引仅当所有文件都改动；部分提交已声明：索引 ⊂ `git diff HEAD --name-only`，列出剩余改动；保留预先存在的缓存时，对无缓存快照跑 QA，绝不为了索引一致而删除缓存；若范围前提变化，`git add` 前重新确认。
 - [ ] 已审阅差异；无密钥、大体积二进制或 `__pycache__`。
-- [ ] 一个主题一个提交，消息与历史风格一致。
+- [ ] 一个主题一个提交，消息与历史风格一致；同一文件内并发 hunk 无法拆分时，整体采纳字节、重跑门禁、单行消息覆盖两个主题并指名写入会话。
 - [ ] 工作已被并发提交吸收：不创建空提交、不 amend；重新验证当前字节，用标记与 OID 证明包含关系，谨慎归属提交消息。
 - [ ] 审阅与提交之间 `HEAD` 前进：提交前固定 `reviewed_oid`，推送前 `HEAD:<chemin>` 等于该 OID，推送已有提交且未新建提交或 amend，远端 OID 已核对。
 - [ ] 根提交：首次提交前先用 `git rev-parse ":<chemin>"` = `git hash-object --path` 校验索引，提交后再校验 `HEAD:<chemin>`；`HEAD^{tree}`、`ls-tree -r HEAD`、`ls-files -s` 与 `hash-object --path` 已与索引核对，随后立即重跑 `status`。
@@ -474,7 +474,7 @@ find "C:/Users/Administrateur/.qoder/skills" "<racine-espace>/.qoder/skills" -ma
 ```text
 Dépôt : <chemin absolu> | Branche : <nom> | <LOCAL-ONLY|remote>
 Commits : <hash court> <sujet>
-Commit concurrent : aucun | <hash> inclus (OID+marqueur), message d'origine incertaine
+Commit concurrent : aucun | <hash> inclus (OID+marqueur), message d'origine incertaine | écrivain <session> | message couvrant <n> thème(s)
 Fichiers : <N> | Tests : <résultat>
 Intégrité : blobs source <N>/<N> | autocrlf <valeur> | checkout <identique|converti>
 Push : non effectué | <remote> <branche> <pushed_oid = hash distant> | main distant <avant>=<après> | main par contenu : aucun (<commit>)
