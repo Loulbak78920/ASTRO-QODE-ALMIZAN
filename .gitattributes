@@ -1,0 +1,2 @@
+# 仓库与工作区统一使用 LF，覆盖系统的 core.autocrlf=true。
+* text=auto eol=lf
