@@ -17,7 +17,7 @@
 - 提交后其他仓库中存在该 Skill 的归档；
 - 预期有提交但 `git status` 为空（提交已由另一会话创建）；
 - 验证与 `git add` 之间发生并发写入，或指纹清单不一致；
-- 持续并发写入（验证期间源文件仍每 10–30 秒变化），或已批准的方案自规划后大小/mtime/SHA-256/行数已变化；
+- 持续并发写入（验证期间源文件仍每 10–30 秒变化），已批准的方案自规划后大小/mtime/SHA-256/行数已变化，或已批准的方案已被另一会话部分实现；
 - 为不在任何仓库中的 Skill 初始化仓库（LOCAL-ONLY，或共享远程 + 专用分支）、根提交，或流程中途范围前提变化；
 - 只更新源文件、译本保持不变（预期对等失败）。
 
@@ -70,7 +70,7 @@ git -C "<depot>" ls-files --error-unmatch -- "<chemin>"
 
 对「TOUT」的回答：先用互斥选项和确切的仓库、文件清单重述一次。若第二次仍回答「TOUT」，不要再提第三个问题：执行推荐组合，在报告中明确声明，并排除未列出或不可逆的动作（push、删除、重写历史）。仅当 `git init` 本来就在已确认选项中时才可执行。已观察案例（2026-10-26）：连续两次「TOUT」→ Skill 本地仓库 + 在公开仓库本地克隆的 `main` 上提交，不创建重复的专用分支，也不推送。下一条关于无关公开仓库的规则优先：绝不推送到 `main`，绝不把用户级 Skill 提交到无关公开仓库。
 
-仅在明确同意后才执行 `git init`。不要修改 Git 配置：只读取 `git config user.name` 与 `git config user.email`，不要改写。绝不要把用户级 Skill 提交到无关公开仓库的 `main`。执行 `git init` 后，用 `git symbolic-ref --short HEAD` 读取实际指向的分支：在未出生的 HEAD 上，`git rev-parse --abbrev-ref HEAD` 会以 `fatal: ambiguous argument 'HEAD'` 失败；同时记录 `init.defaultBranch` 与邻近仓库的分支，不得静默重命名。根提交的 OID 顺序是固定的：`git add` 之后，`git rev-parse ":<chemin-relatif>"` 必须等于 `git hash-object --path=<chemin-relatif> <source>`；`HEAD:<chemin-relatif>` 只在首次提交后存在。**LOCAL-ONLY** 仓库没有 `origin`：不要询问 URL，也不要 push；这与「已有仓库缺少 `origin` → 询问 URL」是两种不同情况。已观察案例（2026-10-26）：Skill 目录不在任何仓库，初始化 → `INIT_EXIT=0`，`rev-parse --abbrev-ref HEAD` → `fatal: ambiguous argument 'HEAD'`，`symbolic-ref` → `refs/heads/master`；`git init` 后 `skill-file-qa` 仍为 `RESULT PASS`、`Files (2)`；根提交 `4b19c34`（2 个文件），索引与 `HEAD` 的 OID 2/2 MATCH，`autocrlf=true` 时出现 `LF will be replaced by CRLF the next time Git touches it`。已观察案例（2026-10-26）：目录不在仓库，`TOP_RC=128` 且无 `origin`；邻近 Skill 的 `branch -vv`/`remote -v` 与 `git ls-remote` → `Loulbak78920/ASTRO-QODE-ALMIZAN` 的 `skill/commit-skill-work` 与 `skill/mesure-cesium-133-geolocalisee`，`IMAM8MAHDI/qoder-skills` 为归档 `main`；`ls-remote` → `main`、`master`、`skill/commit-skill-work`；提出三个目标后用户选择专用分支；`git init`（`master`，`init.defaultBranch` 未设置）、`remote add`、manifest/QA/调用、根提交 `55e2989`（2 个文件，375 insertions）、`push -u origin HEAD:refs/heads/skill/aligner-variantes-commande-skill`、`ls-remote` = HEAD = `55e29897…`、状态干净、`RESULT NONE`（28 个仓库）；`master` 跟踪 `origin/skill/aligner-variantes-commande-skill`，名称不同。
+仅在明确同意后才执行 `git init`。不要修改 Git 配置：只读取 `git config user.name` 与 `git config user.email`，不要改写。绝不要把用户级 Skill 提交到无关公开仓库的 `main`。执行 `git init` 后，用 `git symbolic-ref --short HEAD` 读取实际指向的分支：在未出生的 HEAD 上，`git rev-parse --abbrev-ref HEAD` 会以 `fatal: ambiguous argument 'HEAD'` 失败；同时记录 `init.defaultBranch` 与邻近仓库的分支，不得静默重命名。根提交的 OID 顺序是固定的：`git add` 之后，`git rev-parse ":<chemin-relatif>"` 必须等于 `git hash-object --path=<chemin-relatif> <source>`；`HEAD:<chemin-relatif>` 只在首次提交后存在。**LOCAL-ONLY** 仓库没有 `origin`：不要询问 URL，也不要 push；这与「已有仓库缺少 `origin` → 询问 URL」是两种不同情况。已观察案例（2026-10-26）：Skill 目录不在任何仓库，初始化 → `INIT_EXIT=0`，`rev-parse --abbrev-ref HEAD` → `fatal: ambiguous argument 'HEAD'`，`symbolic-ref` → `refs/heads/master`；`git init` 后 `skill-file-qa` 仍为 `RESULT PASS`、`Files (2)`；根提交 `4b19c34`（2 个文件），索引与 `HEAD` 的 OID 2/2 MATCH，`autocrlf=true` 时出现 `LF will be replaced by CRLF the next time Git touches it`。已观察案例（2026-10-26）：目录不在仓库，`TOP_RC=128` 且无 `origin`；邻近 Skill 的 `branch -vv`/`remote -v` 与 `git ls-remote` → `Loulbak78920/ASTRO-QODE-ALMIZAN` 的 `skill/commit-skill-work` 与 `skill/mesure-cesium-133-geolocalisee`，`IMAM8MAHDI/qoder-skills` 为归档 `main`；`ls-remote` → `main`、`master`、`skill/commit-skill-work`；提出三个目标后用户选择专用分支；`git init`（`master`，`init.defaultBranch` 未设置）、`remote add`、manifest/QA/调用、根提交 `55e2989`（2 个文件，375 insertions）、把 `HEAD:refs/heads/skill/aligner-variantes-commande-skill` 推送到专用分支、`ls-remote` = HEAD = `55e29897…`、状态干净、`RESULT NONE`（28 个仓库）；随后观察到的上游状态：`master` 跟踪 `origin/skill/aligner-variantes-commande-skill`，但名称不同 —— 这是第 10 步现已禁止的歧义状态。
 
 ## 步骤 4 — 提交前验证
 
@@ -83,9 +83,9 @@ stat -c '%s %y' "<fichier>"
 sha256sum "<fichier>"
 ```
 
-至少等待 2 秒后重复，要求输出完全相同。若大小、mtime 或 SHA-256 与基线不同，不要照搬方案：重新读取当前文件，按精确文本重新定位每个锚点（绝不用行号），再做最小 `Edit`。上下文压缩后恢复的文件片段、以及方案中引用的行号与摘录，都不等于磁盘现状：先重读当前文件，按精确文本重新锚定每个锚点，并在写入前重新测量 `description` 与正文行数。保留并发新增内容；不要恢复备份，也不要整文件重写。若锚点消失或与并发新增冲突，停止并询问，而非猜测。若此检查期间文件仍在变化，不要写入：等待稳定窗口，或采用「并发写入：验证冻结快照」一节。在旧基线上获得的验证已失效：更新 `SKILL.md` 前先计算正文行数（frontmatter 之后）；若已有 499 行（上限 500），把规则并入现有段落或表格单元格，绝不新增标题、表格行或清单项，再同步译本；同时用脚本（`len`）而非估算测量 frontmatter 的 `description`：新增或改写触发词前须 ≤ 1024 字符；超出时压缩冗余表述、不删除关键触发词，并逐轮重测；随后要求 `skill-file-qa` 显示 `PASS description: single line, N chars`，其中 N 等于最终文件（已观察 2026-10-26：四轮测量 1177 → 1067 → 1030 → 1021，QA `1021 chars`）；重新验证最终字节（若有译本则对等、`skill-file-qa`、SHA-256、实际调用）。已观察（2026-10-26）：合并一个段落并只新增一行表格，使 498 → 499 行，QA 9/0/0，对等 8/8。
+至少等待 2 秒后重复，要求输出完全相同。若大小、mtime 或 SHA-256 与基线不同，不要照搬方案：重新读取当前文件，按精确文本重新定位每个锚点（绝不用行号），再做最小 `Edit`。上下文压缩后恢复的文件片段、以及方案中引用的行号与摘录，都不等于磁盘现状：先重读当前文件，按精确文本重新锚定每个锚点，并在写入前重新测量 `description` 与正文行数。保留并原样采纳并发新增内容；写入前，依据当前字节而非会话消息，把方案的每个要点归入覆盖矩阵 `CURRENT`（已按原样存在）、`ALREADY_APPLIED`（已由其他字节覆盖）、`PARTIAL`（部分）、`ABSENT`（缺失）、`CONFLICT`（冲突），只编辑 `ABSENT` 与 `PARTIAL`，遇 `CONFLICT` 停止；不要恢复备份，也不要整文件重写。每次并发写入后，对最终字节重跑清单、对等、`skill-file-qa` 与实际调用：不得复用任何先前的 `PASS`。若锚点消失或与并发新增冲突，停止并询问，而非猜测。若此检查期间文件仍在变化，不要写入：等待稳定窗口，或采用「并发写入：验证冻结快照」一节。在旧基线上获得的验证已失效：更新 `SKILL.md` 前先计算正文行数（frontmatter 之后）；若已有 499 行（上限 500），把规则并入现有段落或表格单元格，绝不新增标题、表格行或清单项，再同步译本；同时用脚本（`len`）而非估算测量 frontmatter 的 `description`：新增或改写触发词前须 ≤ 1024 字符；超出时压缩冗余表述、不删除关键触发词，并逐轮重测；随后要求 `skill-file-qa` 显示 `PASS description: single line, N chars`，其中 N 等于最终文件（已观察 2026-10-26：四轮测量 1177 → 1067 → 1030 → 1021，QA `1021 chars`）；重新验证最终字节（若有译本则对等、`skill-file-qa`、SHA-256、实际调用）。已观察（2026-10-26）：合并一个段落并只新增一行表格，使 498 → 499 行，QA 9/0/0，对等 8/8。
 
-已观察案例（2026-10-26）：方案基于 `SKILL.md` `8fc96497…`（28 077 B）与 `skill-zh.md` `1944a214…`；写入时 `SKILL.md` 为 `855b791a…`（28 112 B），`skill-zh.md` 为 `37c02eb5…`；重新读取后对当前文本做 5 次最小 `Edit`，保留并发新增；最终 `SKILL.md` `23d5ac1d…`（30 812 B）。未恢复任何备份，未整文件重写。
+已观察案例（2026-10-26）：方案基于 `SKILL.md` `8fc96497…`（28 077 B）与 `skill-zh.md` `1944a214…`；写入时 `SKILL.md` 为 `855b791a…`（28 112 B），`skill-zh.md` 为 `37c02eb5…`；重新读取后对当前文本做 5 次最小 `Edit`，保留并发新增；最终 `SKILL.md` `23d5ac1d…`（30 812 B）。未恢复任何备份，未整文件重写。已观察（2026-10-26）：步骤 10 的方案与 `9fbfe69a` 重叠（目标探测与 `main` 校验已写入，属 `ALREADY_APPLIED`）；只剩移除 `-u` 与通用 post-push 证明为 `ABSENT`；随后 `9944e101` 修改了步骤 11，使 `PASS` 失效，迫使重新 `diff` 并完整重跑，且未丢失两个会话的新增。
 
 使用仓库文档指定的入口运行测试。本项目已观察到的是 `tests.test_suite_complete`（11 项测试）：
 
@@ -378,12 +378,12 @@ py -3 "C:/Users/Administrateur/.qoder/skills/commit-skill-work/scripts/find_stal
 git -C "<depot>" remote -v
 git -C "<depot>" branch -vv
 git -C "<depot>" ls-remote <url> "refs/heads/main" "refs/heads/skill/<nom>"
+pushed_oid=$(git -C "<depot>" rev-parse HEAD)
 git -C "<depot>" push origin "HEAD:refs/heads/skill/<nom>"
-git -C "<depot>" rev-parse HEAD
 ```
 
-- 没有 remote：按步骤 3 发现并确认目标；执行 `git remote add` 前，用 `git ls-remote --heads <url>` 探测每个 URL：`RC` 非零或已存在 `refs/heads/skill/<nom>` 的候选不可用（询问，绝不强制）；`git remote add` 后，先记录 `git ls-remote origin refs/heads/main`，再 push `HEAD:refs/heads/skill/<nom>`，用 `branch -vv` 与 `ls-remote` 核对分支与 `HEAD` 相等且 `refs/heads/main` 未变；若 `main` 已移动，报告并停止，不重推、不强制；不要未经同意推断 URL；`origin` 是共享仓库：推送专用分支 `skill/<nom>`，绝不推 `main`，绝不强制推送。已观察案例（2026-10-26）：远端 `main` 在 push 前后均为 `b66fdda`，push `a5095ce` 到 `skill/github-pr-create-merge-sans-gh`，`ls-remote` = `HEAD`。
-- 不带 `-u` 推送：当本地分支为 `main` 或 `master` 时，`-u` 会让它跟踪 `origin/skill/<nom>`，使 `git pull`/`git push` 产生歧义（邻近 Skill 中观察到一致状态：`master [origin/skill/<nom>: gone]`、`master [origin/skill/<nom>: ahead 1]`）；仅当本地与远端分支名相同时才使用 `-u`。push 后重跑 `ls-remote`：要求已推送分支等于 `git rev-parse HEAD`，且 `main` 等于 push 前记录的基线；报告实际推送的分支。
+- 没有 remote：按步骤 3 发现并确认目标；执行 `git remote add` 前，用 `git ls-remote --heads <url>` 探测每个 URL：`RC` 非零或已存在 `refs/heads/skill/<nom>` 的候选不可用（询问，绝不强制）；`git remote add` 后，先记录 `git ls-remote origin refs/heads/main`，再 push `HEAD:refs/heads/skill/<nom>`，用 `branch -vv` 与 `ls-remote` 核对分支与 push 前固定的 `pushed_oid` 相等且 `refs/heads/main` 未变；若 `main` 已移动，报告并停止，不重推、不强制；不要未经同意推断 URL；`origin` 是共享仓库：推送专用分支 `skill/<nom>`，绝不推 `main`，绝不强制推送。已观察案例（2026-10-26）：远端 `main` 在 push 前后均为 `b66fdda`，push `a5095ce` 到 `skill/github-pr-create-merge-sans-gh`，`ls-remote` = `HEAD`。
+- 不带 `-u` 推送：当本地分支为 `main` 或 `master` 时，`-u` 会让它跟踪 `origin/skill/<nom>`，使 `git pull`/`git push` 产生歧义（邻近 Skill 中观察到一致状态：`master [origin/skill/<nom>: gone]`、`master [origin/skill/<nom>: ahead 1]`）；仅当本地与远端分支名相同时才使用 `-u`。push 后重跑 `ls-remote`：要求已推送分支等于 push 前固定的 `pushed_oid`（push 后再 `rev-parse` 可能捕获并发提交），且 `main` 等于 push 前记录的基线；报告实际推送的分支。
 - 「合并到 `main`」：若 `git merge-base origin/main HEAD` 返回 1（历史无共同祖先），不使用 `git merge --allow-unrelated-histories`，也不在本 worktree 中检出 `main`（它就是已安装的 Skill）。经明确同意应用内容时，按 `references/contenu-vers-main.md` 执行（索引 blob、树、基于 `origin/main` 的提交、fast-forward 推送、`ls-remote`、blob = 磁盘）。
 
 ## 步骤 11 — 验证已修改 Skill 的运行时可解析性
@@ -433,7 +433,7 @@ find "C:/Users/Administrateur/.qoder/skills" "<racine-espace>/.qoder/skills" -ma
 | `find_stale_archives.py` 退出码为 1，或归档只存在于本地 ref `[ahead 1]`，或 `git init` 后 `Repositories` +1 但为 `RESULT NONE` | 检测到过期归档（不是崩溃）、提交未推送，或 per-Skill 仓库没有 `.qoder/skills/<nom>` 路径 | 阅读报告（退出码 2 = 用法/环境）；标记 `local`，不要称为已发布；`cmd` 后接 `tail` 返回的是 `tail` 的状态：截断前先取 `rc=$?` |
 | OID 为空或 `cat-file` 失败，但管道退出码为 0 | 路径未暂存、OID 多行，或缺少 `pipefail` | 先检查 `[ -n "$oid" ]` 与 `git cat-file -e`，再重跑 |
 | 修改后的 Skill 未被解析或找不到 | 运行时索引未重载，或项目级同名遮蔽 | 调用该 Skill，检查两个根，再请用户执行 `/skills reload` |
-| 方案已批准，但写入前大小/mtime/SHA-256 或行数不同；或会话等待超时而磁盘稳定 | 文件自规划后被重写；会话状态不是写入日志 | 重新采样、重读、按精确文本重新锚定、保留并发新增；不要恢复备份；按磁盘指纹判断活动，而不是 `runtimeState`；用 JSONL（`Write`/`Edit`）指名写入者，绝不用 `updatedAt`；重新验证最终字节 |
+| 方案已批准，但写入前大小/mtime/SHA-256 或行数不同；或会话等待超时而磁盘稳定 | 文件自规划后被重写；会话状态不是写入日志 | 重新采样、重读、按精确文本重新锚定、保留并发新增；不要恢复备份；按磁盘指纹判断活动，而不是 `runtimeState`；用 JSONL（`Write`/`Edit`）指名写入者，绝不用 `updatedAt`；任何编辑前先归类方案覆盖，只编辑 `ABSENT`/`PARTIAL`，每次并发写入后重跑所有门禁；重新验证最终字节 |
 | 只更新源文件后 QA `RESULT PASS` 但对等 `RESULT FAIL` | 译本被有意保持不动（部分范围） | 分别报告 QA 与对等及差异；不得宣布包已验证；提出同步译本 |
 | 流程中途范围前提变化，或 `Files (N)` QA ≠ 已暂存集合且未声明部分提交 | 决策基于过期状态（原先排除的文件变为被引用），或未声明部分提交 | 在 `git add` 前停止并重新确认；完整提交：`Files (N)` = `git diff --cached --name-only`；部分提交：已声明的子集、`git diff HEAD --name-only` = 索引且 `git status --porcelain=v1` 无包内其他非缓存文件；绝不删除预先存在的缓存 |
 | 两个文件都已修改，但对等 `FAIL inline tokens: missing=[…]` 和/或 `extra=[…]` 处 `RESULT FAIL` | 译本把受保护的标识符改写成叙述文字，或全文出现次数不一致（token 在多个章节重复、译本增删示例；已观察：`$N` → 「该字面量」） | 不要放宽检查，也不要修改源文件；用 `INLINE_RE` 与 `Counter` 统计两个正文的多重集，逐项补缺并改写多余出现，再按顺序重跑对等、QA、清单与实际调用 |
@@ -454,7 +454,7 @@ find "C:/Users/Administrateur/.qoder/skills" "<racine-espace>/.qoder/skills" -ma
 - [ ] 提交后状态干净，或副作用已解释并单独提交。
 - [ ] 最后一次提交后已检查邻近归档：`NONE`、`FRESH`，或报告了带 ref/commit 的 `STALE`。
 - [ ] 未自动复制、提交或推送任何归档。
-- [ ] 仅在要求时推送；候选已只读探测（`git ls-remote --heads <url>`：`RC=0`、目标分支不存在），远端 `main` 在 push 前后已记录且未变，remote、分支和哈希均已核对，仅当本地与远端分支名相同时才用 `-u`；无共同祖先时经 `references/contenu-vers-main.md` 将内容应用到 `main`，不检出也不合并。
+- [ ] 仅在要求时推送；候选已只读探测（`git ls-remote --heads <url>`：`RC=0`、目标分支不存在），远端 `main` 在 push 前后已记录且未变，remote、分支和哈希均已核对（`pushed_oid` 在 push 前固定并与 `ls-remote` 比对），仅当本地与远端分支名相同时才用 `-u`；无共同祖先时经 `references/contenu-vers-main.md` 将内容应用到 `main`，不检出也不合并。
 - [ ] 已记录 `SKILL.md`、`scripts/` 与 `references/` 的 SHA-256；单独 `Fingerprint` 只覆盖 `SKILL.md`。
 - [ ] 索引 blob 与 `HEAD` blob 均按 OID 与过滤后的源文件比对；SHA-256 差异已用 eol 过滤器解释。
 - [ ] 最后一次写入之后，已按顺序重跑对等、`skill-file-qa`、SHA-256 与实际调用，并记录最终指纹；即使 QA 为 PASS，也不容忍缺失的 token。
@@ -466,7 +466,7 @@ find "C:/Users/Administrateur/.qoder/skills" "<racine-espace>/.qoder/skills" -ma
 - [ ] 已用 `--show-origin` 读取 `core.autocrlf`；已报告检出转换风险。
 - [ ] 重复「TOUT」未再追问第三次，组合已声明。
 - [ ] 已通过实际调用验证修改后的 Skill 可解析；若返回基目录须一致，且注入正文须包含最终版本的标志性规则（仅基目录不证明刷新）；无项目级/用户级同名遮蔽；若调用带参数，调用前后 `SKILL.md` 与 `HEAD` OID 一致（数字位置参数第 1 至第 9 个被替换、末尾追加 `ARGUMENTS: …`；`$N` 字面量不变；不是磁盘）；`/skills reload` 留给用户执行；动作型 Skill 的调用不执行其任何步骤。
-- [ ] 方案已批准：写入前重新采样基线（大小/mtime/SHA-256）；按文本重读锚点；保留并发新增；未恢复任何备份；正文最多 499 行或已先行压缩；`description` 经脚本测量（≤ 1024 字符），`skill-file-qa` 的 N 等于最终文件；写入者经 JSONL 扫描（`Write`/`Edit`）确认，不用 `updatedAt`/`runtimeState`。
+- [ ] 方案已批准：写入前重新采样基线（大小/mtime/SHA-256）；按文本重读锚点；保留并发新增；未恢复任何备份；正文最多 499 行或已先行压缩；`description` 经脚本测量（≤ 1024 字符），`skill-file-qa` 的 N 等于最终文件；写入者经 JSONL 扫描（`Write`/`Edit`）确认，不用 `updatedAt`/`runtimeState`；方案覆盖已归类（`CURRENT`/`ALREADY_APPLIED`/`PARTIAL`/`ABSENT`/`CONFLICT`），仅编辑 `ABSENT`/`PARTIAL`，已采纳并发字节，未复用任何先前的 `PASS`。
 - [ ] 部分范围（仅源文件）：译本保持不变；QA 与对等分别报告及差异；未宣布包已验证。
 
 ## 报告
@@ -477,11 +477,11 @@ Commits : <hash court> <sujet>
 Commit concurrent : aucun | <hash> inclus (OID+marqueur), message d'origine incertaine
 Fichiers : <N> | Tests : <résultat>
 Intégrité : blobs source <N>/<N> | autocrlf <valeur> | checkout <identique|converti>
-Push : non effectué | <remote> <branche> <hash distant> | main distant <avant>=<après> | main par contenu : aucun (<commit>)
+Push : non effectué | <remote> <branche> <pushed_oid = hash distant> | main distant <avant>=<après> | main par contenu : aucun (<commit>)
 Archives : aucune | <ref> <commit> <FRESH|STALE n/N> [published|local]
 Gate : manifeste <n> fichiers | QA=manifeste <oui|non> | avant add <identique|écart> | après add <identique|écart> | Files (N)=inventaire <oui|non> | index=changements <oui|non> | arbre racine <réconcilié|N/A>
 Instantané : aucun | <chemin> | live=instantané <oui|non> | gate <PASS/N/A>
-Plan : baseline <sha> rééchantillonné <identique|écart> | ré-ancrage <n> édition(s) | ajouts concurrents <préservés|aucun>
+Plan : baseline <sha> rééchantillonné <identique|écart> | ré-ancrage <n> édition(s) | couverture <CURRENT|ALREADY_APPLIED|PARTIAL|ABSENT|CONFLICT> | ajouts concurrents <préservés|aucun>
 Périmètre : complet | source seule (traduction intacte, parité en attente)
 Paquet : validé | non validé (source QA PASS, parité FAIL <n>)
 Skill : <nom> | résolution : <base-dir ET contenu vérifié> | empreintes finales : <sha SKILL.md> <n scripts> <n references> (si un Skill est modifié)
