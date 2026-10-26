@@ -83,7 +83,7 @@ stat -c '%s %y' "<fichier>"
 sha256sum "<fichier>"
 ```
 
-至少等待 2 秒后重复，要求输出完全相同。若大小、mtime 或 SHA-256 与基线不同，不要照搬方案：重新读取当前文件，按精确文本重新定位每个锚点（绝不用行号），再做最小 `Edit`。保留并发新增内容；不要恢复备份，也不要整文件重写。若锚点消失或与并发新增冲突，停止并询问，而非猜测。若此检查期间文件仍在变化，不要写入：等待稳定窗口，或采用「并发写入：验证冻结快照」一节。在旧基线上获得的验证已失效：更新 `SKILL.md` 前先计算正文行数（frontmatter 之后）；若已有 499 行（上限 500），把规则并入现有段落或表格单元格，绝不新增标题、表格行或清单项，再同步译本；同时用脚本（`len`）而非估算测量 frontmatter 的 `description`：新增或改写触发词前须 ≤ 1024 字符；超出时压缩冗余表述、不删除关键触发词，并逐轮重测；随后要求 `skill-file-qa` 显示 `PASS description: single line, N chars`，其中 N 等于最终文件（已观察 2026-10-26：四轮测量 1177 → 1067 → 1030 → 1021，QA `1021 chars`）；重新验证最终字节（若有译本则对等、`skill-file-qa`、SHA-256、实际调用）。已观察（2026-10-26）：合并一个段落并只新增一行表格，使 498 → 499 行，QA 9/0/0，对等 8/8。
+至少等待 2 秒后重复，要求输出完全相同。若大小、mtime 或 SHA-256 与基线不同，不要照搬方案：重新读取当前文件，按精确文本重新定位每个锚点（绝不用行号），再做最小 `Edit`。上下文压缩后恢复的文件片段、以及方案中引用的行号与摘录，都不等于磁盘现状：先重读当前文件，按精确文本重新锚定每个锚点，并在写入前重新测量 `description` 与正文行数。保留并发新增内容；不要恢复备份，也不要整文件重写。若锚点消失或与并发新增冲突，停止并询问，而非猜测。若此检查期间文件仍在变化，不要写入：等待稳定窗口，或采用「并发写入：验证冻结快照」一节。在旧基线上获得的验证已失效：更新 `SKILL.md` 前先计算正文行数（frontmatter 之后）；若已有 499 行（上限 500），把规则并入现有段落或表格单元格，绝不新增标题、表格行或清单项，再同步译本；同时用脚本（`len`）而非估算测量 frontmatter 的 `description`：新增或改写触发词前须 ≤ 1024 字符；超出时压缩冗余表述、不删除关键触发词，并逐轮重测；随后要求 `skill-file-qa` 显示 `PASS description: single line, N chars`，其中 N 等于最终文件（已观察 2026-10-26：四轮测量 1177 → 1067 → 1030 → 1021，QA `1021 chars`）；重新验证最终字节（若有译本则对等、`skill-file-qa`、SHA-256、实际调用）。已观察（2026-10-26）：合并一个段落并只新增一行表格，使 498 → 499 行，QA 9/0/0，对等 8/8。
 
 已观察案例（2026-10-26）：方案基于 `SKILL.md` `8fc96497…`（28 077 B）与 `skill-zh.md` `1944a214…`；写入时 `SKILL.md` 为 `855b791a…`（28 112 B），`skill-zh.md` 为 `37c02eb5…`；重新读取后对当前文本做 5 次最小 `Edit`，保留并发新增；最终 `SKILL.md` `23d5ac1d…`（30 812 B）。未恢复任何备份，未整文件重写。
 
@@ -444,7 +444,7 @@ find "C:/Users/Administrateur/.qoder/skills" "<racine-espace>/.qoder/skills" -ma
 - [ ] 本地初始化的仓库（LOCAL-ONLY）：用 `git symbolic-ref --short HEAD` 读取分支（`git rev-parse --abbrev-ref HEAD` 在未出生 HEAD 上会失败），并记录 `init.defaultBranch` 与邻近仓库，没有 origin 也不 push；与「仓库缺少 origin → 询问 URL」区分。
 - [ ] 区分 SESSION 与 PREEXISTANT；既有改动已确认。
 - [ ] 未使用 `git add -A` 或 `git add .`；使用显式路径。
-- [ ] 已运行测试并记录结果；Skill 改动需 `RESULT PASS`。
+- [ ] 已运行测试并记录结果；Skill 改动需 `RESULT PASS`；新的辅助脚本已与独立参考实现交叉核对（每会话最后 `timestamp` 与 `Write`/`Edit` 累计总数一致）并跑过负向矩阵。
 - [ ] `skill-file-qa` 的 `Files (N)` 等于无缓存清单；测试或 `py_compile` 未留下 `__pycache__`/`*.pyc`；若范围前提变化，`git add` 前重新确认，并要求 `Files (N)` = `git diff --cached --name-only`。
 - [ ] 已审阅差异；无密钥、大体积二进制或 `__pycache__`。
 - [ ] 一个主题一个提交，消息与历史风格一致。
@@ -495,4 +495,4 @@ Contrôles rejoués après la dernière écriture : parité <PASS|FAIL|N/A> | QA
 - `scripts/run-fixture.sh`：一次性夹具，重放「采纳并发提交」与「拒绝 stat 相同但内容不同的提交」；只写入临时目录并删除；退出码 0（PASS）、1（FAIL）、2（用法/环境）。
 - `references/skill-zh.md`：完整中文版本，需与法文版保持结构对等；对等规则见 `skill-doc-translation-parity`。
 - `references/contenu-vers-main.md`：当 `git merge-base origin/main HEAD` 为空（历史无共同祖先）时向 `main` 应用内容；诊断、冻结、临时树、基于 `origin/main` 的提交、fast-forward 推送与 blob 核对；绝不检出 `main`，也不做 `--allow-unrelated-histories` 合并。
-- `scripts/find_writers.py`：从会话 JSONL（`Write`/`Edit`、`input.file_path`）只读归因 Skill 的写入者；按会话输出最后一次写入；运行 `py -3 "C:/Users/Administrateur/.qoder/skills/commit-skill-work/scripts/find_writers.py" --target "<dossier-skill>" --jsonl-dir "C:/Users/Administrateur/.qoder/projects/<projet>"`；退出码 0（找到）、1（没有）、2（用法/环境）。
+- `scripts/find_writers.py`：从会话 JSONL（`Write`/`Edit`、`input.file_path`）只读归因 Skill 的写入者；按会话输出最后一次写入；运行 `py -3 "C:/Users/Administrateur/.qoder/skills/commit-skill-work/scripts/find_writers.py" --target "<dossier-skill>" --jsonl-dir "C:/Users/Administrateur/.qoder/projects/<projet>"`；退出码 0（找到）、1（没有）、2（用法/环境）。在把新的只读辅助脚本写入文档前，先用真实数据与独立参考实现交叉核对：每个会话的最后 `timestamp` 与 `Write`/`Edit` 累计总数都必须一致（仅核对时间不够）；再跑负向矩阵（空目录、无匹配、损坏 JSONL、无效 `--target`、`--max-files 0` 与 `1`）并确认无缓存；代码中把累计计数器与「最后写入」累加器分开（已观察缺陷：遇到更新 timestamp 时重置计数，`records 2` 而非 19 与 4）。
