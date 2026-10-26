@@ -81,7 +81,7 @@ N'exécuter `git init` qu'après accord explicite. Ne pas modifier la configurat
 
 ### Avant d'écrire : ré-ancrer un plan approuvé
 
-Un plan approuvé décrit le fichier au moment de sa rédaction, pas au moment de l'écriture. Avant chaque écriture, rééchantillonner la cible et comparer au baseline consigné dans le plan :
+Un plan approuvé décrit le fichier au moment de sa rédaction, pas au moment de l'écriture. Si une autre session que la session courante (source ou concurrente) peut encore écrire ces fichiers (`list_chat_sessions`), attendre la fin de son tour avec `wait_chat_sessions` (≤ 60 s) jusqu'à `ready` ou `cold` avant de rééchantillonner ; en cas de délai dépassé, d'échec ou d'attention requise, s'arrêter et demander. Un double échantillonnage de 2 s ne prouve pas que cette session a fini d'écrire. Cas observé (2026-10-26) : `61f699a4` `running` (revision 15) → `ready` (revision 19) après `wait_chat_sessions`. Avant chaque écriture, rééchantillonner la cible et comparer au baseline consigné dans le plan :
 
 ```bash
 stat -c '%s %y' "<fichier>"
