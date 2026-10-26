@@ -1,6 +1,6 @@
 ---
 name: commit-skill-work
-description: "Committer des modifications de Skill ou de dépôts imbriqués sur Windows : localiser le vrai dépôt, séparer SESSION et préexistant, lancer tests et skill-file-qa, exiger un paquet sans __pycache__ malgré PASS, relever les empreintes de toutes les ressources (Fingerprint = SKILL.md seul), ajouter par chemins explicites, séparer les artefacts régénérés, ne pousser que sur demande, puis vérifier la résolution runtime par invocation. Après la dernière écriture, rejouer parité, QA, SHA-256 et invocation ; toute écriture ultérieure annule la preuve. Signaler les archives obsolètes sans les republier. Utiliser pour « commit », « git commit », commit concurrent, `nothing to commit`, HEAD avancé entre revue et commit, versionner un Skill hors dépôt, __pycache__/fichiers générés, OID blob/source et core.autocrlf=true, ou résolution runtime sans /skills reload. 中文触发：提交 Skill、git commit、嵌套仓库、显式暂存、并发提交、nothing to commit、审阅后 HEAD 前进、默认不 push、重载验证、运行时可解析性、辅助文件指纹、索引 blob 校验、autocrlf 风险、最终写入后重验、验证后编辑失效、QA PASS 仍含缓存、归档过期不重发。"
+description: "Committer modifications de Skill ou dépôts imbriqués (Windows) : localiser le vrai dépôt, séparer SESSION et préexistant, tests + skill-file-qa, paquet sans __pycache__ malgré PASS, empreintes de toutes les ressources (Fingerprint = SKILL.md), ajout par chemins explicites, artefacts régénérés séparés, push seulement sur demande, résolution runtime par invocation ; rejouer parité, QA, SHA-256 et invocation après écriture, sinon preuve caduque ; archives obsolètes signalées sans republication. Utiliser pour « commit », « git commit », commit concurrent, `nothing to commit`, HEAD avancé entre revue et commit, Skill hors dépôt, dépôt local sans origin (LOCAL-ONLY), commit racine, prémisse de périmètre changée, activité par empreintes disque, __pycache__, OID blob/source, core.autocrlf=true, résolution runtime sans /skills reload. 中文触发：提交 Skill、git commit、嵌套仓库、并发提交、nothing to commit、审阅后 HEAD 前进、默认不 push、重载验证、运行时可解析性、文件指纹、索引 blob 校验、autocrlf、最终写入后重验、QA PASS 含缓存、归档过期不重发、本地仓库无 origin（LOCAL-ONLY）、根提交、范围前提变化、按指纹判活动。"
 ---
 
 # Committer les modifications d'un Skill ou d'un dépôt imbriqué
@@ -15,15 +15,15 @@ Identifier le dépôt qui contient réellement les fichiers modifiés, committer
 - Skill utilisateur sous le dossier user-level des skills, hors de tout dépôt ;
 - plusieurs dépôts imbriqués et périmètre ambigu ;
 - tests qui réécrivent des fichiers générés après le commit ;
-- demande de push, ou dépôt de Skill sans `origin` ;
+- demande de push, de « merge dans `main` » sans ancêtre commun, ou dépôt de Skill sans `origin` ;
 - vérification de l'OID blob/source, ou avertissement `core.autocrlf` ;
 - revalidation après une écriture tardive de `SKILL.md`, d'un script ou de la traduction ;
 - `skill-file-qa` renvoie `RESULT PASS` alors que `Files (N)` contient un cache ;
 - archive du Skill présente dans un autre dépôt après le commit ;
 - `git status` vide alors qu'un commit est attendu (commit créé par une autre session) ;
 - écriture concurrente entre la validation et le `git add`, ou manifeste d'empreintes divergent ;
-- écritures concurrentes persistantes : la source change encore toutes les 10–30 s pendant la validation, malgré les fenêtres stables ;
-- exécution d'un plan de mise à jour approuvé alors que la taille, le mtime, le SHA-256 ou les lignes ont changé depuis la planification ;
+- écritures concurrentes persistantes (source change encore toutes les 10–30 s pendant la validation) ou plan approuvé dont taille/mtime/SHA-256/lignes ont changé depuis la planification ;
+- dépôt local initialisé pour un Skill hors dépôt (LOCAL-ONLY), commit racine, ou prémisse de périmètre qui change en cours de flux ;
 - mise à jour de la seule source, traduction laissée intacte (parité attendue en échec).
 
 ## Étape 1 — Localiser le dépôt réel
@@ -66,22 +66,22 @@ Classer chaque chemin en trois catégories : **SESSION** (produit par le travail
 
 | Situation | Action |
 |---|---|
-| Dossier Skill hors de tout dépôt | demander : initialiser un dépôt dans le dossier du Skill, laisser non commité, ou viser un dépôt existant |
+| Dossier Skill hors de tout dépôt | demander : initialiser un dépôt dans le dossier du Skill, laisser non commité, ou viser un dépôt existant ; après accord, `git init` puis marquer **LOCAL-ONLY** (aucun origin, aucun push) |
 | Dossier situé dans un dépôt imbriqué | utiliser ce dépôt et confirmer avec `ls-files --error-unmatch` |
 | Plusieurs dépôts touchés | un commit par dépôt et par sujet |
 | Modifications préexistantes non liées | demander avant de les inclure |
-| Dépôt de Skill avec `origin` partagé | pousser une branche dédiée `skill/<nom>`, jamais `main` sans accord |
+| Dépôt de Skill avec `origin` partagé | pousser une branche dédiée `skill/<nom>`, jamais `main` sans accord ; un contenu vers `main` sans ancêtre commun suit `references/contenu-vers-main.md` |
 | Dépôt sans `origin` | demander l'URL ; ne pas deviner |
 
 Réponse « TOUT » : reformuler une première fois avec des options mutuellement exclusives et la liste exacte des dépôts et fichiers. Si la deuxième réponse est encore « TOUT », ne pas poser une troisième question : exécuter la combinaison recommandée, la déclarer explicitement dans le rapport, et exclure toute action non listée ou non réversible (push, suppression, réécriture). `git init` reste possible seulement s'il figurait dans les options confirmées. Cas observé (2026-10-26) : deux « TOUT » successifs → dépôt local du Skill + commit sur `main` d'un clone local du dépôt public, sans branche dédiée redondante et sans push. La règle suivante sur les dépôts publics sans rapport reste prioritaire : aucun push vers `main`, aucun commit d'un Skill utilisateur dans un dépôt public sans rapport.
 
-N'exécuter `git init` qu'après accord explicite. Ne pas modifier la configuration Git : vérifier `git config user.name` et `git config user.email`, sans les réécrire. Ne jamais committer un Skill utilisateur dans la branche `main` d'un dépôt public sans rapport.
+N'exécuter `git init` qu'après accord explicite. Ne pas modifier la configuration Git : vérifier `git config user.name` et `git config user.email`, sans les réécrire. Ne jamais committer un Skill utilisateur dans la branche `main` d'un dépôt public sans rapport. Après `git init`, lire la branche réellement pointée avec `git symbolic-ref --short HEAD` : sur un HEAD non né, `git rev-parse --abbrev-ref HEAD` échoue avec `fatal: ambiguous argument 'HEAD'` ; consigner aussi `init.defaultBranch` et la branche des dépôts voisins, sans renommer silencieusement. Pour un commit racine, l'ordre des OID est imposé : après `git add`, `git rev-parse ":<chemin-relatif>"` doit égaler `git hash-object --path=<chemin-relatif> <source>` ; `HEAD:<chemin-relatif>` n'existe qu'après le premier commit. Un dépôt **LOCAL-ONLY** n'a pas d'`origin` : ne pas demander d'URL et ne pas pousser ; c'est un cas distinct de « dépôt existant sans `origin` → demander l'URL ». Cas observé (2026-10-26) : dossier hors dépôt, `git init` → `INIT_EXIT=0`, `rev-parse --abbrev-ref HEAD` → `fatal: ambiguous argument 'HEAD'`, `symbolic-ref` → `refs/heads/master` ; `skill-file-qa` après init toujours `RESULT PASS`, `Files (2)` ; root commit `4b19c34` (2 fichiers), OID index et `HEAD` 2/2 MATCH, `autocrlf=true` avec `LF will be replaced by CRLF the next time Git touches it`.
 
 ## Étape 4 — Vérifier avant de committer
 
 ### Avant d'écrire : ré-ancrer un plan approuvé
 
-Un plan approuvé décrit le fichier au moment de sa rédaction, pas au moment de l'écriture. Si une autre session que la session courante (source ou concurrente) peut encore écrire ces fichiers (`list_chat_sessions`), attendre la fin de son tour avec `wait_chat_sessions` (≤ 60 s) jusqu'à `ready` ou `cold` avant de rééchantillonner ; en cas de délai dépassé, d'échec ou d'attention requise, s'arrêter et demander. Un double échantillonnage de 2 s ne prouve pas que cette session a fini d'écrire. Cas observé (2026-10-26) : `61f699a4` `running` (revision 15) → `ready` (revision 19) après `wait_chat_sessions`. Avant chaque écriture, rééchantillonner la cible et comparer au baseline consigné dans le plan :
+Un plan approuvé décrit le fichier au moment de sa rédaction, pas au moment de l'écriture. La preuve d'inactivité est le disque, pas l'état de session : avant chaque écriture, rééchantillonner la cible et la comparer au baseline consigné dans le plan. Exiger `size`, `mtime` et SHA-256 identiques sur ≥ 3 échantillons espacés (≥ 6 s), et 4 échantillons sur ≥ 20 s si le dossier bouge encore. `wait_chat_sessions`/`runtimeState` sont des indices auxiliaires : un timeout à `running` ou un texte d'assistant ne prouve ni écriture ni inactivité. Cas observé (2026-10-26) : deux attentes expirées à revision 95→105 (`running`, `lastAssistantText=null`) alors que 3 fichiers étaient stables depuis ~75 s ; inversement, un « rien écrit » peut précéder des écritures du même tour. Disque stable : ne pas bloquer sur l'état de session ; disque mobile : attendre ou geler un instantané.
 
 ```bash
 stat -c '%s %y' "<fichier>"
@@ -174,7 +174,7 @@ Si l'utilisateur n'autorise que le fichier source, ne pas modifier `references/<
 - `skill-file-qa` peut renvoyer `RESULT PASS` : il valide la structure du paquet, pas la parité.
 - `check_translation_parity.py` renverra `RESULT FAIL` ; c'est le résultat attendu du périmètre partiel, pas une panne du script.
 
-Détailler les écarts réels (nombre de blocs de code, séquence de titres, nombre d'éléments de checklist, identifiants et nombres manquants) et conclure : « source validée par QA, parité en échec, paquet non validé ». Ne jamais présenter un `RESULT PASS` non qualifié comme la validation du Skill complet. Un manifeste et des empreintes peuvent être consignés pour les octets courants, mais les étiqueter « source seule, parité en attente » ; l'invocation prouve la résolution runtime de la source, pas la parité. Pour clore l'écart, demander l'autorisation de répliquer les changements dans la traduction, puis rejouer parité et QA.
+Détailler les écarts réels (nombre de blocs de code, séquence de titres, nombre d'éléments de checklist, identifiants et nombres manquants) et conclure : « source validée par QA, parité en échec, paquet non validé ». Ne jamais présenter un `RESULT PASS` non qualifié comme la validation du Skill complet. Un manifeste et des empreintes peuvent être consignés pour les octets courants, mais les étiqueter « source seule, parité en attente » ; l'invocation prouve la résolution runtime de la source, pas la parité. Pour clore l'écart, demander l'autorisation de répliquer les changements dans la traduction, puis rejouer parité et QA. Si la prémisse du périmètre change en cours de flux (un fichier d'abord exclu devient référencé, par exemple une nouvelle référence ajoutée à `SKILL.md`), s'arrêter et reconfirmer avant `git add`. Porte dure : `Files (N)` de `skill-file-qa` doit égaler exactement l'ensemble indexé (`git diff --cached --name-only`).
 
 Cas observé (2026-10-26) : après mise à jour de la seule source, QA `RESULT PASS` (9/0, `Files (4)`, 394 lignes, 30 812 B, `23d5ac1d…`) ; parité `RESULT FAIL` (3 PASS / 5 FAIL : blocs 25 vs 23, H3 supplémentaire, checklist 21 vs 20, identifiants `--allow-empty`, `778a547`, `HEAD`, `PASS`, `RESULT PASS`, `SKILL.md`, `c08c9461…` et nombres manquants) ; tables et frontmatter PASS ; paquet non déclaré validé ; manifeste `MANIFEST_MATCH` après invocation.
 
@@ -300,7 +300,7 @@ EOF
 )"
 ```
 
-Reprendre le style des messages existants. Un commit par sujet. Ne pas utiliser `--no-verify`, ne pas amender un commit déjà publié. Après le commit, exécuter `git -C "<depot>" status --porcelain=v1` et `git -C "<depot>" log -1 --stat`.
+Reprendre le style des messages existants. Un commit par sujet. Ne pas utiliser `--no-verify`, ne pas amender un commit déjà publié. Après le commit, exécuter `git -C "<depot>" status --porcelain=v1` et `git -C "<depot>" log -1 --stat`. Pour un commit racine (aucun `HEAD` antérieur), réconcilier l'arbre avant de conclure : `git rev-parse "HEAD^{tree}"`, `git ls-tree -r HEAD`, `git ls-files -s` et `git hash-object --path` doivent produire les mêmes OID que l'index, puis relancer immédiatement `git status --porcelain=v1` ; une écriture post-commit reste hors du commit. Avant le premier commit, `HEAD:<chemin-relatif>` n'existe pas : valider l'index avec `git rev-parse ":<chemin-relatif>"` égal à `git hash-object --path`, puis `HEAD:<chemin-relatif>` après le commit racine.
 
 ### Cas : `git status` vide alors qu'un commit est attendu
 
@@ -369,7 +369,7 @@ Le script est en lecture seule et appartient à `commit-skill-work`, pas au Skil
 | `RESULT FAIL` | usage ou environnement invalide | 2 |
 
 - `published` désigne une ref sous `refs/remotes/` ; `local` une branche ou un tag local seulement. Une archive locale en avance (`[ahead 1]`) n'est pas publiée.
-- Comparer au source final, pas au diff du commit : une archive peut déjà être obsolète avant le commit. Vérifier `git log -1 --format='%h %s' -- ".qoder/skills/<nom>"` avant d'attribuer la cause au commit courant.
+- Comparer au source final, pas au diff du commit : une archive peut déjà être obsolète avant le commit. Vérifier `git log -1 --format='%h %s' -- ".qoder/skills/<nom>"` avant d'attribuer la cause au commit courant. Un dépôt per-Skill créé par `git init` fait passer `Repositories` de N à N+1 mais reste `RESULT NONE` : le script ne cherche que `<repo>/.qoder/skills/<nom>`, or ce dépôt stocke `SKILL.md` à sa racine ; ce n'est pas une archive manquée (cas observé : 26 → 27). Capturer le code avant toute troncature : `out=$(…); rc=$?; printf '%s\n' "$out" | tail -40` ; `cmd | tail; echo $?` mesure `tail`, pas le script (cas observé : `ARCHIVE_EXIT=0`).
 - Ne jamais recopier, committer, fusionner, pousser ni supprimer l'archive dans cette étape. Signaler `Archives : <ref> <commit> STALE (<n>/<N>)` et attendre une instruction explicite. La republication est une étape séparée (`publier-skill-qoder-vers-depot-git`), jamais automatique.
 - Cas observé (2026-10-26) : les modifications devenues le commit `3a47dab` ont rendu l'archive `ddfd179` obsolète, `3/3 MISMATCH`, `EXIT=1` ; l'archive `96fd809` de ce Skill différait déjà sur `2/3` fichiers avant l'ajout de `scripts/find_stale_archives.py`.
 
@@ -383,18 +383,13 @@ Sur demande explicite :
 git -C "<depot>" remote -v
 git -C "<depot>" branch -vv
 git -C "<depot>" push -u origin "HEAD:refs/heads/skill/<nom>"
-```
-
-- Sans remote : demander l'URL, ne pas la déduire d'un autre dépôt.
-- Avec un `origin` partagé : pousser une branche dédiée, jamais `main`, jamais de force push.
-- Après le push, comparer local et distant :
-
-```bash
 git -C "<depot>" rev-parse HEAD
 git -C "<depot>" ls-remote origin "refs/heads/<branche>"
 ```
 
-Le hash distant doit correspondre au hash local. Signaler la branche réellement poussée : un push `HEAD:refs/heads/<branche>` peut laisser la branche locale suivre un nom différent.
+- Sans remote : demander l'URL, ne pas la déduire d'un autre dépôt ; avec un `origin` partagé : branche dédiée, jamais `main`, jamais de force push.
+- Hash distant = hash local ; signaler la branche réellement poussée (un push `HEAD:refs/heads/<branche>` peut laisser la branche locale suivre un autre nom).
+- « Merge dans `main` » : si `git merge-base origin/main HEAD` sort 1 (histoires sans ancêtre commun), ne pas utiliser `git merge --allow-unrelated-histories` ni extraire `main` dans ce worktree (il est le Skill installé). Sur accord explicite pour le contenu, suivre `references/contenu-vers-main.md` (blob indexé, arbre, commit sur `origin/main`, push fast-forward, `ls-remote`, blobs = disque).
 
 ## Étape 11 — Vérifier la résolution runtime du Skill modifié
 
@@ -421,47 +416,50 @@ Un root absent est ignoré ; seul le nombre de résultats compte. Un seul résul
 | `UnicodeEncodeError: 'charmap' codec ... cp1252` | console Windows en cp1252 | forcer `PYTHONIOENCODING=utf-8` ou sortir en ASCII ; le script d'inventaire force l'UTF-8 |
 | `warning: ... CRLF will be replaced by LF` ou `LF will be replaced by CRLF ...` | normalisation des fins de ligne selon `core.autocrlf` | informationnel ; vérifier les blobs (Étape 6) ; avec `autocrlf=true`, signaler que le prochain checkout peut écrire CRLF |
 | `?? scripts/__pycache__/` dans le statut | imports Python | exclure ; ajouter des chemins explicites, ou `.gitignore` après accord |
-| branche `master` sur un dépôt, `main` sur un autre | historiques différents | lire `rev-parse --abbrev-ref HEAD` ; ne rien supposer |
+| branche `master` sur un dépôt, `main` sur un autre, ou `fatal: ambiguous argument 'HEAD'` après `git init` | historiques différents, ou HEAD non né (aucun commit) | sur un HEAD non né, lire `git symbolic-ref --short HEAD` (car `git rev-parse --abbrev-ref HEAD` échoue) ; après `git add`, exiger `git rev-parse ":<chemin>"` = `git hash-object --path`, puis `HEAD:<chemin>` après le root commit |
 | tests qui réécrivent des fichiers scellés après le commit | génération relancée par les tests | relire le diff, puis commit `chore(...)` séparé |
 | réponse « TOUT » à une question de périmètre | le périmètre reste ambigu | proposer la liste exacte des dépôts et fichiers, la faire confirmer avant `git add` |
 | deuxième réponse « TOUT » après reformulation | options mutuellement exclusives | ne pas poser une troisième question ; exécuter la combinaison recommandée, la déclarer, exclure push et suppression |
 | push rejeté (non-fast-forward ou historiques sans rapport) | dépôt de Skill sans lien avec `origin` | pousser une branche dédiée ; ne jamais forcer |
+| « merge to main » avec `git merge-base origin/main HEAD` vide (exit 1) | histoires sans ancêtre commun ; `main` porte l'arbre projet | ne pas fusionner (`--allow-unrelated-histories`) ni extraire `main` dans ce worktree ; sur accord explicite, appliquer le contenu à `main` via `references/contenu-vers-main.md` |
 | `nothing to commit` ou `status`/`diff` vides alors qu'un commit est attendu | changements déjà commités par une autre session, ou mauvais dépôt | ne pas créer de commit vide ni amender ; revalider les octets courants, prouver l'inclusion par marqueur et OID, rapporter le commit existant (Étape 7) |
 | `git commit` retourne `nothing to commit` après une revue `+N/−M` et une QA PASS, ou `git show --stat HEAD` identique mais contenu différent | commit créé par une autre session pendant la validation ; `--stat` ne prouve pas le contenu | geler `reviewed_oid` avant le commit ; comparer `HEAD:<chemin>` et `hash-object --path` à cet OID ; si égal et push demandé, pousser le commit existant et vérifier l'OID distant ; sinon ne pas pousser |
-| `Fingerprint (final)` inchangé après modification de `scripts/` ou `references/` | le fingerprint ne couvre que `SKILL.md` | recalculer les SHA-256 des ressources ; ne pas conclure que rien n'a changé |
+| `Fingerprint (final)` inchangé après modification de `scripts/`/`references/`, ou absent du manifeste | le fingerprint ne couvre que `SKILL.md`, ou QA ne porte pas sur la version courante | recalculer les SHA-256 des ressources ; revalider et réenregistrer le manifeste ; ne pas conclure que rien n'a changé |
 | SHA-256 du blob d'index différent de la source | filtre eol attendu (`core.autocrlf`, `.gitattributes`) ou mauvais fichier | comparer les OID (`hash-object --path` vs index) ; si les OID sont égaux, consigner la normalisation ; sinon ne pas committer |
 | PASS obtenu, puis `SKILL.md` ou la traduction réédité | la preuve porte sur une version qui n'existe plus | rejouer parité, `skill-file-qa`, SHA-256 et invocation dans cet ordre, puis figer les empreintes |
 | `diff` du manifeste non vide avant `git add` | écriture concurrente après la validation | ne pas indexer ; rejouer parité, QA, tests et invocation, réenregistrer le manifeste, puis recommencer le contrôle |
 | `diff` du manifeste non vide à chaque passe, source modifiée toutes les 10–30 s | une autre session réécrit le dossier sans s'arrêter | ne pas boucler : figer un instantané hors du Skill, le valider, archiver ses octets (Étape 4) |
 | parité et QA réussies puis invalidées une deuxième fois | la preuve porte sur un état qui a changé pendant les contrôles | instantané immuable, `diff` live vs manifeste juste avant `git add` ; repartir de l'étape 1 au moindre écart |
 | invocation réussie mais live modifié juste après, ou corps injecté affichant la valeur d'un argument à la place d'un paramètre numérique (1er à 9e), ou `$N` littéral conservé avec `ARGUMENTS: …` ajouté | le runtime résout le dossier live ; une invocation avec arguments substitue les paramètres numériques et ajoute `ARGUMENTS: …`, sans toucher le `$N` littéral | recomparer live == instantané immédiatement après l'invocation, et exiger `SKILL.md`/OID `HEAD` identiques avant/après ; une substitution d'arguments n'est pas une écriture et ne doit pas servir de test de `$N` ; sinon l'invocation ne prouve pas l'instantané |
-| `Fingerprint (final)` de QA absent du manifeste | QA ne porte pas sur la version courante | ne pas committer ; revalider et réenregistrer le manifeste |
+| commit racine : `HEAD^{tree}`, `ls-tree -r HEAD`, `ls-files -s` ou `hash-object --path` divergents, ou `status` modifié juste après le commit | pas de `HEAD` antérieur ; hook ou écriture pendant le commit | réconcilier les OID de l'arbre et de l'index, puis relancer `status` immédiatement ; ne pas conclure sur `log -1 --stat` seul |
 | manifeste absent ou placé dans le dossier du Skill | validation non tracée, ou manifeste auto-inclus | enregistrer le manifeste hors du Skill après la dernière écriture ; sinon reprendre l'Étape 4 |
 | `RESULT PASS` mais `Files (N)` liste `__pycache__/*.pyc` | le validateur ne prouve pas l'absence de caches | supprimer les caches créés par la session, relancer QA, exiger `Files (N)` égal à l'inventaire sans cache |
 | archive `MISMATCH`/`MISSING` après le commit | copie archivée non republiée, ou déjà obsolète avant le commit | signaler `STALE` avec ref/commit ; ne pas recopier ni pousser automatiquement |
-| `find_stale_archives.py` sort en 1 | archive obsolète détectée, pas un crash | lire le rapport ; sortie 2 = usage/environnement |
-| archive trouvée seulement sur une ref locale `[ahead 1]` | commit non poussé | la marquer `local`, ne pas la présenter comme publiée |
+| `find_stale_archives.py` sort en 1, ou archive trouvée seulement sur une ref locale `[ahead 1]`, ou `Repositories` +1 après `git init` avec `RESULT NONE` | archive obsolète (pas un crash), commit non poussé, ou dépôt per-Skill sans chemin `.qoder/skills/<nom>` | lire le rapport (sortie 2 = usage/environnement) ; marquer `local`, ne pas la présenter comme publiée ; `cmd` suivie de `tail` renvoie le statut de `tail` : capturer `rc=$?` avant de tronquer |
 | OID vide ou `cat-file` en échec mais pipeline à 0 | chemin non indexé, OID multiple, ou `pipefail` absent | tester `[ -n "$oid" ]` et `git cat-file -e`, puis relancer |
 | Skill modifié non résolu ou introuvable | index runtime non rechargé, ou homonyme projet qui masque | invoquer le Skill, vérifier les deux racines, puis demander `/skills reload` à l'utilisateur |
-| plan approuvé, mais taille/mtime/SHA-256 ou lignes différents avant écriture | fichier réécrit depuis la planification | rééchantillonner, relire, ré-ancrer par texte exact, préserver les ajouts concurrents ; ne pas restaurer de sauvegarde ; revalider les octets finaux |
+| plan approuvé, mais taille/mtime/SHA-256 ou lignes différents avant écriture ; ou attente de session expirée alors que le disque est stable | fichier réécrit depuis la planification ; l'état de session n'est pas un journal d'écriture | rééchantillonner, relire, ré-ancrer par texte exact, préserver les ajouts concurrents ; ne pas restaurer de sauvegarde ; juger l'activité par les empreintes disque, pas `runtimeState` ; revalider les octets finaux |
 | `RESULT PASS` QA mais parité `RESULT FAIL` après mise à jour de la seule source | traduction volontairement intacte (périmètre partiel) | rapporter QA et parité séparément avec les écarts ; ne pas déclarer le paquet validé ; proposer le miroir |
+| prémisse de périmètre changée en cours de flux, ou `Files (N)` QA ≠ ensemble indexé | décision prise sur un état périmé (fichier d'abord exclu devenu référencé) | s'arrêter et reconfirmer avant `git add` ; exiger `Files (N)` = `git diff --cached --name-only` |
 | parité `RESULT FAIL` avec `FAIL inline tokens: missing=[…]` alors que les deux fichiers ont été modifiés | identifiant protégé reformulé en prose dans la traduction (cas observé : `$N` → « ce littéral ») | ne pas affaiblir le contrôle ni modifier la source ; restaurer le token exact dans la phrase traduite, puis rejouer parité, QA, manifeste et invocation |
 
 ## Checklist finale
 
 - [ ] Dépôt réel localisé par chemin absolu, branche lue.
+- [ ] Dépôt local initialisé (LOCAL-ONLY) : branche lue avec `git symbolic-ref --short HEAD` (`git rev-parse --abbrev-ref HEAD` échoue sur HEAD non né), `init.defaultBranch` et dépôts voisins consignés, aucun origin ni push ; distinct de « dépôt sans origin → demander l'URL ».
 - [ ] Changements SESSION et PREEXISTANT séparés ; préexistants confirmés.
 - [ ] Aucun `git add -A` ni `git add .` ; chemins explicites.
 - [ ] Tests exécutés et résultats consignés ; `RESULT PASS` si un Skill change.
-- [ ] `skill-file-qa` : `Files (N)` égal à l'inventaire sans cache ; aucun `__pycache__`/`*.pyc` créé par les tests ou `py_compile`.
+- [ ] `skill-file-qa` : `Files (N)` égal à l'inventaire sans cache ; aucun `__pycache__`/`*.pyc` créé par les tests ou `py_compile` ; si la prémisse de périmètre change, reconfirmer avant `git add` et exiger `Files (N)` = `git diff --cached --name-only`.
 - [ ] Diff relu ; aucun secret, binaire volumineux ni `__pycache__`.
 - [ ] Un commit par sujet, message aligné sur l'historique.
 - [ ] Travail déjà absorbé par un commit concurrent : aucun commit vide, aucun amend ; octets courants revalidés, inclusion prouvée par marqueur et OID, message attribué avec prudence.
 - [ ] `HEAD` avancé entre la revue et le commit : `reviewed_oid` figé avant le commit, `HEAD:<chemin>` égal à cet OID avant le push, commit existant poussé sans nouveau commit ni amend, OID distant vérifié.
+- [ ] Commit racine : index validé par `git rev-parse ":<chemin>"` = `git hash-object --path` avant le premier commit, puis `HEAD:<chemin>` ; `HEAD^{tree}`, `ls-tree -r HEAD`, `ls-files -s` et `hash-object --path` réconciliés avec l'index, puis `status` relancé immédiatement.
 - [ ] Statut post-commit propre, ou effets de bord expliqués et commités.
 - [ ] Archives voisines vérifiées après le dernier commit : `NONE`, `FRESH`, ou `STALE` signalée avec ref/commit.
 - [ ] Aucune archive recopiée, commitée ni poussée automatiquement.
-- [ ] Push uniquement sur demande ; remote, branche et hash vérifiés.
+- [ ] Push uniquement sur demande ; remote, branche et hash vérifiés ; contenu vers `main` sans ancêtre commun via `references/contenu-vers-main.md`, sans checkout ni fusion.
 - [ ] Empreintes SHA-256 de `SKILL.md`, `scripts/` et `references/` relevées ; le `Fingerprint` seul ne couvre que `SKILL.md`.
 - [ ] Blobs d'index et blobs `HEAD` comparés par OID à la source filtrée ; écart SHA-256 expliqué par un filtre eol si applicable.
 - [ ] Après la dernière écriture : parité, `skill-file-qa`, SHA-256 et invocation rejoués dans cet ordre ; empreintes finales consignées ; aucun token manquant toléré même si QA est PASS.
@@ -479,14 +477,14 @@ Un root absent est ignoré ; seul le nombre de résultats compte. Un seul résul
 ## Rapport
 
 ```text
-Dépôt : <chemin absolu> | Branche : <nom>
+Dépôt : <chemin absolu> | Branche : <nom> | <LOCAL-ONLY|remote>
 Commits : <hash court> <sujet>
 Commit concurrent : aucun | <hash> inclus (OID+marqueur), message d'origine incertaine
 Fichiers : <N> | Tests : <résultat>
 Intégrité : blobs source <N>/<N> | autocrlf <valeur> | checkout <identique|converti>
-Push : non effectué | <remote> <branche> <hash distant>
+Push : non effectué | <remote> <branche> <hash distant> | main par contenu : aucun (<commit>)
 Archives : aucune | <ref> <commit> <FRESH|STALE n/N> [published|local]
-Gate : manifeste <n> fichiers | QA=manifeste <oui|non> | avant add <identique|écart> | après add <identique|écart>
+Gate : manifeste <n> fichiers | QA=manifeste <oui|non> | avant add <identique|écart> | après add <identique|écart> | Files (N)=index <oui|non> | arbre racine <réconcilié|N/A>
 Instantané : aucun | <chemin> | live=instantané <oui|non> | gate <PASS/N/A>
 Plan : baseline <sha> rééchantillonné <identique|écart> | ré-ancrage <n> édition(s) | ajouts concurrents <préservés|aucun>
 Périmètre : complet | source seule (traduction intacte, parité en attente)
@@ -501,3 +499,4 @@ Contrôles rejoués après la dernière écriture : parité <PASS|FAIL|N/A> | QA
 - `scripts/find_stale_archives.py` : détection lecture seule des copies archivées du Skill dans les dépôts voisins ; compare les OID des blobs au source et signale `NONE`/`FRESH`/`STALE` ; codes 0 (NONE/FRESH), 1 (STALE), 2 (usage/environnement).
 - `scripts/run-fixture.sh` : harnais jetable rejouant l'adoption d'un commit concurrent et le rejet d'un commit au stat identique mais au contenu différent ; n'écrit que dans un répertoire temporaire et le supprime ; codes 0 (PASS), 1 (FAIL), 2 (usage/environnement).
 - `references/skill-zh.md` : version chinoise complète, à maintenir structurellement parallèle ; les règles de parité sont décrites par `skill-doc-translation-parity`.
+- `references/contenu-vers-main.md` : application du contenu à `main` quand `git merge-base origin/main HEAD` est vide (histoires sans ancêtre commun) ; diagnostic, gel, arbre temporaire, commit sur `origin/main`, push fast-forward, vérification des blobs ; jamais de checkout de `main` ni de fusion `--allow-unrelated-histories`.
