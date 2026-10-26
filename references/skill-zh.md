@@ -99,7 +99,7 @@ Skill 改动则对真实目录运行 `skill-file-qa`：
 py -3 "C:/Users/Administrateur/.qoder/skills/skill-file-qa/scripts/validate_skill.py" "<dossier-skill>" --workspace "<racine-espace>" --stable-seconds 2
 ```
 
-提交前必须看到 `RESULT PASS`。记录真实结果。测试失败时不要提交：先修正。「已观察案例」的改写是证据，不是自由复述：先核实被引用的仓库（`config`、`branch -vv`、`log`、`ls-remote`）；绝不把实际执行过的命令写成从未执行的命令（把 `push -u` 改写成「未用 `-u` 的 push」，而记录的上游实际指向其他分支）；只删除有问题的命令或参数，保留可核实的结果并标注为现已禁止的状态；同步到译文，重跑对等校验（标识符与数字计数会变化）、QA、清单与调用，然后用 `grep -c "<token>"` = 0 证明该标记在两个文件中已消失。
+提交前必须看到 `RESULT PASS`。记录真实结果。在引用某个会话作为证据，或声称该会话已提交/已推送之前，先记录快照时刻的 `runtimeState`、`revision` 与最后一个助手回合：`error`/`failed` 或空回合表示该回合未执行请求；不要从用户文本或文件是否存在推断已执行，而要用 `log`/`status`/OID 证明工作已落地，并用 JSONL 扫描把提交归给实际写入的会话。已观察（2026-10-26）：`commit these two files` 以 `failed` 结束、无文本也无工具；并发提交 `ea5da2b` 已包含该改动。被截断的 `read_chat_session` 输出会落盘：用 `py -3` 与 `PYTHONIOENCODING=utf-8` 读取（未设置时首次曾以 `cp1252` 失败）。测试失败时不要提交：先修正。「已观察案例」的改写是证据，不是自由复述：先核实被引用的仓库（`config`、`branch -vv`、`log`、`ls-remote`）；绝不把实际执行过的命令写成从未执行的命令（把 `push -u` 改写成「未用 `-u` 的 push」，而记录的上游实际指向其他分支）；只删除有问题的命令或参数，保留可核实的结果并标注为现已禁止的状态；同步到译文，重跑对等校验（标识符与数字计数会变化）、QA、清单与调用，然后用 `grep -c "<token>"` = 0 证明该标记在两个文件中已消失。
 
 `RESULT PASS` 不能证明包是干净的：验证器可能列出缓存并通过。已观察案例（2026-10-26）：执行 `py_compile` 检查后，`Files (4)` 中包含 `scripts/` 下的一个缓存 `.pyc` 文件，同时显示 `PASS layout: 4 file(s)` 和 `RESULT PASS`。提交前检查 `Files (N)` 行并运行：
 
