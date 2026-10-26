@@ -141,6 +141,102 @@ Aucune commande `switch`, `commit`, `merge` ou `push` de cette session n'a visé
 
 Ces hashes et horodatages sont des faits datés, pas des constantes à réutiliser.
 
+## Collision de branche et push externe (2026-10-26)
+
+Troisième constat du même jour, sur le même dépôt cible. Il porte sur la publication du Skill `commit-skill-work` depuis une session Qoder, alors qu'une branche de fusion du même nom existait déjà.
+
+| Élément | Valeur observée |
+|---|---|
+| Préflight | `main` propre, `HEAD=origin/main=2e16742f6a74d657ccdfedf5a65bc51dd6bcf5e9` |
+| Branche déjà présente | `merge/skill-commit-skill-work` `3628f24` — `[origin/main: ahead 1, behind 4]` |
+| Branche utilisée | `merge/skill-commit-skill-work-refresh-20261026`, créée depuis `origin/main` |
+| Copie | 4/4 `OK`, `RESULT PASS`, aucun cache |
+| Commit | `2dade6c23892d27a360bdfcd60a12fef9fe3928c`, 12:31:49 |
+| Dérive | 12:31:51 `checkout: moving from merge/skill-commit-skill-work-refresh-20261026 to main` → `STOP_BRANCH`, `EXIT=1` |
+| Fusion externe | 12:32:45 `merge 2dade6c: Fast-forward` |
+| Push externe | 12:32:51 `update by push` dans le reflog `origin/main` ; aucun push lancé par cette session |
+| Distant | `git ls-remote origin refs/heads/main` → `2dade6c23892d…` |
+| Blobs distants | `--ref origin/main --from remote` → 4/4 `OK`, `RESULT PASS`, `EXIT=0` |
+| Nettoyage | `Deleted branch merge/skill-commit-skill-work-refresh-20261026 (was 2dade6c)` |
+| Hooks | `core.hooksPath` non défini ; aucun hook actif (`post-commit` absent) |
+
+Le `STOP_BRANCH` n'était pas causé par un hook : le reflog montre un `checkout` externe deux secondes après le commit. La session n'a exécuté ni `switch main`, ni `merge`, ni `push` après ce garde ; elle a seulement lu `reflog`, `ls-remote` et les blobs.
+
+Enseignements :
+
+- un nom de branche `merge/skill-<nom>` peut déjà être occupé (`ahead 1, behind 4` ici) : le créer à nouveau échoue ; une variante horodatée évite de toucher la branche d'une autre session ;
+- un `STOP_BRANCH` peut précéder un achèvement externe : le commit de cette session peut être fast-forwardé et poussé par un tiers sans aucune commande de cette session ;
+- `branch -d` peut réussir sans push de cette session lorsque la branche est contenue dans `origin/main` ; le test `merge-base --is-ancestor` rend ce cas explicite ;
+- le rapport doit distinguer `push oui`, `push non` et `push externe à HH:MM:SS`, ce dernier étant observé dans le reflog et non revendiqué.
+
+Les hashes, branches et horodatages ci-dessus sont des faits datés, pas des constantes à réutiliser.
+
+## Plusieurs clones du même remote et STALE résiduel (2026-10-26)
+
+Quatrième constat du même jour : republication de l'archive du Skill `commit-skill-work` alors que deux clones du même remote coexistent, l'un sur `master` (source fonctionnelle), l'autre sur `main` (clone d'archive).
+
+| Élément | Valeur observée |
+|---|---|
+| Remote commun | `https://github.com/Loulbak78920/ASTRO-QODE-ALMIZAN.git` |
+| Clone d'archive retenu | `GITHUB_DEPOT_PUBLIC_IMAM8MAHDI` — `main`, propre, `HEAD = origin/main = ls-remote = 2bc8412b94f3` |
+| Source fonctionnelle | `~/.qoder/skills/commit-skill-work` — `master` `1327b2f`, `origin/main` `2bc8412b` ; non modifiée |
+| Rapport d'archives | 9 groupes `ARCHIVE`, 4 dépôts, 3 refs distinctes ; 8 groupes entiers visibles, le neuvième est `nettoyer-branches-refs-git` `main, origin/main` |
+| Branche créée | `merge/skill-commit-skill-work` sur `2bc8412b` |
+| Copie | 7 fichiers, aucun cache ; `--from worktree` → `RESULT PASS 7/7` |
+| Commit | `034b3c5` `docs(skill): actualiser l'archive commit-skill-work (1327b2f)`, 2 fichiers, 18+/18− |
+| Index | OID `a6cccb20…` (`SKILL.md`) et `a978ab98…` (`references/skill-zh.md`) égaux à `git hash-object --path` |
+| Fusion / push | `2bc8412..034b3c5` fast-forward puis `main -> main` |
+| Distant | `LOCAL = ORIGIN = REMOTE = 034b3c5` ; `--ref origin/main --from remote` → `RESULT PASS 7/7` |
+| Nettoyage | `Deleted branch merge/skill-commit-skill-work (was 034b3c5)` |
+| Détecteur rejoué | archive cible `FRESH 7/7` ; verdict global `RESULT STALE`, `EXIT=1` |
+
+Ancestralité vérifiée dans le clone retenu :
+
+```text
+966bac09bab4 (github-pr-create-merge-sans-gh origin/main)  ANCESTOR_OF_ORIGIN_MAIN
+bf1c721f5501 (nettoyer-branches-refs-git main/origin/main) ANCESTOR_OF_ORIGIN_MAIN
+da7ba1e33067 (origin/merge/skill-aligner-...)              NOT_ANCESTOR
+00e7b3b47903 (origin/merge/skill-github-pr-...-231214)     NOT_ANCESTOR
+```
+
+Enseignements :
+
+- le remote seul ne désigne pas la cible : plusieurs clones locaux du même remote existent, dont la source fonctionnelle sur `master` ; seule une lecture branche/`HEAD`/`ls-remote` qualifie un clone ;
+- un `RESULT STALE` global peut subsister après une republication réussie : il agrège les refs `merge/*` (instantanés non ancêtres de `main`) et les `origin/main` d'autres clones (refs locales en retard, ancêtres de `main`). La preuve de succès est la ligne `FRESH N/N` de l'archive cible ;
+- modifier ou fetcher ces refs hors périmètre reviendrait à réécrire l'état d'autres dépôts sans instruction.
+
+Les hashes, horodatages et compteurs ci-dessus sont des faits datés, pas des constantes à réutiliser.
+
+## Archivage en série et portée de l'autorisation de push (2026-10-26)
+
+Cinquième constat du même jour, sur le même dépôt cible : trois archivages enchaînés dans une session Qoder, dont deux à cible non nommée.
+
+| Élément | Valeur observée |
+|---|---|
+| Message utilisateur | `继续下一个 Skill 的归档流程`, 2026-10-26T23:47:49.358Z |
+| Sortie de l'énumération | `USER=69 ARCHIVE=9`, 60 Skills utilisateur absents de l'archive, tri par `mtime` du `SKILL.md` (00:42:43 en tête) |
+| Question posée | une seule, 23:48:09Z, `归档对象` — «下一个要归档到 ASTRO-QODE-ALMIZAN 的 Skill 是哪个？» ; recommandé = le plus récemment modifié, deux alternatives |
+| Cible retenue | `verifier-mutation-fixture-appliquee`, `mtime` 2026-10-27 00:42:43, source 7 779 B `5db69c9f…` |
+| QA | `RESULT PASS`, 9 pass / 0 fail / 0 warn, empreinte inchangée pendant la validation |
+| Copie | 3 fichiers, `--from worktree` → `RESULT PASS 3/3` : `SKILL.md 5db69c9f…`, `references/cas-2026-10-27-mutation-escape.md 2a5169bd…`, `scripts/apply_mutation.py 40bd5f1a…` |
+| Commit | `f546c7368b1156255b51a3ad9b1025831372434e` `feat(skills): ajouter le Skill verifier-mutation-fixture-appliquee`, 3 fichiers, 456 insertions |
+| Fusion / push | `d1d47ae..f546c73` fast-forward puis `d1d47ae..f546c73  main -> main`, **sans nouvelle question de push** |
+| Distant | `--ref origin/main --from remote` → `RESULT PASS 3/3` ; `Deleted branch merge/skill-verifier-mutation-fixture-appliquee (was f546c73)` |
+| Tour suivant | `继续下一个`, 2026-10-26T23:50:02.549Z : sans aucune question ; premier de la liste `mtime` retenu (`inventory-installed-skills`, 00:14:58) |
+| Seconde publication | 2 fichiers, commit `f91d3de`, push `f546c73..f91d3de`, `RESULT PASS 2/2` (`SKILL.md 24a67513…`, `scripts/inventory_skills.py 262998a3…`), branche supprimée |
+| État final relu le 2026-10-27 | archive 11 entrées, `origin/main = f91d3de717aa7351008a668d9ff0c53739c4fb47` ; entre-temps `origin/main` a avancé à `ba73c0518fe5ebb30cb5c2051f019c00611c5e45` (13 entrées), sans commande de cette session |
+
+Le tour précédent (`auditer-couverture-skill-avant-creation`, 23:46:19Z) avait posé une question de push explicite avant `3f2c9ab..d1d47ae`. Les deux tours suivants ont poussé sans la reposer : l'autorisation du premier push a été étendue implicitement à la série, sans que le contrat 6 ne tranche ce point. Le contrat 6 exige désormais une autorisation nommant le commit, ou un accord de lot explicite (dépôt, branche, périmètre).
+
+Enseignements :
+
+- la liste des Skills à archiver est un instantané : elle rétrécit à chaque publication et doit être recalculée avant chaque Skill ;
+- le diff se fait sur le nom de dossier du clone d'archive, pas sur le frontmatter ; un Skill déjà archivé est une mise à jour, avec `MISMATCH` attendu à l'étape 8 tant qu'il n'est pas republié ;
+- une question unique avec recommandation suffit pour choisir la cible ; une délégation explicite («继续») permet de prendre la plus récente, à condition d'annoncer son nom ;
+- l'absence de correction par l'utilisateur ne vaut pas autorisation de push : seul un accord explicite, nommé ou de lot, compte.
+
+Les compteurs, hashes, commits et horodatages ci-dessus sont des faits datés, pas des constantes à réutiliser.
+
 ## Réserve
 
 La copie publiée est une **archive** : les chemins relatifs du Skill peuvent viser l'arborescence du projet principal, absente du dépôt public. Le Skill fonctionnel reste dans le dossier utilisateur. La branche distante indépendante `skill/mesure-cesium-133-geolocalisee` n'a pas été fusionnée et reste sur `origin` ; sa suppression éventuelle exige une instruction explicite.
