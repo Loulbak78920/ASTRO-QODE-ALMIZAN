@@ -3,9 +3,10 @@
 
 Compares SKILL.md, references/ and scripts/ from the source directory with
 either the working-tree copy inside a Git repository or the blobs of a remote
-ref (for example origin/main). Never writes to the repository.
+ref (for example origin/main), then reports files present in the destination
+but absent from the source, caches included. Never writes to the repository.
 
-Exit codes: 0 all files identical, 1 divergence or missing file, 2 usage error.
+Exit codes: 0 all files identical, 1 divergence or missing/extra file, 2 usage error.
 """
 
 from __future__ import annotations
@@ -90,6 +91,30 @@ def read_remote(repo: Path, ref: str, dest: str, rel: str) -> bytes | None:
     return proc.stdout
 
 
+def list_worktree(repo: Path, dest: str) -> set[str]:
+    base = repo / dest
+    if not base.is_dir():
+        return set()
+    found: set[str] = set()
+    for dirpath, _dirnames, filenames in os.walk(base):
+        for filename in filenames:
+            path = Path(dirpath) / filename
+            found.add(path.relative_to(base).as_posix())
+    return found
+
+
+def list_remote(repo: Path, ref: str, dest: str) -> set[str]:
+    proc = git(repo, "ls-tree", "-r", "--name-only", ref, "--", dest)
+    if proc.returncode != 0:
+        fail(f"impossible de lister {ref}:{dest}")
+    prefix = dest.rstrip("/") + "/"
+    found: set[str] = set()
+    for line in proc.stdout.decode("utf-8", "replace").splitlines():
+        if line.startswith(prefix):
+            found.add(line[len(prefix):])
+    return found
+
+
 def main() -> int:
     for stream in (sys.stdout, sys.stderr):
         try:
@@ -133,9 +158,11 @@ def main() -> int:
             fail(f"ref introuvable : {args.ref} (lancer git fetch origin ?)")
         reference_label = args.ref
         read = lambda rel: read_remote(repo, args.ref, dest, rel)
+        dest_files = list_remote(repo, args.ref, dest)
     else:
         reference_label = "worktree"
         read = lambda rel: read_worktree(repo, dest, rel)
+        dest_files = list_worktree(repo, dest)
 
     rels = collect(source)
 
@@ -165,9 +192,16 @@ def main() -> int:
             )
             failures += 1
 
+    extras = sorted(dest_files - set(rels))
+    if extras:
+        print()
+        for rel in extras:
+            print(f"EXTRA    {rel:<44} absent de la source")
+            failures += 1
+
     print()
     if failures:
-        print(f"RESULT FAIL - {failures}/{len(rels)} fichier(s) non identique(s)")
+        print(f"RESULT FAIL - {failures} anomalie(s) sur {len(rels)} fichier(s) source")
         return 1
     print(f"RESULT PASS - {len(rels)}/{len(rels)} fichiers identiques")
     return 0
