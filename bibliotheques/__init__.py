@@ -23,6 +23,7 @@ from .lib_informe import (
 )
 from .lib_physique import (
     ETATS_HYDROGENE,
+    ETATS_SOLEIL_PLASMA,
     ETATS_TERRE,
     ETATS_LUNE,
     LES_14_FORMES,
@@ -109,6 +110,7 @@ __all__ = [
     "MatriceLogiqueComplexe",
     "QubitInforme",
     "ETATS_HYDROGENE",
+    "ETATS_SOLEIL_PLASMA",
     "ETATS_TERRE",
     "ETATS_LUNE",
     "LES_14_FORMES",

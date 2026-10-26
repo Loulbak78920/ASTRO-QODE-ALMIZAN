@@ -48,8 +48,8 @@ from bibliotheques.lib_informe import (
 )
 from bibliotheques.lib_monade import MonadeSupreme, OMEGA_MONAD_SOUL
 from bibliotheques.lib_physique import (
-    ETATS_HYDROGENE,
     ETATS_LUNE,
+    ETATS_SOLEIL_PLASMA,
     ETATS_TERRE,
     LES_14_FORMES,
     MatriceLogiqueInversee,
@@ -144,11 +144,11 @@ class InspecteurMatricielAstroQode:
             f"  • Qubit Informe (0 i)  : {QubitInforme.depuis_echelon_thermique(0).representation_ket()}",
             "",
             "[2] COUCHE QUBIT_PHYSIQUE — LES 20 ÉTATS DE LA MATIÈRE & OPÉRATIONS INVERSÉES",
-            f"  • Soleil / Hydrogène   : {len(ETATS_HYDROGENE)} états (Gazeux, Liquide, Solide, Plasma) -> Fusion 4H = 1He (Ratio = {div['ratio_fusion_hydrogene_helium']})",
+            f"  • Soleil / Plasma      : {len(ETATS_SOLEIL_PLASMA)} états (Photosphérique, Chromosphérique, Coronaire, Cœur de fusion) + origine Hélium 0 -> Fusion 4H = 1He (Ratio = {div['ratio_fusion_hydrogene_helium']})",
             f"  • Planète Terre        : {len(ETATS_TERRE)} états (3 Solides, 1 Liquide géodynamo, 3 Gazeux)",
             f"  • Satellite Lune       : {len(ETATS_LUNE)} états (6 Solides fossilisés, 0 Liquide, 3 Gazeux d'exosphère)",
             f"  • Total Cumulé         : {MatriceLogiqueInversee.TOTAL_ETATS_CUMULES} états",
-            f"  • Division Globale     : 10 Solides / 7 Gazeux = {div['ratio_solides_sur_gazeux_arrondi']} | Solides Lune/Terre = {div['ratio_solides_lune_sur_terre']}",
+            f"  • Division Globale     : {int(div['total_solides'])} Solides / {int(div['total_gazeux'])} Gazeux = {div['ratio_solides_sur_gazeux_arrondi']} | Solides Lune/Terre = {div['ratio_solides_lune_sur_terre']}",
             f"  • Soustraction Diff.   : Terre(3S-1L)={diff['differentiel_interne_terrestre_solides_moins_liquide']} | Lune-Terre(6S-3S)={diff['ecart_solidification_lune_moins_terre']} | Liquide(1-0)={diff['ecart_fluidite_magnetique_terre_moins_lune']} | Gaz(3-3)={diff['differentiel_atmospherique_gaz_terre_moins_lune']}",
             "",
             "[3] COUCHE .QUBIT.qubit.LOGIQUE.logique — CONSTANTES D'HORLOGE DU KERNEL",

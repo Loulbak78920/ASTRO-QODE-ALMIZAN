@@ -32,10 +32,10 @@
    - Arithmétique (`+ - × ÷ = ≠ > < %`), Logique (`&& ! || NAND == != XOR`), Ensembliste/Topologique (`∪ ∖ ∩ ⊘ ≡ ≢ ⊃ ⊂ ‰` + Kronecker `⊕` / `⊗`).
 
 ### Pilier II — `qubit_physique` : Les 20 États de la Matière et la Matrice Inversée
-- **Soleil / Hydrogène (4 états)** : Gazeux ($\text{H}_2$), Liquide ($-253^\circ\text{C}$), Solide métallique, Plasma ($\text{H}^+ + e^-$) + Fusion Proton-Proton ($4\,\text{H} \rightarrow 1\,^4\text{He} + 26.73\text{ MeV}$, ratio $= 4$).
+- **Soleil / Plasma (4 états)** : Photosphérique (~5 800 K), Chromosphérique (~10 000 K), Coronaire (> 1 MK), Cœur de fusion (~15 MK, chaîne proton-proton $4\,\text{H} \rightarrow 1\,^4\text{He} + 26.73\text{ MeV}$, ratio $= 4$). L'origine inerte Hélium-4 vaut 0 et ne compte pas parmi les 4 états.
 - **Terre (7 états)** : 3 Solides (Croûte, Manteau, Graine), 1 Liquide (Noyau externe géodynamo), 3 Gazeux ($\text{N}_2, \text{O}_2, \text{CO}_2/\text{H}_2\text{O}/\text{Ar}$).
 - **Lune (9 états)** : 6 Solides fossilisés, 0 Liquide, 3 Gazeux d'exosphère ($^4\text{He}, ^{20}\text{Ne}, ^{40}\text{Ar}$).
-- **Ratios cumulés et différentiels** : $10\text{ Solides} / 7\text{ Gazeux} \approx 1.43$, Lune/Terre Solides $= 6/3 = 2$, Différentiels : $3-1=2$, $6-3=3$, $1-0=1$, $3-3=0$.
+- **Ratios cumulés et différentiels** : $9\text{ Solides} / 6\text{ Gazeux} = 1.5$, Lune/Terre Solides $= 6/3 = 2$, Différentiels : $3-1=2$, $6-3=3$, $1-0=1$, $3-3=0$.
 
 ### Pilier III — `.QUBIT.qubit.LOGIQUE.logique` : Le Kernel Temporel Exact (`dt`)
 - **Soleil (`CLOCK_DX_SOLEIL`)** : $\text{dx} = \frac{6\,403\,563}{128} = 50\,027.8359375$ cycles ($0.04\%$).

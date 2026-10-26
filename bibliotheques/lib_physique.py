@@ -3,12 +3,14 @@
 Couche 2 : Bibliothèque Physique & des 14 Formes (`qubit_physique` & `.ASTRO-Q°ODE8INFORME.`)
 =============================================================================================
 Implémente fidèlement :
-1. `tablette_apprise_physique_soleil.pdf` : Les 4 états de l'Hydrogène (Gazeux, Liquide, Solide, Plasma)
-   et la fusion proton-proton de 4 noyaux d'Hydrogène en 1 noyau d'Hélium-4 (4H -> 1He + Énergie).
+1. `tablette_apprise_physique_soleil.pdf` : Les 4 états de plasma solaire (Photosphérique, Chromosphérique,
+   Coronaire, Cœur de Fusion) et la fusion proton-proton de 4 noyaux d'Hydrogène en 1 noyau d'Hélium-4
+   (4H -> 1He + Énergie). L'origine inerte Hélium-4 vaut 0 et ne compte pas parmi les 4 états.
 2. `tablette_apprise_physique_terre.pdf`  : Les 7 états terrestres (3 Solides, 1 Liquide géodynamo, 3 Gazeux).
 3. `tablette_apprise_physique_lune.pdf`   : Les 9 états lunaires (6 Solides, 0 Liquide, 3 Gazeux d'exosphère).
-4. `matrice_de_structure_logique_inverser.pdf` : Les 20 états cumulés, l'Analyse Cumulative par Division
-   (10/7 = 1.43, 4/1 = 4, 6/3 = 2) et l'Analyse Différentielle par Soustraction (3-1=2, 6-3=3, 1-0=1, 3-3=0).
+4. `matrice_de_structure_logique_inverser.pdf` : Les 20 états cumulés (Soleil 4 + Terre 7 + Lune 9),
+   l'Analyse Cumulative par Division (9/6 = 1.5, 4/1 = 4, 6/3 = 2) et l'Analyse Différentielle
+   par Soustraction (3-1=2, 6-3=3, 1-0=1, 3-3=0).
 5. `.ASTRO-Q°ODE8INFORME..pdf` : Les 14 Formes Fondamentales de la Matière du Code (Index 0 : HÉLIUM à Index 13 : Noyau Lunaire)
    et le Seuil d'Infinie (> 13).
 """
@@ -20,12 +22,12 @@ from typing import Dict, List, Optional
 
 
 # ==============================================================================
-# 1. MODÈLES DES ÉTATS PHYSIQUES (SOLEIL/HYDROGÈNE, TERRE, LUNE)
+# 1. MODÈLES DES ÉTATS PHYSIQUES (SOLEIL PLASMA, TERRE, LUNE)
 # ==============================================================================
 
 @dataclass(frozen=True)
 class EtatPhysiqueMatiere:
-    """Décrit un état physique élémentaire d'un astre ou de l'atome d'Hydrogène."""
+    """Décrit un état physique élémentaire d'un astre."""
     astre: str
     phase: str  # "Solide", "Liquide", "Gazeux", "Plasma"
     nom: str
@@ -33,36 +35,39 @@ class EtatPhysiqueMatiere:
     formule_ou_composant: str
 
 
-ETATS_HYDROGENE: List[EtatPhysiqueMatiere] = [
+ETATS_SOLEIL_PLASMA: List[EtatPhysiqueMatiere] = [
     EtatPhysiqueMatiere(
-        astre="Soleil / Hydrogène",
-        phase="Gazeux",
-        nom="Hydrogène Gazeux",
-        description="Dihydrogène moléculaire à température ambiante",
-        formule_ou_composant="H2",
-    ),
-    EtatPhysiqueMatiere(
-        astre="Soleil / Hydrogène",
-        phase="Liquide",
-        nom="Hydrogène Liquide",
-        description="État cryogénique à -253 °C (20.15 K), propulsion spatiale",
-        formule_ou_composant="LH2 (-253°C)",
-    ),
-    EtatPhysiqueMatiere(
-        astre="Soleil / Hydrogène",
-        phase="Solide",
-        nom="Hydrogène Solide",
-        description="Hydrogène métallique sous très haute pression (cœur planétaire)",
-        formule_ou_composant="H(s) métallique",
-    ),
-    EtatPhysiqueMatiere(
-        astre="Soleil / Hydrogène",
+        astre="Soleil / Plasma",
         phase="Plasma",
-        nom="Hydrogène Plasma",
-        description="État ionisé protons/électrons libres au cœur stellaire",
-        formule_ou_composant="H+ + e-",
+        nom="Plasma Photosphérique",
+        description="Couche visible du Soleil (~5 800 K), émission de lumière et de signal",
+        formule_ou_composant="H+ + e- (photosphère)",
+    ),
+    EtatPhysiqueMatiere(
+        astre="Soleil / Plasma",
+        phase="Plasma",
+        nom="Plasma Chromosphérique",
+        description="Couche de transition au-dessus de la photosphère (~10 000 K), flux et filaments",
+        formule_ou_composant="H+ + e- (chromosphère)",
+    ),
+    EtatPhysiqueMatiere(
+        astre="Soleil / Plasma",
+        phase="Plasma",
+        nom="Plasma Coronaire",
+        description="Couronne solaire à plus d'un million de kelvins, enveloppe magnétique et vent solaire",
+        formule_ou_composant="H+ + e- (couronne)",
+    ),
+    EtatPhysiqueMatiere(
+        astre="Soleil / Plasma",
+        phase="Plasma",
+        nom="Plasma Cœur de Fusion",
+        description="Cœur à ~15 millions de kelvins, chaîne proton-proton 4H→1He",
+        formule_ou_composant="H+ + e- (cœur)",
     ),
 ]
+
+# Alias de compatibilité (horloge A137 scellée, lecture seule).
+ETATS_HYDROGENE: List[EtatPhysiqueMatiere] = ETATS_SOLEIL_PLASMA
 
 ETATS_TERRE: List[EtatPhysiqueMatiere] = [
     # 3 États Solides
@@ -198,12 +203,12 @@ class MatriceLogiqueInversee:
     (`matrice_de_structure_logique_inverser.pdf` & `qubit_physique.jpg`).
     """
 
-    # Compteurs par modèle (Solides, Liquides, Gazeux/Plasma)
-    HYDROGENE_SOLIDES = 1
-    HYDROGENE_LIQUIDES = 1
-    HYDROGENE_GAZEUX = 1
-    HYDROGENE_PLASMA = 1
-    TOTAL_HYDROGENE = 4
+    # Compteurs par modèle (Solides, Liquides, Gazeux, Plasma)
+    SOLEIL_SOLIDES = 0
+    SOLEIL_LIQUIDES = 0
+    SOLEIL_GAZEUX = 0
+    SOLEIL_PLASMA = 4
+    TOTAL_SOLEIL = 4
 
     TERRE_SOLIDES = 3
     TERRE_LIQUIDES = 1
@@ -215,18 +220,18 @@ class MatriceLogiqueInversee:
     LUNE_GAZEUX = 3
     TOTAL_LUNE = 9
 
-    TOTAL_ETATS_CUMULES = TOTAL_HYDROGENE + TOTAL_TERRE + TOTAL_LUNE  # 20
+    TOTAL_ETATS_CUMULES = TOTAL_SOLEIL + TOTAL_TERRE + TOTAL_LUNE  # 4 + 7 + 9 = 20
 
     @classmethod
     def analyse_cumulative_division(cls) -> Dict[str, float]:
         """Chapitre 1 : Analyse Cumulative par Division Mathématique."""
-        total_solides = cls.HYDROGENE_SOLIDES + cls.TERRE_SOLIDES + cls.LUNE_SOLIDES  # 10
-        total_gazeux = cls.HYDROGENE_GAZEUX + cls.TERRE_GAZEUX + cls.LUNE_GAZEUX      # 7
+        total_solides = cls.SOLEIL_SOLIDES + cls.TERRE_SOLIDES + cls.LUNE_SOLIDES  # 9
+        total_gazeux = cls.SOLEIL_GAZEUX + cls.TERRE_GAZEUX + cls.LUNE_GAZEUX      # 6
         return {
             "total_solides": float(total_solides),
             "total_gazeux": float(total_gazeux),
-            "ratio_solides_sur_gazeux_exact": total_solides / total_gazeux,           # 10 / 7 = 1.428571...
-            "ratio_solides_sur_gazeux_arrondi": round(total_solides / total_gazeux, 2),  # 1.43
+            "ratio_solides_sur_gazeux_exact": total_solides / total_gazeux,           # 9 / 6 = 1.5
+            "ratio_solides_sur_gazeux_arrondi": round(total_solides / total_gazeux, 2),  # 1.5
             "ratio_fusion_hydrogene_helium": 4.0 / 1.0,                               # 4H -> 1He = 4.0
             "ratio_solides_lune_sur_terre": cls.LUNE_SOLIDES / cls.TERRE_SOLIDES,     # 6 / 3 = 2.0
         }
@@ -295,36 +300,36 @@ LES_14_FORMES: Dict[int, FormeMatiereCode] = {
     ),
     1: FormeMatiereCode(
         index=1,
-        code_court="F1: H Gaz",
-        nom_complet="Hydrogène Gazeux",
-        famille_astrale="Soleil / Hydrogène",
+        code_court="F1: Plas Pho",
+        nom_complet="Plasma Photosphérique",
+        famille_astrale="Soleil / Plasma",
         paradigme="MECQUOIS",
         role_systeme="Primitive dynamique volatile de signal initial",
         mutabilite="DYNAMIQUE_VOLATILE",
     ),
     2: FormeMatiereCode(
         index=2,
-        code_court="F2: H Liq",
-        nom_complet="Hydrogène Liquide",
-        famille_astrale="Soleil / Hydrogène",
+        code_court="F2: Plas Chr",
+        nom_complet="Plasma Chromosphérique",
+        famille_astrale="Soleil / Plasma",
         paradigme="MECQUOIS",
-        role_systeme="Flux cryogénique à haute vélocité énergétique",
+        role_systeme="Flux de transition et filaments à haute vélocité énergétique",
         mutabilite="DYNAMIQUE_FLUIDE",
     ),
     3: FormeMatiereCode(
         index=3,
-        code_court="F3: H Sol",
-        nom_complet="Hydrogène Solide",
-        famille_astrale="Soleil / Hydrogène",
+        code_court="F3: Plas Cor",
+        nom_complet="Plasma Coronaire",
+        famille_astrale="Soleil / Plasma",
         paradigme="MECQUOIS",
-        role_systeme="Conducteur métallique sous haute pression cinétique",
+        role_systeme="Enveloppe magnétique coronaire sous haute pression cinétique",
         mutabilite="DYNAMIQUE_DENSE",
     ),
     4: FormeMatiereCode(
         index=4,
-        code_court="F4: H Plas",
-        nom_complet="Hydrogène Plasma",
-        famille_astrale="Soleil / Hydrogène",
+        code_court="F4: Plas Coe",
+        nom_complet="Plasma Cœur de Fusion",
+        famille_astrale="Soleil / Plasma",
         paradigme="MECQUOIS",
         role_systeme="Émulation du calcul quantique complexe en superposition",
         mutabilite="QUANTIQUE_PLASMA",

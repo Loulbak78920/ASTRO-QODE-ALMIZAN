@@ -183,7 +183,7 @@ class MonadeSupreme(Generic[T]):
         if isinstance(self._valeur, (int, float)):
             idx = abs(int(round(float(self._valeur)))) % 14
             return LES_14_FORMES[idx]
-        return LES_14_FORMES[4]  # F4: Hydrogène Plasma (superposition complexe)
+        return LES_14_FORMES[4]  # F4: Plasma Cœur de Fusion (superposition complexe)
 
     def __eq__(self, autre: object) -> bool:
         if not isinstance(autre, MonadeSupreme):

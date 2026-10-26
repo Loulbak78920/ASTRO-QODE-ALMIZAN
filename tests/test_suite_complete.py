@@ -95,8 +95,8 @@ from bibliotheques.lib_bloc_synchron_mzn import (
 )
 from bibliotheques.lib_pont_materiel_emule import PORTS_LOCAUX_ALMIZAN, PontMaterielEmuleAlmizan
 from bibliotheques.lib_physique import (
-    ETATS_HYDROGENE,
     ETATS_LUNE,
+    ETATS_SOLEIL_PLASMA,
     ETATS_TERRE,
     LES_14_FORMES,
     MatriceLogiqueInversee,
@@ -158,13 +158,13 @@ class TestSystemeCompletAstroQode(unittest.TestCase):
 
     def test_02_couche_qubit_physique_et_14_formes(self) -> None:
         """Vérifie les 20 états physiques, les ratios de division/soustraction et les 14 Formes."""
-        self.assertEqual(len(ETATS_HYDROGENE), 4)
+        self.assertEqual(len(ETATS_SOLEIL_PLASMA), 4)
         self.assertEqual(len(ETATS_TERRE), 7)
         self.assertEqual(len(ETATS_LUNE), 9)
         self.assertEqual(MatriceLogiqueInversee.TOTAL_ETATS_CUMULES, 20)
 
         div = MatriceLogiqueInversee.analyse_cumulative_division()
-        self.assertEqual(div["ratio_solides_sur_gazeux_arrondi"], 1.43)
+        self.assertEqual(div["ratio_solides_sur_gazeux_arrondi"], 1.5)
         self.assertEqual(div["ratio_fusion_hydrogene_helium"], 4.0)
         self.assertEqual(div["ratio_solides_lune_sur_terre"], 2.0)
 
