@@ -76,7 +76,7 @@ git -C "<depot>" ls-files --error-unmatch -- "<chemin>"
 
 ### 写入前：重新锚定已批准的方案
 
-已批准的方案描述的是撰写时的文件，不是写入时的文件。每次写入前重新采样目标，并与方案中记录的基线比较：
+已批准的方案描述的是撰写时的文件，不是写入时的文件。若当前会话之外的其他会话（来源或并发）仍可能写入这些文件（`list_chat_sessions`），先用 `wait_chat_sessions` 等其回合结束（≤ 60 秒）并转为 `ready` 或 `cold` 后再重新采样；超时、失败或需要人工处理则停止并询问。2 秒双采样不能证明该会话已停止写入。已观察（2026-10-26）：`61f699a4` 读取时为 `running`（revision 15），经 `wait_chat_sessions` 转为 `ready`（revision 19）。每次写入前重新采样目标，并与方案中记录的基线比较：
 
 ```bash
 stat -c '%s %y' "<fichier>"
