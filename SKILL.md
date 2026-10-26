@@ -165,7 +165,7 @@ py -3 "<skills-root>/skill-doc-translation-parity/scripts/check_translation_pari
 3. Recalculer le manifeste et exiger un `diff` vide (voir ci-dessus).
 4. Invocation réelle du Skill (Étape 11), puis recalculer le manifeste et exiger un `diff` vide.
 
-Consigner le manifeste et les empreintes finales, puis les associer à la version validée. Une écriture après l'étape 4 impose de reprendre à l'étape 1. Ne jamais présenter un PASS obtenu avant la dernière écriture comme la validation du fichier actuel. La parité est structurelle (blocs de code, tableaux, titres, listes, identifiants, nombres) et ne prouve pas la qualité sémantique de la traduction.
+Consigner le manifeste et les empreintes finales, puis les associer à la version validée. Une écriture après l'étape 4 impose de reprendre à l'étape 1. Ne jamais présenter un PASS obtenu avant la dernière écriture comme la validation du fichier actuel. La parité est structurelle (blocs de code, tableaux, titres, listes, identifiants, nombres) et ne prouve pas la qualité sémantique de la traduction. Un `RESULT FAIL` dont la seule ligne en échec est `FAIL inline tokens: missing=[…]`, alors que la source a aussi été modifiée, signale en général un identifiant protégé reformulé en prose dans la traduction (cas observé : `$N` remplacé par « ce littéral ») ; ce n'est ni une panne du script ni le périmètre partiel. Ne pas affaiblir le contrôle, ne pas modifier la source pour la faire correspondre : restaurer le token exact dans la phrase traduite, puis reprendre à l'étape 1 et rejouer parité, `skill-file-qa`, manifeste hors Skill et invocation. Un `RESULT PASS` de QA ne compense pas ce `FAIL`.
 
 ### Périmètre partiel : source seule, traduction non modifiée
 
@@ -445,6 +445,7 @@ Un root absent est ignoré ; seul le nombre de résultats compte. Un seul résul
 | Skill modifié non résolu ou introuvable | index runtime non rechargé, ou homonyme projet qui masque | invoquer le Skill, vérifier les deux racines, puis demander `/skills reload` à l'utilisateur |
 | plan approuvé, mais taille/mtime/SHA-256 ou lignes différents avant écriture | fichier réécrit depuis la planification | rééchantillonner, relire, ré-ancrer par texte exact, préserver les ajouts concurrents ; ne pas restaurer de sauvegarde ; revalider les octets finaux |
 | `RESULT PASS` QA mais parité `RESULT FAIL` après mise à jour de la seule source | traduction volontairement intacte (périmètre partiel) | rapporter QA et parité séparément avec les écarts ; ne pas déclarer le paquet validé ; proposer le miroir |
+| parité `RESULT FAIL` avec `FAIL inline tokens: missing=[…]` alors que les deux fichiers ont été modifiés | identifiant protégé reformulé en prose dans la traduction (cas observé : `$N` → « ce littéral ») | ne pas affaiblir le contrôle ni modifier la source ; restaurer le token exact dans la phrase traduite, puis rejouer parité, QA, manifeste et invocation |
 
 ## Checklist finale
 
@@ -463,7 +464,7 @@ Un root absent est ignoré ; seul le nombre de résultats compte. Un seul résul
 - [ ] Push uniquement sur demande ; remote, branche et hash vérifiés.
 - [ ] Empreintes SHA-256 de `SKILL.md`, `scripts/` et `references/` relevées ; le `Fingerprint` seul ne couvre que `SKILL.md`.
 - [ ] Blobs d'index et blobs `HEAD` comparés par OID à la source filtrée ; écart SHA-256 expliqué par un filtre eol si applicable.
-- [ ] Après la dernière écriture : parité, `skill-file-qa`, SHA-256 et invocation rejoués dans cet ordre ; empreintes finales consignées.
+- [ ] Après la dernière écriture : parité, `skill-file-qa`, SHA-256 et invocation rejoués dans cet ordre ; empreintes finales consignées ; aucun token manquant toléré même si QA est PASS.
 - [ ] Manifeste SHA-256 enregistré hors du Skill après la dernière écriture ; `Fingerprint (final)` de QA égal au `./SKILL.md` du manifeste.
 - [ ] `diff` du manifeste vide avant et après `git add` ; aucune écriture entre validation et indexation.
 - [ ] Écart de manifeste traité par revalidation complète, jamais par un simple recalcul de SHA-256.

@@ -160,7 +160,7 @@ py -3 "<skills-root>/skill-doc-translation-parity/scripts/check_translation_pari
 3. 重算清单并要求 `diff` 为空（见上文）。
 4. 实际调用该 Skill（步骤 11），然后重算清单并要求 `diff` 为空。
 
-记录清单与最终指纹，并绑定到被验证版本。若在步骤 4 之后又发生写入，从步骤 1 重来。不得把最后写入之前获得的 PASS 当作当前文件的验证结果。对等检查是结构性的（代码块、表格、标题、清单、标识符、数字），不能证明译文的语义质量。
+记录清单与最终指纹，并绑定到被验证版本。若在步骤 4 之后又发生写入，从步骤 1 重来。不得把最后写入之前获得的 PASS 当作当前文件的验证结果。对等检查是结构性的（代码块、表格、标题、清单、标识符、数字），不能证明译文的语义质量。若 `RESULT FAIL` 的唯一失败行是 `FAIL inline tokens: missing=[…]`，且源文件也已被修改，通常表示译本把受保护的标识符改写成了叙述文字（已观察：`$N` 被写成「该字面量」）；这既不是脚本故障，也不是部分范围。不要放宽检查，也不要修改源文件去迁就译本：在译句中恢复逐字相同的 token，然后从步骤 1 重来，依次重跑对等、`skill-file-qa`、Skill 外清单与实际调用。QA 的 `RESULT PASS` 不能抵消该 `FAIL`。
 
 ### 部分范围：只改源文件、不改译本
 
@@ -440,6 +440,7 @@ find "C:/Users/Administrateur/.qoder/skills" "<racine-espace>/.qoder/skills" -ma
 | 修改后的 Skill 未被解析或找不到 | 运行时索引未重载，或项目级同名遮蔽 | 调用该 Skill，检查两个根，再请用户执行 `/skills reload` |
 | 方案已批准，但写入前大小/mtime/SHA-256 或行数不同 | 文件自规划后被重写 | 重新采样、重读、按精确文本重新锚定、保留并发新增；不要恢复备份；重新验证最终字节 |
 | 只更新源文件后 QA `RESULT PASS` 但对等 `RESULT FAIL` | 译本被有意保持不动（部分范围） | 分别报告 QA 与对等及差异；不得宣布包已验证；提出同步译本 |
+| 两个文件都已修改，但对等仅在 `FAIL inline tokens: missing=[…]` 处 `RESULT FAIL` | 译本把受保护的标识符改写成叙述文字（已观察：`$N` → 「该字面量」） | 不要放宽检查，也不要修改源文件；在译句中恢复逐字相同的 token，再按顺序重跑对等、QA、清单与实际调用 |
 
 ## 最终检查清单
 
@@ -458,7 +459,7 @@ find "C:/Users/Administrateur/.qoder/skills" "<racine-espace>/.qoder/skills" -ma
 - [ ] 仅在要求时推送；remote、分支和哈希均已核对。
 - [ ] 已记录 `SKILL.md`、`scripts/` 与 `references/` 的 SHA-256；单独 `Fingerprint` 只覆盖 `SKILL.md`。
 - [ ] 索引 blob 与 `HEAD` blob 均按 OID 与过滤后的源文件比对；SHA-256 差异已用 eol 过滤器解释。
-- [ ] 最后一次写入之后，已按顺序重跑对等、`skill-file-qa`、SHA-256 与实际调用，并记录最终指纹。
+- [ ] 最后一次写入之后，已按顺序重跑对等、`skill-file-qa`、SHA-256 与实际调用，并记录最终指纹；即使 QA 为 PASS，也不容忍缺失的 token。
 - [ ] 最后一次写入后已将 SHA-256 清单保存到 Skill 之外；QA 的 `Fingerprint (final)` 等于清单中的 `./SKILL.md`。
 - [ ] `git add` 前后清单 `diff` 均为空；验证与暂存之间没有写入。
 - [ ] 清单差异通过完整重新验证处理，绝不用单纯重算 SHA-256 代替。
