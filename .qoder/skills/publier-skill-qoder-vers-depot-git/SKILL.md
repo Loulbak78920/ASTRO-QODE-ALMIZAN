@@ -16,6 +16,7 @@ Publier un Skill du dossier utilisateur Qoder dans un dépôt Git sans réécrir
 - Vérifier qu'une copie publiée est octet pour octet identique à la source.
 - Diagnostiquer `fatal: ambiguous argument 'origin\main;...'` sous Git Bash.
 - Diagnostiquer un `MISMATCH` après modification du Skill (archive périmée) ou une branche/`origin/main` déplacée par une autre session en cours d'opération.
+- Publier quand le worktree du dépôt cible est occupé par une autre session (branche autre que `main` ou fichiers non commités) : s'arrêter, puis, après accord, utiliser un clone temporaire isolé sans toucher à ce worktree.
 
 Ne pas utiliser pour : committer sans publier (voir `commit-skill-work`), modifier le Skill (voir `skill-update-concurrency-safe`), fusionner du code applicatif, ou pousser sans instruction explicite de l'utilisateur.
 
@@ -31,6 +32,7 @@ Ne pas utiliser pour : committer sans publier (voir `commit-skill-work`), modifi
 8. **Archive, pas fonctionnel** : les chemins relatifs du Skill peuvent viser l'arborescence du projet principal, absente du dépôt. Le signaler dans le rapport.
 9. **Aucune réécriture** : pas de `git config`, pas de `reset --hard`, pas de force push, pas de modification de l'historique existant.
 10. **État relu avant merge et push** : relire la branche courante, `HEAD` et `origin/main` juste avant l'étape 6 puis juste avant l'étape 7. Tout écart avec la baseline de l'étape 0 arrête la procédure ; attribuer la dérive avec `git reflog --date=iso` et `git reflog show --date=iso origin/main`, ne jamais se l'approprier ni corriger l'état d'une autre session sans instruction.
+11. **Worktree occupé** : si le préflight trouve une branche autre que `main` ou un worktree sale, ne jamais `switch`, `stash`, `add`, `commit`, `clean` ni supprimer les fichiers d'une autre session. S'arrêter, lister les chemins, attribuer avec `git reflog --date=iso` et `git reflog show --date=iso origin/main`, puis demander. Après accord explicite seulement, publier depuis un clone temporaire du remote (étape 0b) et exécuter les étapes 1 à 9 dans ce clone ; le dépôt d'origine reste en lecture seule. Les gardes de merge et de push comparent des hashes complets (`rev-parse`, 40 caractères en SHA-1), jamais des hashes abrégés.
 
 ## Procédure
 
@@ -50,7 +52,22 @@ git -C "<depot>" reflog --date=iso -n 20
 git -C "<depot>" reflog show --date=iso origin/main -n 10
 ```
 
-Exiger `RESULT PASS`, la branche `main`, un worktree propre et un `origin` qui correspond au dépôt visé. Consigner la branche, `HEAD`, `origin/main` et les dernières entrées de reflog (HEAD et `origin/main`) : c'est la baseline des étapes 6 et 7. Le dépôt peut être partagé avec une autre session Qoder ; ne pas supposer que cet état reste vrai pendant l'opération. Si le worktree est sale : s'arrêter, lister les chemins et demander (voir `commit-skill-work`). La racine du projet n'est pas forcément un dépôt : localiser le vrai dépôt avec `git -C`, ne pas en déduire un chemin.
+Exiger `RESULT PASS`, la branche `main`, un worktree propre et un `origin` qui correspond au dépôt visé. Consigner la branche, `HEAD`, `origin/main` et les dernières entrées de reflog (HEAD et `origin/main`) : c'est la baseline des étapes 6 et 7. Le dépôt peut être partagé avec une autre session Qoder ; ne pas supposer que cet état reste vrai pendant l'opération. Si la branche n'est pas `main` ou si le worktree est sale : ne rien écrire dans ce dépôt (aucun `switch`, `stash`, `add`, `commit`, `clean`), lister les chemins, attribuer avec `git reflog --date=iso` et `git reflog show --date=iso origin/main`, puis demander (voir `commit-skill-work`). Si l'utilisateur autorise une publication isolée, suivre l'étape 0b ; sinon s'arrêter. La racine du projet n'est pas forcément un dépôt : localiser le vrai dépôt avec `git -C`, ne pas en déduire un chemin.
+
+### 0b. Publication depuis un clone isolé (worktree occupé)
+
+À n'utiliser qu'après accord explicite. Conserver le chemin d'origine sous `<depot-original>` ; remplacer ensuite `<depot>` par `"$tmp/repo"` et exécuter les étapes 1 à 9 dans le clone. Le dépôt d'origine reste en lecture seule.
+
+```bash
+url="$(git -C "<depot-original>" remote get-url origin)"
+tmp="$(mktemp -d "$HOME/.qoder/tmp/publish-<nom>.XXXXXX")"
+git clone --branch main --single-branch "$url" "$tmp/repo"
+git -C "$tmp/repo" rev-parse --abbrev-ref HEAD
+git -C "$tmp/repo" rev-parse HEAD origin/main
+git -C "$tmp/repo" status --porcelain=v1
+```
+
+Exiger `main`, `HEAD` égal à `origin/main` et un worktree propre. La baseline des étapes 6 et 7 est celle du clone, pas celle du dépôt d'origine. Ne pas exécuter `fetch`, `switch`, `merge`, `stash` ou `clean` dans le dépôt d'origine, ne pas y créer de worktree (`git worktree add`) et ne pas modifier sa configuration. Le clone prend l'état réel du remote, même si l'`origin/main` local du dépôt d'origine est en retard : ne pas corriger ce dernier. Avant la copie, un contrôle `--ref origin/main --from remote` peut renvoyer `MISMATCH` si l'archive est périmée ; c'est attendu et ne bloque pas la copie.
 
 ### 1. Aligner main
 
@@ -110,34 +127,38 @@ Chemins explicites uniquement, jamais `git add -A` ni `git add .`. Le message su
 ### 6. Avancer main en fast-forward
 
 ```bash
-git -C "<depot>" rev-parse --abbrev-ref HEAD
-git -C "<depot>" rev-parse HEAD
-git -C "<depot>" rev-parse origin/main
-git -C "<depot>" status --porcelain=v1
+EXPECT_HEAD="<hash complet du commit de l'étape 5>"
+EXPECT_ORIGIN="<hash complet de origin/main de l'étape 1>"
+[ "$(git -C "<depot>" rev-parse --abbrev-ref HEAD)" = "merge/skill-<nom>" ] || { echo STOP_BRANCH; exit 1; }
+[ "$(git -C "<depot>" rev-parse HEAD)" = "$EXPECT_HEAD" ] || { echo STOP_HEAD; exit 1; }
+[ "$(git -C "<depot>" rev-parse origin/main)" = "$EXPECT_ORIGIN" ] || { echo STOP_ORIGIN; exit 1; }
+[ -z "$(git -C "<depot>" status --porcelain=v1)" ] || { echo STOP_DIRTY; exit 1; }
 git -C "<depot>" switch main
-git -C "<depot>" rev-parse --abbrev-ref HEAD
-git -C "<depot>" rev-parse HEAD
+[ "$(git -C "<depot>" rev-parse --abbrev-ref HEAD)" = "main" ] || { echo STOP_BRANCH; exit 1; }
+[ "$(git -C "<depot>" rev-parse HEAD)" = "$EXPECT_ORIGIN" ] || { echo STOP_HEAD; exit 1; }
 git -C "<depot>" merge --ff-only "merge/skill-<nom>"
 git -C "<depot>" log --oneline -2
 git -C "<depot>" status -sb
 ```
 
-Avant de basculer : la branche doit être `merge/skill-<nom>`, `HEAD` le commit de l'étape 5, `origin/main` la base de l'étape 1 et le worktree propre. Tout écart arrête la procédure ; inspecter `git reflog --date=iso` et ne pas attribuer le changement à cette session. Après `switch main`, relire la branche et `HEAD` avant le merge. Si `main` est déjà extraite dans un autre worktree (`git worktree list`), s'arrêter et demander.
+Avant de basculer : la branche doit être `merge/skill-<nom>`, `HEAD` le commit de l'étape 5, `origin/main` la base de l'étape 1 et le worktree propre. Tout écart arrête la procédure ; inspecter `git reflog --date=iso` et ne pas attribuer le changement à cette session. Les gardes comparent les hashes complets rendus par `rev-parse` : un hash abrégé (`c669d02`) comparé à un hash complet (`c669d029…`) produit un faux `STOP_HEAD` (observé, `EXIT=31`). Après `switch main`, relire la branche et `HEAD` avant le merge. Si `main` est déjà extraite dans un autre worktree (`git worktree list`), s'arrêter et demander.
 
 Attendre `Fast-forward`, un seul commit ajouté et `[ahead 1]`. Si `--ff-only` refuse, `main` a bougé : vérifier dans le reflog si le mouvement vient de cette session ou d'une autre, puis revenir à l'étape 2, recréer la branche depuis le nouveau `origin/main` et recopier. Ne jamais utiliser `--no-ff` ni forcer, ni présenter un changement externe comme le sien.
 
 ### 7. Pousser (sur instruction explicite)
 
 ```bash
+EXPECT_HEAD="<hash complet du commit de fusion>"
+EXPECT_BASE="<hash complet de origin/main attendu, celui de l'étape 6>"
 git -C "<depot>" fetch origin
-git -C "<depot>" rev-parse --abbrev-ref HEAD
-git -C "<depot>" rev-parse HEAD
-git -C "<depot>" rev-parse origin/main
-git -C "<depot>" ls-remote origin refs/heads/main
+[ "$(git -C "<depot>" rev-parse --abbrev-ref HEAD)" = "main" ] || { echo STOP_BRANCH; exit 1; }
+[ "$(git -C "<depot>" rev-parse HEAD)" = "$EXPECT_HEAD" ] || { echo STOP_HEAD; exit 1; }
+[ "$(git -C "<depot>" rev-parse origin/main)" = "$EXPECT_BASE" ] || { echo STOP_ORIGIN; exit 1; }
+[ "$(git -C "<depot>" ls-remote origin refs/heads/main | cut -f1)" = "$EXPECT_BASE" ] || { echo STOP_REMOTE; exit 1; }
 git -C "<depot>" push origin main
 ```
 
-Avant de pousser : la branche doit être `main`, `HEAD` le commit de fusion, et `origin/main` égal à `ls-remote`. Si le fetch a avancé `origin/main`, une autre session a poussé : s'arrêter et demander ; ne pas rebaser, merger ni forcer.
+Avant de pousser : la branche doit être `main`, `HEAD` le commit de fusion, `origin/main` et `ls-remote` égaux à la base de l'étape 6. Si le fetch a avancé `origin/main`, une autre session a poussé : `STOP_ORIGIN` arrête la procédure ; demander, ne pas rebaser, merger ni forcer. Les gardes comparent des hashes complets, jamais des hashes abrégés.
 
 Attendre une ligne de la forme `<ancien>..<nouveau>  main -> main`. Jamais `--force` ni `-f`. Si le push est rejeté, relire `git log HEAD..origin/main` et `git reflog --date=iso`, puis demander avant toute action.
 
@@ -184,6 +205,26 @@ Conserver alors la branche, la signaler dans le rapport et terminer avec `## mai
 
 Une branche distante indépendante `skill/<nom>`, poussée avant la fusion, reste sur `origin` : ne pas la supprimer sans instruction explicite. Vérifier avec `branch -vv` que `main` suit `origin/main` et non `origin/skill/<nom>`.
 
+Dans la variante 0b, après le push et la suppression de la branche, supprimer le clone créé à l'étape 0b, uniquement après avoir vérifié le préfixe :
+
+```bash
+case "$tmp" in
+  "$HOME"/.qoder/tmp/publish-<nom>.*) rm -rf "$tmp" ;;
+  *) echo "REFUS $tmp"; exit 1 ;;
+esac
+```
+
+Revenir ensuite au dépôt d'origine en lecture seule pour consigner son état final :
+
+```bash
+git -C "<depot-original>" rev-parse --abbrev-ref HEAD
+git -C "<depot-original>" rev-parse HEAD
+git -C "<depot-original>" rev-parse origin/main
+git -C "<depot-original>" status --porcelain=v1
+```
+
+Le dépôt d'origine doit être inchangé par cette session ; son `origin/main` local peut rester en retard jusqu'au prochain `git fetch`, qui n'est pas exécuté ici. Consigner cette valeur et ne pas la corriger.
+
 ## Piège MSYS (vérifié le 2026-10-26)
 
 Sous Git Bash, un argument de la forme `origin/main:<chemin>` est converti comme une liste de chemins Windows (`:` devient `;`, `/` devient `\`). Erreur observée sur cinq fichiers :
@@ -207,6 +248,10 @@ Sans variable d'environnement, la commande sort en 128 ; avec `MSYS_NO_PATHCONV=
 | la branche locale suit `origin/skill/...` après un push | refspec `HEAD:refs/heads/<branche>` | vérifier `git -C "<depot>" branch -vv` ; préférer `git push origin main` |
 | `error: the branch 'merge/skill-<nom>' is not fully merged` alors que `main` contient le commit | commit non poussé : `-d` compare à `refs/remotes/origin/main`, créé depuis `origin/main` | conserver la branche et la signaler ; pousser puis relancer `-d` ; `-D` sur accord explicite seulement |
 | vérificateur `--from remote` : `MISSING` sur tous les fichiers alors que la copie worktree est `PASS` | push non effectué, `origin/main` inchangé | ne pas pousser sans instruction ; consigner le contrôle distant comme non exécuté |
+| worktree sur une branche autre que `main` avec des fichiers non commités d'une autre session | une autre session Qoder travaille dans le même dépôt | ne rien écrire (`switch`, `stash`, `clean`) ; attribuer via reflog ; clone isolé après accord |
+| `STOP_HEAD` juste après le commit alors que `HEAD` est le bon commit | hash abrégé comparé à un hash complet | comparer les sorties complètes de `rev-parse` (40 caractères en SHA-1) |
+| `fatal: Not a valid object name <hash>` dans le dépôt d'origine après une publication isolée | le commit existe côté remote mais n'a pas été récupéré localement | vérifier `git ls-remote origin refs/heads/main` ; ne pas conclure à un échec |
+| `origin/main` local en retard après une publication isolée | le dépôt d'origine n'a pas fait `fetch` | attendu ; signaler dans le rapport ; ne pas fetch/merge sans instruction |
 | `warning: ... CRLF will be replaced by LF` | normalisation des fins de ligne | informationnel ; ne pas réécrire le dépôt |
 
 ## Définition de terminé
@@ -223,6 +268,10 @@ Sans variable d'environnement, la commande sort en 128 ; avec `MSYS_NO_PATHCONV=
 - [ ] Toute dérive externe arrête la procédure et est attribuée via `git reflog --date=iso` et `git reflog show --date=iso origin/main`, sans revendication.
 - [ ] `MISMATCH` qualifié : archive périmée si la ref est antérieure, MSYS réservé à `fatal: ambiguous argument` hors script.
 - [ ] Rapport : réserve d'archive, état du push et des chemins relatifs signalés.
+- [ ] Worktree occupé : arrêt sans écriture, chemins listés, dérive attribuée via reflog, accord explicite avant clone isolé.
+- [ ] Variante isolée : clone depuis l'URL remote, `main` = `origin/main`, worktree propre, étapes 1 à 9 exécutées dans le clone ; dépôt d'origine intact.
+- [ ] Gardes merge/push : comparaison de hashes complets ; aucun `STOP_*` inexpliqué.
+- [ ] Variante isolée terminée : branche temporaire et clone supprimés ; `origin/main` local du dépôt d'origine signalé s'il est en retard.
 
 ## Rapport
 
@@ -235,6 +284,10 @@ Main : <ancien>..<nouveau> fast-forward | push oui/non
 État : <branche>@<hash> | origin/main <hash> | relu avant merge et push | dérive : aucune|<reflog>
 Distant : HEAD <hash> | blobs PASS/FAIL | non exécuté (push non effectué)
 Nettoyage : branche supprimée | conservée (non poussé)
+Variante : standard | clone isolé
+Source repo : <chemin> | intact | <branche>@<hash> | origin/main local <hash>
+Clone : <chemin> | supprimé | créé depuis <URL remote>
+Gardes : HEAD <hash complet> | origin/main <hash complet> | STOP_* : aucun
 Reserve : archive, chemins relatifs non garantis dans ce depot
 ```
 
