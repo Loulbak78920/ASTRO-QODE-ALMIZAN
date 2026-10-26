@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Create and merge GitHub pull requests with credentials from git credential fill.
 
-Read-only commands: probe, status.
+Read-only commands: probe, compare, files, status.
 Mutating commands: create, merge (both require --yes).
 Only github.com is supported. The token is never printed or written to disk.
 """
@@ -319,6 +319,97 @@ def cmd_status(args):
     return 0
 
 
+def cmd_compare(args):
+    if not check_repo(args.repo):
+        return 2
+    creds = credentials()
+    if creds is None:
+        return 2
+    user, token = creds
+    print(f"CREDENTIAL_USER {user}")
+
+    base = urllib.parse.quote(args.base, safe="/")
+    head = urllib.parse.quote(args.head, safe="/")
+    status, body = api("GET", f"/repos/{args.repo}/compare/{base}...{head}", token)
+    if status != 200 or not isinstance(body, dict):
+        print(f"COMPARE_FAIL status={status} body={brief(body, 500)}")
+        return 2
+
+    print(
+        f"COMPARE status={body.get('status')} ahead={body.get('ahead_by')} "
+        f"behind={body.get('behind_by')} total_commits={body.get('total_commits')}"
+    )
+    merge_base = body.get("merge_base_commit") or {}
+    merge_sha = merge_base.get("sha")
+    print(f"MERGE_BASE {merge_sha}")
+    if not merge_sha:
+        print("COMPARE_FAIL missing merge_base_commit")
+        return 2
+
+    files = body.get("files") or []
+    print(f"FILES {len(files)}")
+    for item in files:
+        print(
+            f"FILE {item.get('status')} {item.get('filename')} "
+            f"+{item.get('additions')} -{item.get('deletions')}"
+        )
+    return 0
+
+
+def cmd_files(args):
+    if not check_repo(args.repo):
+        return 2
+    creds = credentials()
+    if creds is None:
+        return 2
+    user, token = creds
+    print(f"CREDENTIAL_USER {user}")
+
+    files = []
+    page = 1
+    while True:
+        status, batch = api(
+            "GET",
+            f"/repos/{args.repo}/pulls/{args.pr}/files?per_page=100&page={page}",
+            token,
+        )
+        if status != 200 or not isinstance(batch, list):
+            print(f"FILES_FAIL status={status} body={brief(batch, 500)}")
+            return 2
+        files.extend(batch)
+        if len(batch) < 100:
+            break
+        page += 1
+        if page > 10:
+            print("FILES_FAIL pagination limit exceeded")
+            return 2
+
+    print(f"FILES {len(files)}")
+    for item in files:
+        print(
+            f"FILE {item.get('status')} {item.get('filename')} "
+            f"+{item.get('additions')} -{item.get('deletions')}"
+        )
+
+    status, pull = api("GET", f"/repos/{args.repo}/pulls/{args.pr}", token)
+    if status != 200 or not isinstance(pull, dict):
+        print(f"PR_GET_FAIL status={status} body={brief(pull, 500)}")
+        return 2
+    changed = pull.get("changed_files")
+    print(
+        f"PR_FILES changed={changed} additions={pull.get('additions')} "
+        f"deletions={pull.get('deletions')} state={pull.get('state')} "
+        f"merged={pull.get('merged')}"
+    )
+    if not isinstance(changed, int):
+        print("FILES_FAIL changed_files missing")
+        return 2
+    if changed != len(files):
+        print(f"FILES_MISMATCH api_files={len(files)} changed_files={changed}")
+        return 2
+    return 0
+
+
 def build_parser():
     parser = argparse.ArgumentParser(
         description="Create, merge and inspect GitHub pull requests without gh."
@@ -329,6 +420,17 @@ def build_parser():
     probe.add_argument("--repo", required=True, help="owner/name")
     probe.add_argument("--head", required=True, help="head branch")
     probe.set_defaults(func=cmd_probe)
+
+    compare = sub.add_parser("compare", help="read-only base...head comparison and merge base")
+    compare.add_argument("--repo", required=True, help="owner/name")
+    compare.add_argument("--base", required=True, help="base branch")
+    compare.add_argument("--head", required=True, help="head branch")
+    compare.set_defaults(func=cmd_compare)
+
+    files = sub.add_parser("files", help="read-only PR file list with changed_files check")
+    files.add_argument("--repo", required=True, help="owner/name")
+    files.add_argument("--pr", required=True, type=int, help="PR number")
+    files.set_defaults(func=cmd_files)
 
     create = sub.add_parser("create", help="create a PR, reusing an open PR for the same head")
     create.add_argument("--repo", required=True, help="owner/name")
@@ -357,6 +459,8 @@ def build_parser():
 
 
 def main():
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
     args = build_parser().parse_args()
     try:
         return args.func(args)
