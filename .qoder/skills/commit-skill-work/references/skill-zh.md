@@ -41,10 +41,10 @@ find "C:/Users/Administrateur/.qoder/skills" -maxdepth 2 -name .git -type d
 - 只读清点，ASCII 输出，退出码 0/1/2：
 
 ```bash
-py -3 "<dossier-skill>/scripts/inspect_git_state.py" "<racine>" "C:/Users/Administrateur/.qoder/skills"
+py -3 "C:/Users/Administrateur/.qoder/skills/commit-skill-work/scripts/inspect_git_state.py" "<racine>" "C:/Users/Administrateur/.qoder/skills"
 ```
 
-该脚本调用 `rev-parse`、`status`、`diff`、`log` 和 `remote`，不修改索引，并标出未跟踪的缓存目录。脚本路径必须保持绝对：从项目根执行 `scripts/inspect_git_state.py` 会因 `can't open file` 失败（退出码 2）。
+该脚本调用 `rev-parse`、`status`、`diff`、`log` 和 `remote`，不修改索引，并标出未跟踪的缓存目录。脚本属于 `commit-skill-work`，不属于被提交的 Skill：`<dossier-skill>` 可能只有 `SKILL.md`。路径必须保持绝对并指向本 Skill；从项目根执行 `scripts/inspect_git_state.py` 会因 `can't open file` 失败（退出码 2）。
 
 ## 步骤 2 — 分类改动
 
@@ -160,7 +160,7 @@ py -3 "<skills-root>/skill-doc-translation-parity/scripts/check_translation_pari
 3. 重算清单并要求 `diff` 为空（见上文）。
 4. 实际调用该 Skill（步骤 11），然后重算清单并要求 `diff` 为空。
 
-记录清单与最终指纹，并绑定到被验证版本。若在步骤 4 之后又发生写入，从步骤 1 重来。不得把最后写入之前获得的 PASS 当作当前文件的验证结果。对等检查是结构性的（代码块、表格、标题、清单、标识符、数字），不能证明译文的语义质量。
+记录清单与最终指纹，并绑定到被验证版本。若在步骤 4 之后又发生写入，从步骤 1 重来。不得把最后写入之前获得的 PASS 当作当前文件的验证结果。对等检查是结构性的（代码块、表格、标题、清单、标识符、数字），不能证明译文的语义质量。若 `RESULT FAIL` 的唯一失败行是 `FAIL inline tokens: missing=[…]`，且源文件也已被修改，通常表示译本把受保护的标识符改写成了叙述文字（已观察：`$N` 被写成「该字面量」）；这既不是脚本故障，也不是部分范围。不要放宽检查，也不要修改源文件去迁就译本：在译句中恢复逐字相同的 token，然后从步骤 1 重来，依次重跑对等、`skill-file-qa`、Skill 外清单与实际调用。QA 的 `RESULT PASS` 不能抵消该 `FAIL`。
 
 ### 部分范围：只改源文件、不改译本
 
@@ -224,7 +224,7 @@ manifest="$(dirname "$snap")/fingerprints-<nom-skill>.txt"
 
 6. 归档并索引快照字节：把快照复制到 `.qoder/skills/<nom>`，用显式路径 `git add`，然后用快照文件（而非 live）计算 `git hash-object --path` 的预期 OID。
 
-7. 提交并推送后，分别以 `find_stale_archives.py --skill "<instantané>"` 和 `--skill "<dossier-skill>"` 运行；新 ref 必须为 `FRESH`，旧的 `STALE` 只报告、不重发。两次报告的差异说明提交后又发生了写入。
+7. 提交并推送后，用 `C:/Users/Administrateur/.qoder/skills/commit-skill-work/scripts/find_stale_archives.py` 分别以 `--skill "<instantané>"` 和 `--skill "<dossier-skill>"` 运行；新 ref 必须为 `FRESH`，旧的 `STALE` 只报告、不重发。两次报告的差异说明提交后又发生了写入。
 
 8. 若提交后 live 发生变化，这些字节属于另一会话：报告它们，不要吸收进提交，也不要改写快照。快照是证据；live 只是某一时刻的观察状态。
 
@@ -324,14 +324,20 @@ git -C "<depot>" grep -F -n "<marqueur-unique>" HEAD -- "<chemin-relatif-depot>"
 
 已观察案例（2026-10-26）：`SKILL.md` 验证时为 `c08c9461…`，当前为 `cc40b069…`；`status` 与 `diff` 为空；初始提交 `778a547` 于 11:54，之前 11:44–11:45 有并发写入；对当前字节重跑 `skill-file-qa` 得到 `RESULT PASS`；2 个文件的 `HEAD` OID 等于过滤后源文件；标记位于 L66/L141，脚本位于 L530。没有空提交，没有 amend；提交消息描述的是并发工作。
 
-校验已提交 blob 及其稳定性：
+### 情况：审阅与提交之间 `HEAD` 前进
+
+若在 `+N/−M` 的审阅与 QA PASS 之后，`git commit` 返回 `nothing to commit`，说明另一会话在验证期间创建了提交。不要 amend、reset、创建空提交，也不要重新执行 `git add`。
+
+1. 提交前固定 `reviewed_oid=$(git -C "<depot>" rev-parse ":<chemin-relatif-depot>")`，并要求 `git hash-object --path="<chemin-relatif-depot>" "<chemin-source>"` 与它相等；记录已审阅的 diff（`git diff --cached --stat`）。
+2. 失败后，将 `git -C "<depot>" rev-parse "HEAD:<chemin-relatif-depot>"` 与 `reviewed_oid` 比较，并在 `HEAD` 中核对唯一标记。`git show --stat HEAD` 相同只是线索，不是内容证明。OID 不同则停止，不要推送。
+3. 若用户要求推送且 OID 相等，推送已有提交，不创建新提交也不 amend；执行 `git fetch origin` 后核对 `git rev-parse "origin/<branche>:<chemin-relatif-depot>"` 与 `git ls-remote origin "refs/heads/<branche>"`。`core.autocrlf=true` 时比较 OID，不要比较 SHA-256：2026-10-26 的案例中，`+9/−4`（`0b3ebce..4b71f23`），QA `RESULT PASS`，`INDEX_OID=WORKTREE_OID=4b71f23`，`git commit` 返回 `nothing to commit`，并发提交为 `70ccdd9`；`HEAD:SKILL.md=4b71f23` 是在推送后才比较的，而采纳证明必须早于推送；CRLF 源 `e46b8a92…` ≠ LF blob `3b3ff118…`。
 
 ```bash
 git -C "<depot>" ls-tree -r HEAD -- "<chemin-relatif-depot>"
 head_oid=$(git -C "<depot>" rev-parse "HEAD:<chemin-relatif-depot>")
 ```
 
-`HEAD` 的 OID 必须与步骤 6 校验的 OID 一致。若 hook 可能在提交期间改动索引，用 `git hash-object --path` 重新比对 OID；存在 eol 过滤器时不要比较字节级 SHA-256。
+校验已提交 blob 及其稳定性：`HEAD` 的 OID 必须与步骤 6 校验的 OID 一致。若 hook 可能在提交期间改动索引，用 `git hash-object --path` 重新比对 OID；存在 eol 过滤器时不要比较字节级 SHA-256。`scripts/run-fixture.sh` 在生产之外重放此情况的两个分支。
 
 ## 步骤 8 — 处理副作用
 
@@ -342,13 +348,13 @@ head_oid=$(git -C "<depot>" rev-parse "HEAD:<chemin-relatif-depot>")
 本地提交不会更新其他仓库中 `.qoder/skills/<nom>` 下的归档副本。最后一次提交后（包括步骤 8 的 `chore(...)` 提交），查找这些归档并与最终源码比较：
 
 ```bash
-py -3 "<dossier-skill>/scripts/find_stale_archives.py" \
+py -3 "C:/Users/Administrateur/.qoder/skills/commit-skill-work/scripts/find_stale_archives.py" \
   --skill "<dossier-skill>" \
   --search-root "<racine-espace>" \
   --search-root "C:/Users/Administrateur/.qoder/skills"
 ```
 
-脚本只读。它枚举仓库、包含 `.qoder/skills/<nom>` 的 ref，然后通过 `git hash-object --path` 将每个 blob 与源码比较（应用 eol 过滤器）。脚本不执行 `fetch`：`published` 仅表示本地存在 `refs/remotes/` ref，不表示已向服务器查询。
+脚本只读，且属于 `commit-skill-work`，不属于被提交的 Skill：`<dossier-skill>` 可能只有 `SKILL.md`，所以上面的路径绝不能由 `<dossier-skill>/scripts/` 推导。它枚举仓库、包含 `.qoder/skills/<nom>` 的 ref，然后通过 `git hash-object --path` 将每个 blob 与源码比较（应用 eol 过滤器）。脚本不执行 `fetch`：`published` 仅表示本地存在 `refs/remotes/` ref，不表示已向服务器查询。
 
 | 输出 | 含义 | 代码 |
 |---|---|---|
@@ -389,7 +395,7 @@ git -C "<depot>" ls-remote origin "refs/heads/<branche>"
 
 修改或提交 Skill 后，要证明运行时确实能解析它，而不仅是磁盘上存在：
 
-1. 在最后一次写入之后，用 Skill 工具实际调用已修改的 Skill。若运行时返回基目录，必须与真正修改的目录一致；否则要求已加载内容包含最终版本的标志性规则。若之后又发生写入，先前调用不能作为证明。
+1. 在最后一次写入之后，用 Skill 工具实际调用已修改的 Skill，尽量不带参数。若运行时返回基目录，必须与真正修改的目录一致；否则要求已加载内容包含最终版本的标志性规则。若之后又发生写入，先前调用不能作为证明。带参数调用时，注入层会在片段中把数字位置参数（第 1 至第 9 个）替换为参数文本——已观察第 1、2、3 个——并可能在正文末尾追加 `ARGUMENTS: …`；字面量 `$N`（字母 N）保持不变。这属于注入层替换，不是文件被改写。调用前后比较 `SKILL.md` 的 `stat`/`sha256sum` 与 `HEAD:SKILL.md` 的 OID；即使注入文本不同，也要求二者保持不变。已观察案例（2026-10-26）：`audit-recouvrement-skills-avant-creation` 提交 `c46cd75`（`200dd8b7…`/`baec727b…`），片段中的第 1、2、3 个参数被替换，磁盘与 `HEAD` 不变；本 Skill 带参数调用时 `$N` 保持原样，末尾追加 `ARGUMENTS: validation lecture seule uniquement ; ne rien committer ni modifier`，调用期间磁盘/`HEAD` 指纹不变。不要用 `$N` 作为验证替换行为的测试标记；加固片段请遵循 `harden-skill-argument-substitution`。公开片段优先使用具名变量；数字位置参数的转义方式尚未验证。
 2. 检查可能遮蔽用户级版本的同名目录；两个根都要查：
 
 ```bash
@@ -416,13 +422,14 @@ find "C:/Users/Administrateur/.qoder/skills" "<racine-espace>/.qoder/skills" -ma
 | 重述后第二次回答「TOUT」 | 选项互斥 | 不再提第三个问题；执行推荐组合并声明，排除 push 与删除 |
 | push 被拒（non-fast-forward 或历史无关） | Skill 仓库与 `origin` 无关联 | 推送专用分支；绝不强制 |
 | 预期有提交却显示 `nothing to commit`，或 `status`/`diff` 为空 | 改动已被另一会话提交，或仓库选错 | 不创建空提交也不 amend；重新验证当前字节，用标记与 OID 证明包含关系，报告已有提交（步骤 7） |
+| 已审阅 `+N/−M` 且 QA PASS 后 `git commit` 返回 `nothing to commit`，或 `git show --stat HEAD` 与已审阅 diff 相同但内容不同 | 另一会话在验证期间创建了提交；`--stat` 不证明内容 | 提交前固定 `reviewed_oid`；比较 `HEAD:<chemin>` 与 `hash-object --path` 到该 OID；相等且要求推送时，推送已有提交并核对远端 OID；否则不要推送 |
 | 修改 `scripts/` 或 `references/` 后 `Fingerprint (final)` 不变 | 指纹只覆盖 `SKILL.md` | 重算资源文件的 SHA-256；不要据此认为没有变化 |
 | 索引 blob 的 SHA-256 与源文件不同 | 预期 eol 过滤（`core.autocrlf`、`.gitattributes`）或文件选错 | 比较 OID（`hash-object --path` 与索引）；OID 相等时记录规范化，否则不要提交 |
 | 已获得 PASS，随后又修改 `SKILL.md` 或译本 | 证明针对的版本已不存在 | 按顺序重跑对等、`skill-file-qa`、SHA-256 与实际调用，然后固定指纹 |
 | `diff` 清单在 `git add` 前非空 | 验证后发生并发写入 | 不得暂存；重跑对等、QA、测试和实际调用，重新记录清单，再重复检查 |
 | 每轮 `diff` 清单都非空，源文件每 10–30 秒被改写 | 另一会话持续重写目录 | 不要死循环：在 Skill 之外冻结快照，验证并归档其字节（步骤 4） |
 | 对等与 QA 通过后第二次失效 | 证明针对的状态在检查期间已变化 | 使用不可变快照，并在 `git add` 前对 live 与清单跑 `diff`；任何差异都从步骤 1 重来 |
-| 调用成功但 live 随后被修改 | 运行时解析的是活动目录，不是快照 | 调用后立即复比较 live == instantané；否则该调用不能证明快照 |
+| 调用成功但 live 随后被修改，或注入正文在数字位置参数（第 1 至第 9 个）处显示参数值，或 `$N` 字面量保留且末尾追加 `ARGUMENTS: …` | 运行时解析活动目录；带参数调用会替换数字位置参数并追加 `ARGUMENTS: …`，但不改动 `$N` 字面量 | 调用后立即复比较 live == instantané，并要求调用前后 `SKILL.md`/`HEAD` OID 一致；参数替换不是写入，也不能用来测试 `$N`；否则该调用不能证明快照 |
 | 清单中缺少 QA 的 `Fingerprint (final)` | QA 证明的不是当前版本 | 不得提交；重新验证并重新记录清单 |
 | 清单缺失或被放进 Skill 目录 | 验证未留痕，或清单把自己算入 | 最后一次写入后把清单保存到 Skill 之外；否则从步骤 4 重来 |
 | `RESULT PASS`，但 `Files (N)` 列出 `__pycache__/*.pyc` | 验证器不能证明没有缓存 | 只删除本会话创建的缓存，重跑 QA，要求 `Files (N)` 等于无缓存清单 |
@@ -433,6 +440,7 @@ find "C:/Users/Administrateur/.qoder/skills" "<racine-espace>/.qoder/skills" -ma
 | 修改后的 Skill 未被解析或找不到 | 运行时索引未重载，或项目级同名遮蔽 | 调用该 Skill，检查两个根，再请用户执行 `/skills reload` |
 | 方案已批准，但写入前大小/mtime/SHA-256 或行数不同 | 文件自规划后被重写 | 重新采样、重读、按精确文本重新锚定、保留并发新增；不要恢复备份；重新验证最终字节 |
 | 只更新源文件后 QA `RESULT PASS` 但对等 `RESULT FAIL` | 译本被有意保持不动（部分范围） | 分别报告 QA 与对等及差异；不得宣布包已验证；提出同步译本 |
+| 两个文件都已修改，但对等仅在 `FAIL inline tokens: missing=[…]` 处 `RESULT FAIL` | 译本把受保护的标识符改写成叙述文字（已观察：`$N` → 「该字面量」） | 不要放宽检查，也不要修改源文件；在译句中恢复逐字相同的 token，再按顺序重跑对等、QA、清单与实际调用 |
 
 ## 最终检查清单
 
@@ -444,13 +452,14 @@ find "C:/Users/Administrateur/.qoder/skills" "<racine-espace>/.qoder/skills" -ma
 - [ ] 已审阅差异；无密钥、大体积二进制或 `__pycache__`。
 - [ ] 一个主题一个提交，消息与历史风格一致。
 - [ ] 工作已被并发提交吸收：不创建空提交、不 amend；重新验证当前字节，用标记与 OID 证明包含关系，谨慎归属提交消息。
+- [ ] 审阅与提交之间 `HEAD` 前进：提交前固定 `reviewed_oid`，推送前 `HEAD:<chemin>` 等于该 OID，推送已有提交且未新建提交或 amend，远端 OID 已核对。
 - [ ] 提交后状态干净，或副作用已解释并单独提交。
 - [ ] 最后一次提交后已检查邻近归档：`NONE`、`FRESH`，或报告了带 ref/commit 的 `STALE`。
 - [ ] 未自动复制、提交或推送任何归档。
 - [ ] 仅在要求时推送；remote、分支和哈希均已核对。
 - [ ] 已记录 `SKILL.md`、`scripts/` 与 `references/` 的 SHA-256；单独 `Fingerprint` 只覆盖 `SKILL.md`。
 - [ ] 索引 blob 与 `HEAD` blob 均按 OID 与过滤后的源文件比对；SHA-256 差异已用 eol 过滤器解释。
-- [ ] 最后一次写入之后，已按顺序重跑对等、`skill-file-qa`、SHA-256 与实际调用，并记录最终指纹。
+- [ ] 最后一次写入之后，已按顺序重跑对等、`skill-file-qa`、SHA-256 与实际调用，并记录最终指纹；即使 QA 为 PASS，也不容忍缺失的 token。
 - [ ] 最后一次写入后已将 SHA-256 清单保存到 Skill 之外；QA 的 `Fingerprint (final)` 等于清单中的 `./SKILL.md`。
 - [ ] `git add` 前后清单 `diff` 均为空；验证与暂存之间没有写入。
 - [ ] 清单差异通过完整重新验证处理，绝不用单纯重算 SHA-256 代替。
@@ -458,7 +467,7 @@ find "C:/Users/Administrateur/.qoder/skills" "<racine-espace>/.qoder/skills" -ma
 - [ ] 仅当 `live == instantané` 时才调用，并立即复比较。
 - [ ] 已用 `--show-origin` 读取 `core.autocrlf`；已报告检出转换风险。
 - [ ] 重复「TOUT」未再追问第三次，组合已声明。
-- [ ] 已通过实际调用验证修改后的 Skill 可解析；无项目级/用户级同名遮蔽；`/skills reload` 留给用户执行。
+- [ ] 已通过实际调用验证修改后的 Skill 可解析；无项目级/用户级同名遮蔽；若调用带参数，调用前后 `SKILL.md` 与 `HEAD` OID 一致（数字位置参数第 1 至第 9 个被替换、末尾追加 `ARGUMENTS: …`；`$N` 字面量不变；不是磁盘）；`/skills reload` 留给用户执行。
 - [ ] 方案已批准：写入前重新采样基线（大小/mtime/SHA-256）；按文本重读锚点；保留并发新增；未恢复任何备份。
 - [ ] 部分范围（仅源文件）：译本保持不变；QA 与对等分别报告及差异；未宣布包已验证。
 
@@ -485,4 +494,5 @@ Contrôles rejoués après la dernière écriture : parité <PASS|FAIL|N/A> | QA
 
 - `scripts/inspect_git_state.py`：只读清点仓库、分支、状态、差异与 remote；ASCII 输出，退出码 0/1/2。
 - `scripts/find_stale_archives.py`：只读检测邻近仓库中的 Skill 归档副本；将 blob OID 与源码比较，输出 `NONE`/`FRESH`/`STALE`；退出码 0（NONE/FRESH）、1（STALE）、2（用法/环境）。
+- `scripts/run-fixture.sh`：一次性夹具，重放「采纳并发提交」与「拒绝 stat 相同但内容不同的提交」；只写入临时目录并删除；退出码 0（PASS）、1（FAIL）、2（用法/环境）。
 - `references/skill-zh.md`：完整中文版本，需与法文版保持结构对等；对等规则见 `skill-doc-translation-parity`。
