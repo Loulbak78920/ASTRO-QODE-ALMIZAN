@@ -1,13 +1,13 @@
 ---
 name: github-pr-create-merge-sans-gh
-description: "Créer/fusionner une PR GitHub sans gh ni navigateur, via Git Credential Manager (git credential fill) et l'API REST : probe lecture seule, garde d'ancêtre commun (compare 404, branche orpheline), reconstruction depuis la base, recalcul après fetch (origin/main ou URL explicite, merge-base, diff 3 points), création idempotente, contrôle des fichiers de la PR, attente de mergeable, fusion rebase prioritaire, puis SHA de fusion, main distant, fast-forward et blobs. Après fusion, si les sources divergent, échantillonner SHA-256/mtime sans rollback ni republication non demandée. Utiliser pour « gh absent », « créer une PR », « pas d'origin », « No common ancestor », « branche orpheline », « reconstruire depuis main », « vérifier les fichiers de la PR », « merge PR to main », « rebase merge », « mergeable », « base a avancé », « MISMATCH après fusion », « écriture concurrente ». 中文触发：无 gh、无 origin、创建 PR、共同祖先 404、孤儿分支、从 main 重建、核对 PR 文件、合并 PR 到 main、rebase 合并、mergeable 轮询、base 前进、合并后 MISMATCH、并发写入。"
+description: "Créer/fusionner une PR GitHub sans gh ni navigateur, via Git Credential Manager et l'API REST : probe, garde d'ancêtre commun, reconstruction depuis la base, mise à jour d'une archive existante du même Skill (frontmatter identique, aucun fichier base-only), baseline sur les OID du HEAD source, création idempotente, contrôle des fichiers et des blobs, fusion rebase, vérification post-fusion ; une dérive live non commitée est attribuée (find_writers, runtimeState) et seulement rapportée, jamais absorbée. Utiliser pour « gh absent », « créer une PR », « pas d'origin », « No common ancestor », « branche orpheline », « reconstruire depuis main », « archive obsolète », « PR ne publie que HEAD », « vérifier les fichiers de la PR », « merge PR to main », « rebase merge », « mergeable », « base a avancé », « BLOB_MISMATCH », « écriture concurrente », « live drift ». 中文触发：无 gh、无 origin、创建 PR、共同祖先 404、孤儿分支、从 main 重建、陈旧归档更新、PR 只发布 HEAD、核对 PR 文件、合并 PR 到 main、rebase 合并、mergeable 轮询、base 前进、BLOB_MISMATCH、并发写入、未提交漂移。"
 ---
 
 # Créer et fusionner une pull request GitHub sans gh
 
 ## Portée
 
-Ce Skill couvre github.com, avec un jeton déjà stocké par un credential helper Git. Il prend aussi en charge un dépôt local sans `origin` via une URL explicite et des refs temporaires locales. Une branche à historique racine indépendant ne peut pas former de PR : elle doit être reconstruite depuis la base, sans fusionner les deux historiques. Il ne couvre pas GitHub Enterprise, la création de jetons, la connexion au navigateur, le contournement des protections de branche, le force push, ni la republication automatique après divergence des sources.
+Ce Skill couvre github.com, avec un jeton déjà stocké par un credential helper Git. Il prend aussi en charge un dépôt local sans `origin` via une URL explicite et des refs temporaires locales. Une branche à historique racine indépendant ne peut pas former de PR : elle doit être reconstruite depuis la base, sans fusionner les deux historiques. Une archive déjà présente sous `$PREFIXE` n'est pas nécessairement un conflit : si le frontmatter `name` désigne le même Skill et qu'aucun fichier n'existe uniquement dans la base, elle est mise à jour. La PR publie les octets du HEAD du dépôt source, pas ceux du worktree live ; une dérive non commitée est rapportée, jamais absorbée. Il ne couvre pas GitHub Enterprise, la création de jetons, la connexion au navigateur, le contournement des protections de branche, le force push, ni la republication automatique après divergence des sources.
 
 ## Autorisations et actions irréversibles
 
@@ -16,6 +16,7 @@ Ce Skill couvre github.com, avec un jeton déjà stocké par un credential helpe
 - Fusion : uniquement sur demande explicite, avec la branche cible confirmée. Si l'utilisateur demande seulement de créer la PR, s'arrêter après l'étape 3 bis et donner l'URL.
 - Ne jamais pousser directement sur `main` pour contourner la PR ; ne jamais faire de force push ; ne pas supprimer la branche de travail sans instruction.
 - Reconstruire une branche de livraison et pousser ce nouveau head fait partie d'une demande explicite de création de PR. Ne jamais réécrire, fusionner ni supprimer la branche orpheline ; ne jamais fusionner deux historiques sans ancêtre commun.
+- Mettre à jour une archive existante du même Skill fait partie de la demande de création de PR. Ne jamais supprimer un fichier présent uniquement dans la base ; s'arrêter et demander. Ne pas réécrire le dépôt source ni absorber ses modifications non commitées.
 - Une fusion modifie un état partagé. En cas d'ambiguïté sur la cible, demander avant d'agir.
 
 ## Sécurité des identifiants
@@ -49,7 +50,7 @@ SOURCE="<dossier-source-du-skill>"
 
 Ne pas laisser ces variables vides : `py -3 "$SKILL/..."` ou `git -C "$DEPOT"` s'exécuterait sur un chemin vide. `REMOTE_URL` doit être sur github.com et désigner le même dépôt que `REPO` ; si une seule URL SSH est disponible, vérifier qu'elle pointe vers le même dépôt sans changer de protocole silencieusement.
 
-- Ne jamais écrire de jeton dollar-chiffre (variable positionnelle) dans un bloc de commande : lors d'un appel avec arguments, le CLI le remplace dans le corps injecté. Cas vérifié le 2026-10-26 : le jeton de numéro de champ d'un `awk` de l'étape 2 a été injecté avec `PR` à la place. Utiliser `cut -f1`/`cut -f3` ou des variables nommées (`$BRANCH`, `$PREFIXE`) ; ces dernières ne sont pas concernées.
+- Ne jamais écrire de jeton dollar-chiffre (variable positionnelle) dans un bloc de commande : lors d'un appel avec arguments, le CLI le remplace dans le corps injecté. Cas vérifié le 2026-10-26 : le jeton de numéro de champ d'un `awk` de l'étape 2 a été injecté avec `PR` à la place. Pour extraire le SHA d'un `ls-remote`, utiliser `cut -f1` (deux champs tabulés). Pour extraire un OID de `ls-tree`, utiliser `--format='%(objectname)'` : le champ 3 de `cut -f3` n'existe pas dans la sortie par défaut `<mode> <type> <oid>\t<chemin>`. Les variables nommées (`$BRANCH`, `$PREFIXE`) ne sont pas concernées par la substitution.
 
 ```bash
 command -v gh || true
@@ -166,9 +167,42 @@ for b in $(git -C "$TMP/probe" for-each-ref --format='%(refname:short)' 'refs/re
 done
 
 PREFIXE=".qoder/skills/$NOM"
-if [ -n "$(git -C "$TMP/repo" ls-tree -r --name-only HEAD -- "$PREFIXE")" ]; then
-  echo PREFIX_EXISTS; exit 2
+SOURCE_TOP="$(git -C "$SOURCE" rev-parse --show-toplevel 2>/dev/null || true)"
+SOURCE_PREFIX="$(git -C "$SOURCE" rev-parse --show-prefix 2>/dev/null || true)"
+if [ -n "$SOURCE_TOP" ] && [ -z "$SOURCE_PREFIX" ]; then
+  SOURCE_HEAD="$(git -C "$SOURCE" rev-parse HEAD)"
+  git -C "$SOURCE" status --porcelain -- SKILL.md references scripts | grep -v '__pycache__' | grep -v '\.pyc$' > "$TMP/source.status" || true
+  if [ -s "$TMP/source.status" ]; then sed 's/^/SOURCE_DIRTY /' "$TMP/source.status"; echo SOURCE_DIRTY_STOP; exit 2; fi
+  git -C "$SOURCE" ls-tree -r --format='%(objectname) %(path)' HEAD -- SKILL.md references scripts > "$TMP/head.oids"
+  git -C "$SOURCE" ls-tree -r --name-only HEAD -- SKILL.md references scripts | sort > "$TMP/src.rel"
+else
+  SOURCE_HEAD=""
+  echo SOURCE_NOT_GIT
+  ( cd "$SOURCE" && { echo SKILL.md; find references scripts -type f ! -path '*/__pycache__/*' ! -name '*.pyc' 2>/dev/null; } | sort ) > "$TMP/src.rel"
 fi
+printf 'SOURCE_HEAD=%s\n' "${SOURCE_HEAD:-NONE}"
+[ -f "$TMP/head.oids" ] || : > "$TMP/head.oids"
+
+MAIN_FILES="$(git -C "$TMP/repo" ls-tree -r --name-only HEAD -- "$PREFIXE")"
+if [ -z "$MAIN_FILES" ]; then
+  echo PREFIX_ABSENT
+  ARCHIVE_MODE=create
+else
+  MAIN_NAME_OID="$(git -C "$TMP/repo" ls-tree -r --format='%(objectname)' HEAD -- "$PREFIXE/SKILL.md")"
+  n="$(printf '%s\n' "$MAIN_NAME_OID" | grep -c . || true)"
+  if [ "$n" -ne 1 ]; then echo "MAIN_SKILL_INVALID count=$n"; exit 2; fi
+  MAIN_NAME="$(git -C "$TMP/repo" cat-file blob "$MAIN_NAME_OID" | sed -n 's/^name:[[:space:]]*//p' | head -1 | tr -d '\r')"
+  SRC_NAME="$(sed -n 's/^name:[[:space:]]*//p' "$SOURCE/SKILL.md" | head -1 | tr -d '\r')"
+  printf 'MAIN_NAME=%s\nSRC_NAME=%s\n' "$MAIN_NAME" "$SRC_NAME"
+  printf '%s\n' "$MAIN_FILES" | sed "s|^$PREFIXE/||" | sort > "$TMP/main.rel"
+  comm -23 "$TMP/main.rel" "$TMP/src.rel" > "$TMP/main.only"
+  sed 's/^/MAIN_ONLY /' "$TMP/main.only"
+  if [ "$MAIN_NAME" != "$SRC_NAME" ]; then echo DIFF_SKILL; exit 2; fi
+  if [ -s "$TMP/main.only" ]; then echo MAIN_ONLY_STOP; exit 2; fi
+  echo ARCHIVE_UPDATE
+  ARCHIVE_MODE=update
+fi
+
 mkdir -p "$TMP/repo/$PREFIXE"
 cp "$SOURCE/SKILL.md" "$TMP/repo/$PREFIXE/SKILL.md"
 [ -d "$SOURCE/references" ] && cp -R "$SOURCE/references" "$TMP/repo/$PREFIXE/"
@@ -178,19 +212,30 @@ find "$TMP/repo/$PREFIXE" -name '*.pyc' -delete
 ```
 
 - Ne copier que `SKILL.md`, `references/` et `scripts/` ; ni cache, ni fichier de travail, ni contenu hors du préfixe.
-- Le dossier de destination doit être neuf sur cette branche ; la commande `PREFIX_EXISTS` vérifie que `$BASE` ne contient pas déjà `.qoder/skills/$NOM`. Si elle s'affiche, s'arrêter et demander.
-- Si aucun `PRECEDENT` n'apparaît, ne pas inventer un préfixe : utiliser le layout de la base et demander confirmation avant de copier.
-- Le clone `$TMP/probe` est en lecture seule (`--no-checkout`) ; il est supprimé avec `$TMP`.
+- `PREFIX_ABSENT` crée l'archive ; `ARCHIVE_UPDATE` met à jour une archive du même Skill : `MAIN_NAME` doit égaler `SRC_NAME`, `MAIN_ONLY` être vide. `DIFF_SKILL` (nom différent) et `MAIN_ONLY_STOP` (fichiers base-only) imposent l'arrêt ; ne jamais supprimer sans instruction.
+- `SOURCE_DIRTY_STOP` : le périmètre source contient des modifications non commitées. S'arrêter et demander ; la PR ne publie que le HEAD commité.
+- `SOURCE_NOT_GIT` : `$SOURCE` n'est pas la racine d'un dépôt Git (ou en est un sous-dossier). Pas de baseline HEAD ; le mode live reste possible avec échantillonnage de stabilité, mais la comparaison PR/HEAD de l'étape 3 bis est indisponible.
+- Si aucun `PRECEDENT` n'apparaît, ne pas inventer un préfixe : utiliser le layout de la base et demander confirmation avant de copier. Le clone `$TMP/probe` est en lecture seule (`--no-checkout`) ; il est supprimé avec `$TMP`.
 
-Comparer la copie à la source, fichier par fichier :
+Comparer la copie aux octets commités de la source, fichier par fichier :
 
 ```bash
-( cd "$SOURCE" && find . -type f ! -path '*/__pycache__/*' ! -name '*.pyc' -print0 | sort -z | xargs -0 sha256sum ) > "$TMP/src.sha"
-( cd "$TMP/repo/$PREFIXE" && find . -type f -print0 | sort -z | xargs -0 sha256sum ) > "$TMP/dst.sha"
-diff "$TMP/src.sha" "$TMP/dst.sha" && echo COPY_MATCH || echo COPY_MISMATCH
+if [ -n "$SOURCE_HEAD" ]; then
+  bad=0
+  while read -r oid rel; do
+    dst_oid="$(git -C "$TMP/repo" hash-object --path="$rel" "$TMP/repo/$PREFIXE/$rel")"
+    if [ "$dst_oid" = "$oid" ]; then echo "COPY_MATCH_HEAD $rel $oid"; else echo "COPY_MISMATCH_HEAD $rel head=$oid got=$dst_oid"; bad=$((bad + 1)); fi
+  done < "$TMP/head.oids"
+  [ "$bad" -eq 0 ] && echo COPY_MATCH || echo COPY_MISMATCH
+else
+  ( cd "$SOURCE" && find . -type f ! -path '*/__pycache__/*' ! -name '*.pyc' -print0 | sort -z | xargs -0 sha256sum ) > "$TMP/src.sha"
+  ( cd "$TMP/repo/$PREFIXE" && find . -type f -print0 | sort -z | xargs -0 sha256sum ) > "$TMP/dst.sha"
+  diff "$TMP/src.sha" "$TMP/dst.sha" && echo COPY_MATCH || echo COPY_MISMATCH
+fi
 ```
 
 - `COPY_MISMATCH` : ne pas committer ; expliquer l'écart.
+- En mode HEAD, la référence est le blob commité (`COPY_MATCH_HEAD`), pas le fichier live : une modification non commitée après la copie est traitée comme dérive à l'étape 3 bis. En mode live, exiger deux échantillons `size`/`mtime`/SHA-256 identiques depuis la copie, sinon recommencer.
 
 Publier la branche de livraison :
 
@@ -198,7 +243,8 @@ Publier la branche de livraison :
 git -C "$TMP/repo" switch -c "merge/skill-$NOM"
 git -C "$TMP/repo" add "$PREFIXE"
 git -C "$TMP/repo" status --short
-git -C "$TMP/repo" commit -m "docs(skill): archiver $NOM"
+MSG="docs(skill): $([ "$ARCHIVE_MODE" = update ] && echo actualiser || echo archiver) $NOM"
+git -C "$TMP/repo" commit -m "$MSG"
 git -C "$TMP/repo" push "$REMOTE_URL" "merge/skill-$NOM:merge/skill-$NOM"
 BRANCH="merge/skill-$NOM"
 HEAD_SHA="$(git -C "$TMP/repo" rev-parse HEAD)"
@@ -209,6 +255,7 @@ git -C "$TMP/repo" ls-tree -r --name-only HEAD -- "$PREFIXE"
 ```
 
 - `git add` explicite : jamais `git add -A`. Vérifier `status --short` avant de committer.
+- En `ARCHIVE_UPDATE`, `status --short` doit montrer `M` ou `A` sous `$PREFIXE` ; aucun `D`, sinon arrêt.
 - Si la branche `merge/skill-$NOM` existe déjà, ne pas forcer : choisir un suffixe ou demander.
 - `HEAD_MISMATCH` : le push n'a pas publié le commit attendu ; s'arrêter sans créer de PR.
 - La liste `ls-tree` doit égaler les fichiers copiés ; un fichier supplémentaire ou manquant impose un arrêt.
@@ -239,24 +286,64 @@ py -3 "$SKILL/scripts/github_pr_api.py" status --repo "$REPO" --pr "$N"
 ```
 
 ```bash
-git -C "$TMP/repo" ls-tree -r --name-only HEAD -- "$PREFIXE" | while IFS= read -r f; do
+LISTE="$(mktemp)"
+git -C "$TMP/repo" ls-tree -r --name-only HEAD -- "$PREFIXE" > "$LISTE"
+bad=0
+drift=0
+while IFS= read -r f; do
   rel="${f#"$PREFIXE"/}"
-  oid="$(git -C "$TMP/repo" ls-tree -r HEAD -- "$f" | cut -f3)"
-  pub="$(git -C "$TMP/repo" cat-file blob "$oid" | sha256sum | cut -d' ' -f1)"
-  src="$(sha256sum "$SOURCE/$rel" | cut -d' ' -f1)"
-  [ "$pub" = "$src" ] && echo "BLOB_MATCH $rel $pub" || echo "BLOB_MISMATCH $rel published=$pub source=$src"
-done
+  oid="$(git -C "$TMP/repo" ls-tree -r --format='%(objectname)' HEAD -- "$f")"
+  n="$(printf '%s\n' "$oid" | grep -c . || true)"
+  if [ "$n" -ne 1 ]; then echo "OID_INVALID $rel count=$n"; bad=$((bad + 1)); continue; fi
+  if [ -n "${SOURCE_HEAD:-}" ]; then
+    head_oid="$(git -C "$SOURCE" ls-tree -r --format='%(objectname)' HEAD -- "$rel")"
+    hn="$(printf '%s\n' "$head_oid" | grep -c . || true)"
+    if [ "$hn" -ne 1 ]; then echo "HEAD_OID_INVALID $rel count=$hn"; bad=$((bad + 1)); continue; fi
+    if [ "$oid" = "$head_oid" ]; then echo "BLOB_MATCH_HEAD $rel $oid"; else echo "BLOB_MISMATCH_HEAD $rel published=$oid head=$head_oid"; bad=$((bad + 1)); fi
+    if [ -f "$SOURCE/$rel" ]; then
+      pub="$(git -C "$TMP/repo" cat-file blob "$oid" | sha256sum | cut -d' ' -f1)"
+      live="$(sha256sum < "$SOURCE/$rel" | cut -d' ' -f1)"
+      [ "$pub" = "$live" ] || { echo "LIVE_DRIFT $rel published=$pub live=$live"; drift=$((drift + 1)); }
+    else
+      echo "LIVE_MISSING $rel"; drift=$((drift + 1))
+    fi
+  else
+    if [ ! -f "$SOURCE/$rel" ]; then echo "SRC_MISSING $rel"; bad=$((bad + 1)); continue; fi
+    pub="$(git -C "$TMP/repo" cat-file blob "$oid" | sha256sum | cut -d' ' -f1)"
+    src="$(sha256sum < "$SOURCE/$rel" | cut -d' ' -f1)"
+    if [ "$pub" = "$src" ]; then echo "BLOB_MATCH $rel $pub"; else echo "BLOB_MISMATCH $rel published=$pub source=$src"; bad=$((bad + 1)); fi
+  fi
+done < "$LISTE"
+rm -f "$LISTE"
+[ "$bad" -eq 0 ] && echo BLOBS_OK || echo "BLOBS_FAIL bad=$bad"
+printf 'LIVE_DRIFT_COUNT=%s\n' "$drift"
 ```
 
-- Attendu : chaque `FILE` est `added`, son chemin commence par `$PREFIXE`, `-0`, et `FILES n` égale le nombre de fichiers copiés.
-- `PR_FILES changed=` doit égaler `FILES n` ; sinon `FILES_MISMATCH` et arrêt.
+- Attendu : chaque `FILE` est `added` avec deletions `-0` en création, ou `modified`/`added` en `ARCHIVE_UPDATE` ; son chemin commence par `$PREFIXE` ; aucun `removed` (aucune suppression dans ce flux) ; `FILES n` égale le nombre de fichiers modifiés ou ajoutés par la copie (création : tous ; mise à jour : seulement les changements, donc moins que l'archive ; cas PR #4 : 2 vs 7), tandis que `BLOBS_OK` couvre tous les fichiers sous `$PREFIXE`.
+- `BLOBS_OK` exige un `BLOB_MATCH_HEAD` (ou `BLOB_MATCH` sans HEAD) par fichier de l'archive sous `$PREFIXE` (ex. 7), pas seulement par fichier changé de la PR (ex. 2). `OID_INVALID`/`HEAD_OID_INVALID count=0` signifie que l'extraction a échoué, pas que le blob est vide : ne pas passer `cat-file`.
+- `BLOB_MISMATCH_HEAD` compare les OID Git de la PR et du HEAD source ; c'est le contrôle bloquant. Il ne dépend ni du worktree, ni de `core.autocrlf`.
+- `LIVE_DRIFT` signale que le fichier source non commité diffère du blob publié ; `LIVE_DRIFT_COUNT` compte ces fichiers. Une dérive live seule laisse `BLOBS_OK`, mais annonce que `main` ne contiendra pas ces octets.
+- `PR_FILES changed=` doit égaler `FILES n` (fichiers changés, pas le total de l'archive) ; sinon `FILES_MISMATCH` et arrêt.
 - Vérifier que `PR_BASE` est `$BASE`, que le head SHA égale `REMOTE_HEAD` et que `PR_MERGEABLE` est `true` ou `null` (en calcul).
-- `HEAD_SYNC` a établi que le commit poussé est celui du clone ; ces blobs sont donc ceux du distant.
-- Sous `core.autocrlf=true`, `git add` peut afficher `LF will be replaced by CRLF` : cet avertissement concerne la copie de travail du clone, pas le blob. Comparer les SHA-256 des blobs, pas des fichiers du clone.
-- Un `BLOB_MISMATCH` ou un fichier sans source : ne pas fusionner ; rapporter l'écart.
-- Toute surprise (fichier hors préfixe, suppression, binaire, nombre différent) : ne pas fusionner, rapporter, et ne fermer la PR que sur instruction explicite.
+- `HEAD_SYNC` a établi que le commit poussé est celui du clone ; ces blobs sont donc ceux du distant. Sous `core.autocrlf=true`, l'avertissement `LF will be replaced by CRLF` concerne la copie de travail, pas le blob : comparer les OID et SHA-256 des blobs.
+- Un `BLOBS_FAIL`, un fichier sans source, ou toute surprise (fichier hors préfixe, suppression, binaire, nombre différent) : ne pas fusionner ; rapporter, et ne fermer la PR que sur instruction explicite.
 - Si l'utilisateur n'a demandé que la création, s'arrêter après cette vérification.
-- Nettoyer ensuite `$TMP`, les refs `refs/qoder-tmp/base|head` et tout fichier de corps temporaire ; ne pas supprimer la branche orpheline ni la branche de livraison sans instruction.
+- Nettoyer ensuite `$TMP`, les refs `refs/qoder-tmp/base|head` et tout fichier de corps temporaire ; en cas de fusion demandée, conserver `$TMP` (dont `$TMP/head.oids`) jusqu'à l'étape 5. Ne pas supprimer la branche orpheline ni la branche de livraison sans instruction.
+
+### Attribuer une dérive live
+
+Si `LIVE_DRIFT_COUNT` n'est pas 0, identifier l'écrivain avant de conclure. Ne jamais committer ces octets dans la PR ni les recopier après coup : la PR reste alignée sur `SOURCE_HEAD`.
+
+```bash
+py -3 "C:/Users/Administrateur/.qoder/skills/commit-skill-work/scripts/find_writers.py" \
+  --target "$SOURCE" \
+  --jsonl-dir "C:/Users/Administrateur/.qoder/projects/C--Users-Administrateur-Desktop-IMAM8MAHDI"
+```
+
+- Sortie : une ligne `SESSION <id> | last <horodatage> | <outil> | <fichier> | records <n>` par écrivain, puis `RESULT FOUND n session(s)`. Puis `read_chat_session` sur la session la plus récente : relever `runtimeState`, `activeTurnId`, `revision`.
+- `runtimeState=ready` (ou `waiting-user`) avec une intention explicite de ne pas committer (« A : seulement mettre à jour et vérifier ») : rapporter la dérive et continuer ; l'écart est assumé.
+- `runtimeState=running`, `activeTurnId` non nul, intention inconnue, ou `LIVE_MISSING` (fichier live disparu alors que HEAD le contient) : s'arrêter avant fusion. Ne pas absorber l'écriture, ne pas committer à la place de l'autre session.
+- Deux échantillons stables à l'étape 2 bis ne prouvent pas l'absence d'un écrivain futur ; `find_writers` et l'état de session font foi.
 
 ## Étape 4 — Fusionner
 
@@ -268,6 +355,9 @@ py -3 "$SKILL/scripts/github_pr_api.py" merge \
 ```
 
 - `merge` exige `--yes` et refuse avant tout appel réseau sans ce drapeau.
+- Ne pas fusionner après `BLOBS_FAIL` : la PR ne publie pas les octets attendus.
+- Une dérive live seule (`LIVE_DRIFT_COUNT` non nul, `BLOBS_OK`) ne bloque pas si l'écrivain est `ready` avec une intention explicite de ne pas committer ; le rapport doit alors dire que `main` ne contiendra pas ces octets live.
+- Conserver `$TMP` et `$TMP/head.oids` jusqu'à l'étape 5 : ils servent de référence après fusion.
 - Le script interroge `mergeable` jusqu'à 15 fois à 2 secondes d'intervalle. `null` persistant ou `false` : abandon, sans contournement.
 - La méthode par défaut est `rebase` ; elle produit un historique linéaire. Le script ne bascule pas silencieusement vers `merge`. Pour utiliser `merge` ou `squash`, le décider explicitement et le déclarer dans le rapport.
 - Sortie attendue : `MERGE_REBASE status=200 merged=True`, puis `PR_FINAL`, `REMOTE_MAIN` et `VERIFY_MATCH true`.
@@ -282,15 +372,34 @@ git -C "$DEPOT" ls-remote origin refs/heads/main
 git -C "$DEPOT" log --oneline -3 origin/main
 git -C "$DEPOT" diff --name-status "$BASE_AVANT"..origin/main
 git -C "$DEPOT" ls-tree -r origin/main -- "$PREFIXE"
-for oid in $(git -C "$DEPOT" ls-tree -r origin/main -- "$PREFIXE" | cut -f3); do
-  git -C "$DEPOT" cat-file blob "$oid" | sha256sum
-done
+oids="$(git -C "$DEPOT" ls-tree -r --format='%(objectname)' origin/main -- "$PREFIXE")"
+printf 'OID_COUNT=%s\n' "$(printf '%s\n' "$oids" | grep -c . || true)"
+if [ -z "$oids" ]; then
+  echo OID_LIST_EMPTY
+else
+  for oid in $oids; do
+    git -C "$DEPOT" cat-file blob "$oid" | sha256sum
+  done
+fi
+git -C "$DEPOT" ls-tree -r --name-only origin/main -- "$PREFIXE" > "$TMP/main.rel.liste"
+bad=0
+while IFS= read -r f; do
+  rel="${f#"$PREFIXE"/}"
+  merged="$(git -C "$DEPOT" ls-tree -r --format='%(objectname)' origin/main -- "$f")"
+  head_oid=""
+  while read -r oid path; do [ "$path" = "$rel" ] && head_oid="$oid"; done < "$TMP/head.oids"
+  [ -n "$head_oid" ] || head_oid="$(git -C "$TMP/repo" ls-tree -r --format='%(objectname)' HEAD -- "$PREFIXE/$rel")"
+  if [ -n "$head_oid" ] && [ "$merged" = "$head_oid" ]; then echo "MERGED_BLOB_MATCH $rel $merged"; else echo "MERGED_BLOB_MISMATCH $rel merged=$merged head=$head_oid"; bad=$((bad + 1)); fi
+done < "$TMP/main.rel.liste"
+[ "$bad" -eq 0 ] && echo MERGED_BLOBS_OK || echo "MERGED_BLOBS_FAIL bad=$bad"
 git -C "$DEPOT" merge --ff-only origin/main
 git -C "$DEPOT" diff --name-status "$HEAD_PR" origin/main -- "$PREFIXE"
 ```
 
 - Immédiatement après la fusion, comparer le SHA de fusion de l'API, `origin/main`, `ls-remote` et le fast-forward local : ils doivent désigner le même commit. Si `main` a avancé depuis, le SHA de fusion doit être un ancêtre de `origin/main`, pas nécessairement la tête.
-- Recalculer les SHA-256 des blobs distants et les comparer aux empreintes validées avant la PR.
+- Recalculer les SHA-256 des blobs distants, puis comparer chaque OID fusionné aux OID du HEAD source enregistrés dans `$TMP/head.oids` ; sans baseline HEAD (`SOURCE_NOT_GIT`, fichier vide) la référence est le blob du head de PR. `MERGED_BLOBS_OK` est requis ; comparer au worktree live serait faux.
+- Si `LIVE_DRIFT_COUNT` était non nul à l'étape 3 bis, ces octets live ne sont pas dans `main` : le rapport doit le dire explicitement. Ne pas les publier après coup sans nouvelle instruction.
+- `OID_COUNT` doit égaler le nombre de fichiers attendus sous `$PREFIXE` ; `OID_LIST_EMPTY` signifie qu'aucun blob n'a été lu et que la preuve est vide.
 - Le diff limité au préfixe entre le head de PR et `origin/main` doit être vide après une fusion rebase.
 - Vérifier que le worktree est propre et que la branche locale est à jour avec `git status -sb`.
 - Sans `origin`, faire `git -C "$DEPOT" fetch "$REMOTE_URL" "+refs/heads/$BASE:refs/qoder-tmp/base"` et remplacer `origin/main` par `refs/qoder-tmp/base` dans les commandes ci-dessus ; supprimer la ref après contrôle.
@@ -301,14 +410,21 @@ git -C "$DEPOT" diff --name-status "$HEAD_PR" origin/main -- "$PREFIXE"
 Un `MISMATCH` du vérificateur ne prouve pas une corruption de l'archive. Il peut signaler une écriture concurrente dans les fichiers source.
 
 ```bash
-oid=$(git -C "$DEPOT" ls-tree -r origin/main -- "$CHEMIN" | cut -f3)
-git -C "$DEPOT" cat-file blob "$oid" > /tmp/publie
-sha256sum /tmp/publie "$SOURCE/$CHEMIN"
-stat -c '%y %s %n' "$SOURCE/$CHEMIN"
-for i in 1 2 3; do sha256sum "$SOURCE/$CHEMIN"; stat -c '%y %s' "$SOURCE/$CHEMIN"; sleep 2; done
+oids="$(git -C "$DEPOT" ls-tree -r --format='%(objectname)' origin/main -- "$CHEMIN")"
+n="$(printf '%s\n' "$oids" | grep -c . || true)"
+printf 'OID_COUNT=%s\n' "$n"
+if [ "$n" -ne 1 ]; then
+  echo "OID_INVALID $CHEMIN count=$n"
+else
+  oid="$oids"
+  git -C "$DEPOT" cat-file blob "$oid" > /tmp/publie
+  sha256sum /tmp/publie "$SOURCE/$CHEMIN"
+  stat -c '%y %s %n' "$SOURCE/$CHEMIN"
+  for i in 1 2 3; do sha256sum "$SOURCE/$CHEMIN"; stat -c '%y %s' "$SOURCE/$CHEMIN"; sleep 2; done
+fi
 ```
 
-- Vérifier que `oid` est non vide et désigne un seul fichier ; sinon le chemin est absent ou ambigu. Ne pas utiliser `git show "origin/main:$CHEMIN"` sous Git Bash : MSYS réécrit l'argument en `origin\main;...` et Git répond `ambiguous argument`. Extraire l'OID puis lire le blob évite cette conversion.
+- Vérifier que `OID_COUNT` vaut exactement 1 ; `count=0` signifie un chemin absent ou une extraction vide, `count>1` un chemin ambigu. Dans les deux cas, ne pas lire de blob et s'arrêter. Ne pas utiliser `git show "origin/main:$CHEMIN"` sous Git Bash : MSYS réécrit l'argument en `origin\main;...` et Git répond `ambiguous argument`. Extraire l'OID puis lire le blob évite cette conversion.
 - Comparer le blob publié au fichier source, puis les mtime. Trois échantillons identiques à 2 secondes d'intervalle établissent la stabilité.
 - Si les blobs publiés correspondent à la version validée et que les sources ont changé après la copie : conclure à une dérive des sources, pas à un échec de fusion.
 - Ne pas restaurer, écraser ou republier les sources sans instruction explicite. Ne pas pousser ces changements dans le cadre de la PR déjà fusionnée.
@@ -324,12 +440,21 @@ for i in 1 2 3; do sha256sum "$SOURCE/$CHEMIN"; stat -c '%y %s' "$SOURCE/$CHEMIN
 | 401 / 403 | Jeton absent, expiré ou permissions insuffisantes | Arrêter ; ne pas deviner un autre jeton |
 | `error: No such remote 'origin'` | Dépôt local sans remote | Utiliser `REMOTE_URL` et `refs/qoder-tmp/*` ; ne pas modifier la config Git |
 | `merge-base` sortie 1, ou `compare` 404 `No common ancestor` | Histoires non reliées, branche orpheline | Ne pas créer de PR ; étape 2 bis |
-| `PREFIX_EXISTS`, ou base contient déjà `.qoder/skills/$NOM` | Skill homonyme ou conflit de portée | S'arrêter et demander ; ne pas écraser |
-| `awk '{print PR}'` ou `awk '{print <argument>}'` dans le corps injecté | Le CLI substitue les jetons dollar-chiffre par les arguments positionnels | Ne pas copier le bloc ; utiliser `cut -f1`/`cut -f3` ou des variables nommées (voir Étape 0) |
-| `BLOB_MISMATCH` après push | Le blob poussé diffère de la source | Ne pas fusionner ; comparer `cat-file blob` et la source |
+| `PREFIX_ABSENT`, ou base sans `.qoder/skills/$NOM` | Archive absente | Créer l'archive (`ARCHIVE_MODE=create`) |
+| `ARCHIVE_UPDATE` | Archive existante du même Skill, sans fichier base-only | Actualiser, sans s'arrêter sur la seule présence du préfixe |
+| `DIFF_SKILL` | Le `name` du frontmatter de la base diffère de la source | Ne pas écraser un Skill homonyme ; arrêter |
+| `MAIN_ONLY_STOP` | La base contient des fichiers absents de la source | Ne jamais supprimer ; arrêter et demander |
+| `SOURCE_DIRTY_STOP` | Le périmètre source a des modifications non commitées | Arrêter ; la PR ne publie que le HEAD commité |
+| `SOURCE_NOT_GIT` | `$SOURCE` n'est pas la racine d'un dépôt Git | Pas de baseline HEAD ; comparaison live seulement |
+| `awk '{print PR}'` ou `awk '{print <argument>}'` dans le corps injecté | Le CLI substitue les jetons dollar-chiffre par les arguments positionnels | Ne pas copier le bloc ; utiliser `cut -f1` pour `ls-remote`, `--format='%(objectname)'` pour un OID de `ls-tree`, ou des variables nommées (voir Étape 0) |
+| `BLOB_MISMATCH_HEAD` après push | Un blob de la PR diffère du HEAD source | Ne pas fusionner ; comparer les OID `cat-file`/`ls-tree` |
+| `BLOB_MISMATCH` (sans HEAD) après push | Le blob poussé diffère du fichier source live | Ne pas fusionner ; comparer `cat-file blob` et la source |
+| `LIVE_DRIFT` avec `BLOBS_OK` | Le fichier live a changé après le dernier commit | Attribuer avec `find_writers` et `read_chat_session` ; ne pas absorber ces octets |
+| `find_writers` : session `running`, `activeTurnId` non nul | Écrivain encore actif | S'arrêter avant fusion ; ne pas committer à sa place |
+| `fatal: Not a valid object name`, puis SHA-256 `e3b0c442…` (flux vide) | `cut -f3` appliqué à la sortie par défaut de `ls-tree` : la ligne est `<mode> <type> <oid>\t<chemin>`, il n'y a pas de 3e champ tabulé | Extraire l'OID avec `git ls-tree -r --format='%(objectname)'` ; exiger exactement un OID non vide avant `cat-file` |
 | Head absent de `ls-remote` | Branche non poussée | S'arrêter ; ne pas pousser silencieusement |
 | `ahead_by=0` ou `total_commits=0` | Aucun commit entre base et head | Vérifier la branche ; ne pas créer de PR |
-| `FILES_MISMATCH` ou fichier hors préfixe après création | Mauvaise base, copie sale ou portée incorrecte | Ne pas fusionner ; rapporter |
+| `FILES_MISMATCH`, ou `FILES n` inférieur au nombre de fichiers de l'archive en `ARCHIVE_UPDATE` | Confusion entre fichiers changés et total de l'archive, mauvaise base ou copie sale | Comparer `FILES n` à `PR_FILES changed`, pas au total ; exiger un blob par fichier de l'archive ; ne pas fusionner sur un vrai écart |
 | Refs `refs/qoder-tmp/*` restantes | Nettoyage omis | `git update-ref -d` ; ne pas supprimer la branche orpheline |
 | Dossier `system-commandline-sentinel-files` recréé | Effet de bord du credential helper | Supprimer uniquement ce dossier, sans toucher la config |
 | `PR_CREATE_FAIL 422` | Aucun commit entre base et head, ou head inconnu | Vérifier la branche poussée et la base |
@@ -339,14 +464,14 @@ for i in 1 2 3; do sha256sum "$SOURCE/$CHEMIN"; stat -c '%y %s' "$SOURCE/$CHEMIN
 | 405 / 409 à la fusion | Protection de branche, checks requis, conflit | Rapporter ; ne pas contourner |
 | `VERIFY_MATCH false` après une fusion réussie | `main` a avancé après la fusion | Vérifier que le SHA de fusion est un ancêtre de `origin/main` |
 | `MISMATCH` après fusion | Source modifiée après la copie | Échantillonner hash et mtime ; distinguer dérive et corruption |
-| `git show "origin/main:chemin"` renvoie `ambiguous argument 'origin\main;...'` | MSYS réécrit `ref:chemin` sous Git Bash | Extraire l'OID avec `ls-tree -r`, puis `cat-file blob "$oid"` |
+| `git show "origin/main:chemin"` renvoie `ambiguous argument 'origin\main;...'` | MSYS réécrit `ref:chemin` sous Git Bash | Extraire l'OID avec `git ls-tree -r --format='%(objectname)'`, puis `cat-file blob "$oid"` |
 | Tour interrompu | Session ou outil interrompu | Relire l'état réel ; ne pas déclarer la fusion ou la republication réussie |
 
 ## Ressources
 
 - `scripts/github_pr_api.py` : `probe`, `compare`, `files`, `status` en lecture seule ; `create` et `merge` exigent `--yes`. `compare` expose le statut, le merge-base et les fichiers ; `files` pagine les fichiers de la PR et compare leur nombre à `changed_files`.
-- `references/evidence-2026-10-26.md` : preuves datées des sessions `ffc7150a`, `324c8787` et `52ce9bcb`, dépôt sans `origin`, histoires non reliées, branche de livraison reconstruite, PR sans ancêtre commun d'origine, substitution des variables positionnelles dans le corps injecté, layout et préfixe de livraison, vérification des blobs poussés, fusion rebase et contrôle post-fusion, vérifications locales des branches du script et des étapes 2/5/6, conversion MSYS de `ref:chemin`, et limites non exécutées.
-- Skills liés : `publier-skill-qoder-vers-depot-git` pour l'archivage, la reconstruction et le vérificateur ; `skill-file-qa` pour la validation d'un Skill ; `commit-skill-work` pour le commit local et la séparation des changements ; `harden-skill-argument-substitution` pour auditer les variables positionnelles d'un Skill.
+- `references/evidence-2026-10-26.md` : preuves datées des sessions `ffc7150a`, `324c8787`, `52ce9bcb`, `2c0b2667`, `c0032f4e` et `b5dc7bbb`, dépôt sans `origin`, histoires non reliées, branche de livraison reconstruite, PR sans ancêtre commun d'origine, substitution des variables positionnelles dans le corps injecté, layout et préfixe de livraison, mise à jour d'une archive existante du même Skill, écart `FILES n` (fichiers changés) vs total de l'archive et fusion non exécutée (PR #4), baseline sur les OID du HEAD source, dérive live et attribution des écrivains, vérification des blobs poussés, extraction d'OID `ls-tree` (`cut -f3` vide, `--format='%(objectname)'`), fusion rebase et contrôle post-fusion, vérifications locales des branches du script et des étapes 2/5/6, conversion MSYS de `ref:chemin`, et limites non exécutées.
+- Skills liés : `publier-skill-qoder-vers-depot-git` pour l'archivage, la reconstruction et le vérificateur ; `skill-file-qa` pour la validation d'un Skill ; `commit-skill-work` pour le commit local, la séparation des changements et son script `find_writers.py` (attribution des écrivains) ; `harden-skill-argument-substitution` pour auditer les variables positionnelles d'un Skill.
 
 ## Limites
 
@@ -355,6 +480,10 @@ for i in 1 2 3; do sha256sum "$SOURCE/$CHEMIN"; stat -c '%y %s' "$SOURCE/$CHEMIN
 - `compare` peut plafonner la liste des fichiers ; la portée locale à trois points et `files` après création restent les contrôles de référence.
 - La reconstruction est décrite pour un paquet de Skill sous `.qoder/skills/$NOM` ; un autre type de dépôt exige une portée adaptée.
 - La fusion d'une branche reconstruite a été exécutée le 2026-10-26 (PR #2, `merge --method rebase`, SHA `08ca045c320edc847b564fdeed3a4fd92ab3c57e`) et vérifiée après fusion ; voir `references/evidence-2026-10-26.md`.
+- L'extraction d'OID `ls-tree` a échoué le 2026-10-26 dans la session `2c0b2667` (`cut -f3` vide, `fatal: Not a valid object name`, SHA-256 de flux vide) ; la forme `--format='%(objectname)'` avec assertion d'un OID unique a été utilisée pour vérifier puis fusionner la PR #3 d'IMAM8MAHDI/qoder-skills (`2d013354002370f241d14fa263829fb41221e8c0`).
+- Le 2026-10-26, la session `c0032f4e` a actualisé une archive existante du même Skill et créé la PR #3 du dépôt ASTRO (`ARCHIVE_UPDATE`, 7/7 `BLOB_MATCH_HEAD`), sans fusion : la vérification post-fusion de ce cas n'est pas exécutée. Dans la même session, une dérive live a produit `BLOBS_FAIL bad=2` contre les fichiers live alors que la PR correspondait au HEAD 7/7 ; elle a été attribuée à une session `ready` déclarant ne pas committer. Le cas d'un écrivain `running` et les branches `DIFF_SKILL`/`MAIN_ONLY_STOP`/`SOURCE_DIRTY_STOP` n'ont pas été déclenchés en conditions réelles.
+- Le 2026-10-26, la session `b5dc7bbb` a créé la PR #4 du dépôt ASTRO pour `commit-skill-work` (`ARCHIVE_UPDATE` : 2 fichiers `modified +2/-2`, `FILES 2`, archive de 7 fichiers, 7/7 `RESULT PASS`). Le tour final « merge PR #4 with squash » a échoué sans appel d'outil : la fusion squash n'est pas exécutée ni vérifiée, et `main` restait `24d9ac2` à la fin du tour de création.
+- Enregistrer `$TMP/head.oids` avant toute copie est une règle de durcissement : la session `c0032f4e` n'établit pas que l'enregistrement a eu lieu avant la création de la PR, seulement que la comparaison PR/HEAD a conclu 7/7.
 - Sans `origin`, les vérifications locales passent par `refs/qoder-tmp/*` ; ces refs sont temporaires et doivent être supprimées après contrôle.
 - Aucune création de jeton, aucun flux OAuth, aucune automatisation de connexion navigateur.
 - Aucun contournement de protection de branche, de checks requis ou de politique de fusion ; aucune fusion d'histoires non reliées.
