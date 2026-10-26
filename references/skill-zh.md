@@ -18,7 +18,7 @@
 - 预期有提交但 `git status` 为空（提交已由另一会话创建）；
 - 验证与 `git add` 之间发生并发写入，或指纹清单不一致；
 - 持续并发写入（验证期间源文件仍每 10–30 秒变化），或已批准的方案自规划后大小/mtime/SHA-256/行数已变化；
-- 为不在任何仓库中的 Skill 初始化本地仓库（LOCAL-ONLY）、根提交，或流程中途范围前提变化；
+- 为不在任何仓库中的 Skill 初始化仓库（LOCAL-ONLY，或共享远程 + 专用分支）、根提交，或流程中途范围前提变化；
 - 只更新源文件、译本保持不变（预期对等失败）。
 
 ## 步骤 1 — 定位真实仓库
@@ -61,7 +61,7 @@ git -C "<depot>" ls-files --error-unmatch -- "<chemin>"
 
 | 情况 | 动作 |
 |---|---|
-| Skill 目录不在任何仓库中 | 询问：在 Skill 目录初始化仓库、保持未提交，还是指向已有仓库；经同意后执行 `git init`，并标记为 **LOCAL-ONLY**（无 origin、不 push） |
+| Skill 目录不在任何仓库中 | 提出三个互斥目标：(a) **LOCAL-ONLY**（无 origin、不 push）；(b) 已有仓库，或通过 `publier-skill-qoder-vers-depot-git` 归档 `main`；(c) init + 共享远程：读取邻近 Skill 的 `branch -vv`/`remote -v` 与 `git ls-remote`，提出目标，经同意后 `git init`、`git remote add`、push `skill/<nom>`；不要预设 LOCAL-ONLY |
 | 目录位于嵌套仓库内 | 使用该仓库，并用 `ls-files --error-unmatch` 确认 |
 | 多个仓库都有改动 | 每个仓库、每个主题各自提交 |
 | 存在无关的既有改动 | 纳入前先询问 |
@@ -70,7 +70,7 @@ git -C "<depot>" ls-files --error-unmatch -- "<chemin>"
 
 对「TOUT」的回答：先用互斥选项和确切的仓库、文件清单重述一次。若第二次仍回答「TOUT」，不要再提第三个问题：执行推荐组合，在报告中明确声明，并排除未列出或不可逆的动作（push、删除、重写历史）。仅当 `git init` 本来就在已确认选项中时才可执行。已观察案例（2026-10-26）：连续两次「TOUT」→ Skill 本地仓库 + 在公开仓库本地克隆的 `main` 上提交，不创建重复的专用分支，也不推送。下一条关于无关公开仓库的规则优先：绝不推送到 `main`，绝不把用户级 Skill 提交到无关公开仓库。
 
-仅在明确同意后才执行 `git init`。不要修改 Git 配置：只读取 `git config user.name` 与 `git config user.email`，不要改写。绝不要把用户级 Skill 提交到无关公开仓库的 `main`。执行 `git init` 后，用 `git symbolic-ref --short HEAD` 读取实际指向的分支：在未出生的 HEAD 上，`git rev-parse --abbrev-ref HEAD` 会以 `fatal: ambiguous argument 'HEAD'` 失败；同时记录 `init.defaultBranch` 与邻近仓库的分支，不得静默重命名。根提交的 OID 顺序是固定的：`git add` 之后，`git rev-parse ":<chemin-relatif>"` 必须等于 `git hash-object --path=<chemin-relatif> <source>`；`HEAD:<chemin-relatif>` 只在首次提交后存在。**LOCAL-ONLY** 仓库没有 `origin`：不要询问 URL，也不要 push；这与「已有仓库缺少 `origin` → 询问 URL」是两种不同情况。已观察案例（2026-10-26）：Skill 目录不在任何仓库，初始化 → `INIT_EXIT=0`，`rev-parse --abbrev-ref HEAD` → `fatal: ambiguous argument 'HEAD'`，`symbolic-ref` → `refs/heads/master`；`git init` 后 `skill-file-qa` 仍为 `RESULT PASS`、`Files (2)`；根提交 `4b19c34`（2 个文件），索引与 `HEAD` 的 OID 2/2 MATCH，`autocrlf=true` 时出现 `LF will be replaced by CRLF the next time Git touches it`。
+仅在明确同意后才执行 `git init`。不要修改 Git 配置：只读取 `git config user.name` 与 `git config user.email`，不要改写。绝不要把用户级 Skill 提交到无关公开仓库的 `main`。执行 `git init` 后，用 `git symbolic-ref --short HEAD` 读取实际指向的分支：在未出生的 HEAD 上，`git rev-parse --abbrev-ref HEAD` 会以 `fatal: ambiguous argument 'HEAD'` 失败；同时记录 `init.defaultBranch` 与邻近仓库的分支，不得静默重命名。根提交的 OID 顺序是固定的：`git add` 之后，`git rev-parse ":<chemin-relatif>"` 必须等于 `git hash-object --path=<chemin-relatif> <source>`；`HEAD:<chemin-relatif>` 只在首次提交后存在。**LOCAL-ONLY** 仓库没有 `origin`：不要询问 URL，也不要 push；这与「已有仓库缺少 `origin` → 询问 URL」是两种不同情况。已观察案例（2026-10-26）：Skill 目录不在任何仓库，初始化 → `INIT_EXIT=0`，`rev-parse --abbrev-ref HEAD` → `fatal: ambiguous argument 'HEAD'`，`symbolic-ref` → `refs/heads/master`；`git init` 后 `skill-file-qa` 仍为 `RESULT PASS`、`Files (2)`；根提交 `4b19c34`（2 个文件），索引与 `HEAD` 的 OID 2/2 MATCH，`autocrlf=true` 时出现 `LF will be replaced by CRLF the next time Git touches it`。已观察案例（2026-10-26）：目录不在仓库，`TOP_RC=128` 且无 `origin`；邻近 Skill 的 `branch -vv`/`remote -v` 与 `git ls-remote` → `Loulbak78920/ASTRO-QODE-ALMIZAN` 的 `skill/commit-skill-work` 与 `skill/mesure-cesium-133-geolocalisee`，`IMAM8MAHDI/qoder-skills` 为归档 `main`；`ls-remote` → `main`、`master`、`skill/commit-skill-work`；提出三个目标后用户选择专用分支；`git init`（`master`，`init.defaultBranch` 未设置）、`remote add`、manifest/QA/调用、根提交 `55e2989`（2 个文件，375 insertions）、`push -u origin HEAD:refs/heads/skill/aligner-variantes-commande-skill`、`ls-remote` = HEAD = `55e29897…`、状态干净、`RESULT NONE`（28 个仓库）；`master` 跟踪 `origin/skill/aligner-variantes-commande-skill`，名称不同。
 
 ## 步骤 4 — 提交前验证
 
@@ -382,7 +382,7 @@ git -C "<depot>" rev-parse HEAD
 git -C "<depot>" ls-remote origin "refs/heads/<branche>"
 ```
 
-- 没有 remote：询问 URL，不要从其他仓库推断；`origin` 是共享仓库：推送专用分支，绝不推 `main`，绝不强制推送。
+- 没有 remote：按步骤 3 发现并确认目标；`git remote add` 后 push `HEAD:refs/heads/skill/<nom>`，用 `branch -vv` 与 `ls-remote` 核对，不要未经同意推断 URL；`origin` 是共享仓库：推送专用分支 `skill/<nom>`，绝不推 `main`，绝不强制推送。
 - 远端哈希 = 本地哈希；报告实际推送的分支（`HEAD:refs/heads/<branche>` 可能让本地分支跟踪另一个名称的远端分支）。
 - 「合并到 `main`」：若 `git merge-base origin/main HEAD` 返回 1（历史无共同祖先），不使用 `git merge --allow-unrelated-histories`，也不在本 worktree 中检出 `main`（它就是已安装的 Skill）。经明确同意应用内容时，按 `references/contenu-vers-main.md` 执行（索引 blob、树、基于 `origin/main` 的提交、fast-forward 推送、`ls-remote`、blob = 磁盘）。
 
@@ -406,7 +406,7 @@ find "C:/Users/Administrateur/.qoder/skills" "<racine-espace>/.qoder/skills" -ma
 
 | 现象 | 原因 | 处理 |
 |---|---|---|
-| 根目录出现 `fatal: not a git repository` 且 `EXIT=128` | 项目根不是仓库 | 枚举 `.git`，再用 `git -C` 指向真实仓库 |
+| 根目录出现 `fatal: not a git repository` 且 `EXIT=128` | 项目根不是仓库 | 枚举 `.git`，再用 `git -C` 指向真实仓库；Skill 不在任何仓库时，读取邻近仓库的 `branch -vv`/`ls-remote` 发现约定并询问目标（LOCAL-ONLY、归档 `main`、或共享远程 + `skill/<nom>`） |
 | `fatal: cannot change to '...ASTRO-Q°ODE_SYSTEME'` | 相对或非 ASCII 路径从另一个当前目录解析 | 用 `test -d` 确认，再传带引号的绝对路径 |
 | `UnicodeEncodeError: 'charmap' codec ... cp1252` | Windows 控制台使用 cp1252 | 设置 `PYTHONIOENCODING=utf-8` 或输出 ASCII；清点脚本强制 UTF-8 |
 | `warning: ... CRLF will be replaced by LF` 或 `LF will be replaced by CRLF ...` | 依据 `core.autocrlf` 的行尾规范化 | 仅提示；校验 blob（步骤 6）；`autocrlf=true` 时报告下次检出可能写成 CRLF |
@@ -441,7 +441,7 @@ find "C:/Users/Administrateur/.qoder/skills" "<racine-espace>/.qoder/skills" -ma
 ## 最终检查清单
 
 - [ ] 用绝对路径定位真实仓库，并读取分支。
-- [ ] 本地初始化的仓库（LOCAL-ONLY）：用 `git symbolic-ref --short HEAD` 读取分支（`git rev-parse --abbrev-ref HEAD` 在未出生 HEAD 上会失败），并记录 `init.defaultBranch` 与邻近仓库，没有 origin 也不 push；与「仓库缺少 origin → 询问 URL」区分。
+- [ ] 在 Skill 目录初始化的仓库：确认 LOCAL-ONLY（无 origin、不 push；用 `git symbolic-ref --short HEAD` 读取分支，记录 `init.defaultBranch` 与邻近仓库），或发现共享远程（`branch -vv`/`ls-remote`）、确认目标、`git remote add`、推送 `skill/<nom>` 且 `ls-remote` = HEAD；与「仓库缺少 origin → 询问 URL」区分。
 - [ ] 区分 SESSION 与 PREEXISTANT；既有改动已确认。
 - [ ] 未使用 `git add -A` 或 `git add .`；使用显式路径。
 - [ ] 已运行测试并记录结果；Skill 改动需 `RESULT PASS`；新的辅助脚本已与独立参考实现交叉核对（每会话最后 `timestamp` 与 `Write`/`Edit` 累计总数一致）并跑过负向矩阵。
