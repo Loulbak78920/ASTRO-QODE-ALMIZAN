@@ -1,6 +1,6 @@
 ---
 name: commit-skill-work
-description: "Committer des modifications de Skill ou de dépôts imbriqués sur Windows : localiser le vrai dépôt avec git -C <dir> rev-parse --show-toplevel, séparer les changements de la session des modifications préexistantes, lancer les tests et skill-file-qa, relever les empreintes des ressources car son Fingerprint ne couvre que SKILL.md, ajouter par chemins explicites, séparer les artefacts régénérés par les tests, puis ne pousser que sur demande explicite et vérifier la résolution runtime du Skill modifié par une invocation réelle. Utiliser pour toute demande « commit », « git commit », versionner un Skill utilisateur hors dépôt, choisir entre dépôts imbriqués, traiter __pycache__ ou fichiers générés, pousser un dépôt de Skill sans origin, ou vérifier qu'un Skill modifié est réellement résolu sans pouvoir exécuter /skills reload. 中文触发：提交 Skill、git commit、嵌套仓库、显式暂存、测试生成物、默认不 push、重载验证、运行时可解析性、辅助文件指纹。"
+description: "Committer des modifications de Skill ou de dépôts imbriqués sur Windows : localiser le vrai dépôt (git -C … rev-parse --show-toplevel), séparer SESSION et préexistant, lancer tests et skill-file-qa, exiger un paquet sans __pycache__ malgré PASS, relever les empreintes de toutes les ressources (Fingerprint = SKILL.md seul), ajouter par chemins explicites, séparer les artefacts régénérés, ne pousser que sur demande, puis vérifier la résolution runtime par invocation. Après la dernière écriture, rejouer parité, QA, SHA-256 et invocation ; toute écriture ultérieure annule la preuve. Après le commit, signaler les archives devenues obsolètes sans les republier. Utiliser pour « commit », « git commit », versionner un Skill hors dépôt, dépôts imbriqués, __pycache__/fichiers générés, Skill sans origin, OID blob/source et core.autocrlf=true, ou résolution runtime sans /skills reload. 中文触发：提交 Skill、git commit、嵌套仓库、显式暂存、测试生成物、默认不 push、重载验证、运行时可解析性、辅助文件指纹、索引 blob 校验、autocrlf 风险、最终写入后重验、验证后编辑失效、QA PASS 仍含缓存、归档过期不重发。"
 ---
 
 # Committer les modifications d'un Skill ou d'un dépôt imbriqué
@@ -15,7 +15,12 @@ Identifier le dépôt qui contient réellement les fichiers modifiés, committer
 - Skill utilisateur sous le dossier user-level des skills, hors de tout dépôt ;
 - plusieurs dépôts imbriqués et périmètre ambigu ;
 - tests qui réécrivent des fichiers générés après le commit ;
-- demande de push, ou dépôt de Skill sans `origin`.
+- demande de push, ou dépôt de Skill sans `origin` ;
+- vérification de l'OID blob/source, ou avertissement `core.autocrlf` ;
+- revalidation après une écriture tardive de `SKILL.md`, d'un script ou de la traduction ;
+- `skill-file-qa` renvoie `RESULT PASS` alors que `Files (N)` contient un cache ;
+- archive du Skill présente dans un autre dépôt après le commit ;
+- écriture concurrente entre la validation et le `git add`, ou manifeste d'empreintes divergent.
 
 ## Étape 1 — Localiser le dépôt réel
 
@@ -37,10 +42,10 @@ find "C:/Users/Administrateur/.qoder/skills" -maxdepth 2 -name .git -type d
 - Inventaire en lecture seule, sortie ASCII, codes 0/1/2 :
 
 ```bash
-py -3 scripts/inspect_git_state.py "<racine>" "C:/Users/Administrateur/.qoder/skills"
+py -3 "<dossier-skill>/scripts/inspect_git_state.py" "<racine>" "C:/Users/Administrateur/.qoder/skills"
 ```
 
-Le script interroge `rev-parse`, `status`, `diff`, `log` et `remote` sans modifier l'index, et signale les caches non suivis.
+Le script interroge `rev-parse`, `status`, `diff`, `log` et `remote` sans modifier l'index, et signale les caches non suivis. Le chemin du script doit rester absolu : depuis la racine du projet, `scripts/inspect_git_state.py` échoue avec `can't open file` (code 2).
 
 ## Étape 2 — Classer les changements
 
@@ -64,6 +69,8 @@ Classer chaque chemin en trois catégories : **SESSION** (produit par le travail
 | Dépôt de Skill avec `origin` partagé | pousser une branche dédiée `skill/<nom>`, jamais `main` sans accord |
 | Dépôt sans `origin` | demander l'URL ; ne pas deviner |
 
+Réponse « TOUT » : reformuler une première fois avec des options mutuellement exclusives et la liste exacte des dépôts et fichiers. Si la deuxième réponse est encore « TOUT », ne pas poser une troisième question : exécuter la combinaison recommandée, la déclarer explicitement dans le rapport, et exclure toute action non listée ou non réversible (push, suppression, réécriture). `git init` reste possible seulement s'il figurait dans les options confirmées. Cas observé (2026-10-26) : deux « TOUT » successifs → dépôt local du Skill + commit sur `main` d'un clone local du dépôt public, sans branche dédiée redondante et sans push. La règle suivante sur les dépôts publics sans rapport reste prioritaire : aucun push vers `main`, aucun commit d'un Skill utilisateur dans un dépôt public sans rapport.
+
 N'exécuter `git init` qu'après accord explicite. Ne pas modifier la configuration Git : vérifier `git config user.name` et `git config user.email`, sans les réécrire. Ne jamais committer un Skill utilisateur dans la branche `main` d'un dépôt public sans rapport.
 
 ## Étape 4 — Vérifier avant de committer
@@ -82,13 +89,68 @@ py -3 "C:/Users/Administrateur/.qoder/skills/skill-file-qa/scripts/validate_skil
 
 Exiger la sortie `RESULT PASS` avant de committer. Consigner les résultats réels. Ne pas committer si un test échoue : corriger d'abord.
 
+`RESULT PASS` ne prouve pas que le paquet est propre : le validateur peut lister un cache et passer. Cas observé (2026-10-26) : après un contrôle `py_compile`, `Files (4)` incluait un fichier `.pyc` de cache dans `scripts/`, avec `PASS layout: 4 file(s)` et `RESULT PASS`. Avant de committer, inspecter la ligne `Files (N)` et lancer :
+
+```bash
+find "<dossier-skill>" \( -name __pycache__ -o -name '*.pyc' -o -name '*.pyo' \) -print
+```
+
+Si la sortie n'est pas vide, supprimer uniquement les caches créés par la session (`rm -rf "<dossier-skill>/scripts/__pycache__"`), puis relancer `skill-file-qa` et exiger que `Files (N)` corresponde à l'inventaire sans cache :
+
+```bash
+find "<dossier-skill>" -type f \( -name "SKILL.md" -o -path "*/scripts/*" -o -path "*/references/*" \) ! -path "*/__pycache__/*" ! -name "*.pyc" ! -name "*.pyo" | sort
+```
+
+Pour un cache préexistant, demander avant de le supprimer. Un `PASS` obtenu avec un cache dans la liste ne vaut pas pour le paquet stagé.
+
 Le `Fingerprint` de `skill-file-qa` ne couvre que `SKILL.md`. Cas observé : après deux modifications de `scripts/inspect_git_state.py`, il est resté à `9901 bytes` avec le même SHA-256 ; seul un changement de `SKILL.md` l'a fait passer à `9917 bytes`. Relever donc les empreintes de toutes les ressources avant de committer :
 
 ```bash
 find "<dossier-skill>" -type f \( -name "SKILL.md" -o -path "*/scripts/*" -o -path "*/references/*" \) ! -path "*/__pycache__/*" -print0 | xargs -0 sha256sum
 ```
 
-Si un fichier auxiliaire change après la validation, relancer `skill-file-qa` et recalculer. Ne pas conclure à l'intégrité du Skill à partir du seul `Fingerprint`.
+Toute écriture postérieure à une validation annule la preuve, y compris une correction de `SKILL.md`, d'un script ou de la traduction. Cas observé : une invocation réussie, puis deux corrections de `SKILL.md` et de la traduction pour rendre `find` déterministe, ont rendu cette preuve obsolète ; parité, `skill-file-qa`, empreintes et invocation ont dû être rejoués sur la version finale. Ne pas conclure à l'intégrité du Skill à partir du seul `Fingerprint`.
+
+Le manifeste de référence est enregistré **hors du dossier du Skill** immédiatement après la dernière écriture, puis comparé après les contrôles. Il couvre `SKILL.md`, `scripts/` et `references/` à l'exclusion des caches :
+
+```bash
+manifest="<chemin-hors-skill>/fingerprints-<nom-skill>.txt"
+(
+  cd "<dossier-skill>" || exit 2
+  find . -type f \( -path './SKILL.md' -o -path './scripts/*' -o -path './references/*' \) \
+    ! -path '*/__pycache__/*' ! -name '*.pyc' ! -name '*.pyo' -print0 \
+    | sort -z | xargs -0 sha256sum
+) > "$manifest"
+```
+
+Ne pas placer ce fichier dans le dossier du Skill : il polluerait le paquet et, sous `references/` ou `scripts/`, s'auto-inclurait. Après les contrôles, recalculer la même liste et exiger un `diff` vide :
+
+```bash
+(
+  cd "<dossier-skill>" || exit 2
+  find . -type f \( -path './SKILL.md' -o -path './scripts/*' -o -path './references/*' \) \
+    ! -path '*/__pycache__/*' ! -name '*.pyc' ! -name '*.pyo' -print0 \
+    | sort -z | xargs -0 sha256sum
+) | diff -u "$manifest" - || { echo "FAIL: écriture pendant la validation"; exit 1; }
+```
+
+Le SHA-256 de `./SKILL.md` dans le manifeste doit égaler le `Fingerprint (final)` de `skill-file-qa` ; sinon QA ne porte pas sur cette version. Un manifeste absent ou un `diff` non vide interdit de conclure à une version validée.
+
+Après la dernière écriture, rejouer les contrôles dans cet ordre, puis ne plus rien modifier :
+
+1. Parité de traduction, si une traduction existe :
+
+```bash
+py -3 "<skills-root>/skill-doc-translation-parity/scripts/check_translation_parity.py" "<dossier-skill>/SKILL.md" "<dossier-skill>/references/<nom>-zh.md"
+```
+
+2. Scan des caches, puis `skill-file-qa` : exiger `RESULT PASS`, `Files (N)` égal à l'inventaire sans cache, et le `Fingerprint (final)` égal au `./SKILL.md` du manifeste.
+3. Recalculer le manifeste et exiger un `diff` vide (voir ci-dessus).
+4. Invocation réelle du Skill (Étape 11), puis recalculer le manifeste et exiger un `diff` vide.
+
+Consigner le manifeste et les empreintes finales, puis les associer à la version validée. Une écriture après l'étape 4 impose de reprendre à l'étape 1. Ne jamais présenter un PASS obtenu avant la dernière écriture comme la validation du fichier actuel. La parité est structurelle (blocs de code, tableaux, titres, listes, identifiants, nombres) et ne prouve pas la qualité sémantique de la traduction.
+
+Après l'ajout (Étape 6) puis le commit (Étape 7), vérifier l'identité des blobs par OID : l'OID indexé doit égaler `git hash-object --path` de la source, et l'OID de `HEAD` doit égaler celui de l'index. Un `Fingerprint` ou un `git status` propre ne prouve pas cette identité ; l'égalité SHA-256 octet à octet n'est attendue que sans filtre eol (voir Étape 6).
 
 Attention : la suite peut réécrire des fichiers générés (cas observé : 5 sceaux dans `memoire_aq/`). Les traiter après le commit, pas les ignorer.
 
@@ -100,9 +162,24 @@ git -C "<depot>" diff -- "<chemin>"
 git -C "<depot>" status --porcelain=v1
 ```
 
-Chercher secrets, binaires volumineux, caches et fichiers hors périmètre. Les avertissements `warning: ... CRLF will be replaced by LF` sont informatifs, pas des erreurs : les signaler sans les corriger par une réécriture globale.
+Chercher secrets, binaires volumineux, caches et fichiers hors périmètre. Les avertissements de fin de ligne dépendent de `core.autocrlf` : `CRLF will be replaced by LF` (normalisation à l'entrée) et `LF will be replaced by CRLF the next time Git touches it` (`autocrlf=true`) sont informatifs, mais le second annonce une conversion au prochain checkout. Vérifier les blobs (Étape 6) et signaler le risque sans réécrire le dépôt.
 
 ## Étape 6 — Ajouter par lots explicites
+
+### Contrôle d'empreinte avant `git add`
+
+Aucun `git add` avant que le manifeste de l'Étape 4 soit identique à l'état courant :
+
+```bash
+(
+  cd "<dossier-skill>" || exit 2
+  find . -type f \( -path './SKILL.md' -o -path './scripts/*' -o -path './references/*' \) \
+    ! -path '*/__pycache__/*' ! -name '*.pyc' ! -name '*.pyo' -print0 \
+    | sort -z | xargs -0 sha256sum
+) | diff -u "<manifeste>" - || { echo "FAIL: écriture après validation — ne pas indexer"; exit 1; }
+```
+
+Si le `diff` n'est pas vide, ne pas indexer : rejouer parité, scan des caches + `skill-file-qa`, tests applicables et invocation, puis réenregistrer le manifeste. Un simple recalcul de SHA-256 ne remplace pas la revalidation. Répéter le contrôle juste après `git add` : si le `diff` n'est plus vide, ne pas committer ; revalider puis refaire `git add`. L'égalité d'OID vérifiée ci-dessous ne prouve pas que l'index contient la version validée.
 
 ```bash
 git -C "<depot>" add -- "<chemin1>" "<chemin2>"
@@ -111,6 +188,24 @@ git -C "<depot>" diff --cached --stat
 ```
 
 Ne jamais utiliser `git add -A`, `git add .` ni un motif large. Grouper par sujet et séparer les artefacts régénérés du changement de code. Vérifier la liste indexée avant chaque commit.
+
+Vérifier ensuite le contenu réellement indexé, un seul fichier à la fois :
+
+```bash
+git -C "<depot>" config --show-origin --get core.autocrlf || echo "core.autocrlf: unset"
+oid=$(git -C "<depot>" rev-parse ":<chemin-relatif-depot>")
+[ -n "$oid" ] && git -C "<depot>" cat-file -e "$oid" || { echo "FAIL: blob absent"; exit 1; }
+expected=$(git -C "<depot>" hash-object --path="<chemin-relatif-depot>" "<chemin-source>")
+[ "$oid" = "$expected" ] || { echo "FAIL: OID indexe != source filtree"; exit 1; }
+git -C "<depot>" cat-file blob "$oid" | sha256sum
+sha256sum "<chemin-source>"
+```
+
+- `rev-parse ":<chemin-relatif-depot>"` exige une entrée en stage 0 ; un OID vide ou un `cat-file -e` en échec doit arrêter la vérification.
+- L'égalité d'OID prouve que Git stockera la source telle que filtrée par `core.autocrlf` et `.gitattributes` ; c'est le contrôle principal.
+- Les SHA-256 affichés peuvent différer avec `core.autocrlf=true` (source CRLF, blob LF) : c'est une normalisation attendue, pas une corruption. Ne pas conclure à un échec sur cette seule différence.
+- La forme `cat-file blob <oid>` évite `ref:chemin` et la conversion MSYS des refs contenant `/` (observé, non rejoué dans tous les shells).
+- Si `core.autocrlf=true` et que la source est LF, le blob est identique mais un futur checkout écrira CRLF : le signaler. Pour figer `eol=lf`, proposer un `.gitattributes` avec accord explicite ; ne pas modifier `core.autocrlf` ni réécrire le dépôt. Un pipeline masque l'échec de `cat-file` : toujours tester l'OID et `cat-file -e` avant de hacher.
 
 ## Étape 7 — Committer
 
@@ -124,11 +219,45 @@ EOF
 
 Reprendre le style des messages existants. Un commit par sujet. Ne pas utiliser `--no-verify`, ne pas amender un commit déjà publié. Après le commit, exécuter `git -C "<depot>" status --porcelain=v1` et `git -C "<depot>" log -1 --stat`.
 
+Vérifier les blobs commités et leur stabilité :
+
+```bash
+git -C "<depot>" ls-tree -r HEAD -- "<chemin-relatif-depot>"
+head_oid=$(git -C "<depot>" rev-parse "HEAD:<chemin-relatif-depot>")
+```
+
+L'OID de `HEAD` doit égaler celui vérifié à l'Étape 6. Si un hook a pu modifier l'index pendant le commit, refaire la comparaison d'OID avec `git hash-object --path` ; ne pas comparer SHA-256 octet à octet quand un filtre eol s'applique.
+
 ## Étape 8 — Traiter les effets de bord
 
 Si les tests ont modifié des fichiers après le commit, examiner `git diff`, confirmer qu'il s'agit bien d'une régénération, puis créer un commit séparé de type `chore(...)`. Ne pas jeter ces fichiers et ne pas les mélanger au commit fonctionnel. Si les fichiers sont sans rapport, les laisser intacts et le signaler.
 
-## Étape 9 — Pousser seulement sur demande
+## Étape 9 — Détecter une archive publiée devenue obsolète
+
+Un commit local ne met à jour aucune copie archivée sous `.qoder/skills/<nom>` dans un autre dépôt. Après le dernier commit (y compris un `chore(...)` de l'Étape 8), chercher ces archives et les comparer au source final :
+
+```bash
+py -3 "<dossier-skill>/scripts/find_stale_archives.py" \
+  --skill "<dossier-skill>" \
+  --search-root "<racine-espace>" \
+  --search-root "C:/Users/Administrateur/.qoder/skills"
+```
+
+Le script est en lecture seule. Il énumère les dépôts, les refs qui contiennent `.qoder/skills/<nom>`, puis compare chaque blob au source via `git hash-object --path` (filtres eol appliqués). Il ne fait aucun `fetch` : `published` signifie qu'une ref `refs/remotes/` existe localement, pas que le serveur a été interrogé.
+
+| Sortie | Sens | Code |
+|---|---|---|
+| `RESULT NONE` | aucune archive trouvée | 0 |
+| `RESULT FRESH` | toutes les archives sont identiques au source | 0 |
+| `RESULT STALE` | au moins une archive diffère (`MISMATCH`, `MISSING` ou `EXTRA`) | 1 |
+| `RESULT FAIL` | usage ou environnement invalide | 2 |
+
+- `published` désigne une ref sous `refs/remotes/` ; `local` une branche ou un tag local seulement. Une archive locale en avance (`[ahead 1]`) n'est pas publiée.
+- Comparer au source final, pas au diff du commit : une archive peut déjà être obsolète avant le commit. Vérifier `git log -1 --format='%h %s' -- ".qoder/skills/<nom>"` avant d'attribuer la cause au commit courant.
+- Ne jamais recopier, committer, fusionner, pousser ni supprimer l'archive dans cette étape. Signaler `Archives : <ref> <commit> STALE (<n>/<N>)` et attendre une instruction explicite. La republication est une étape séparée (`publier-skill-qoder-vers-depot-git`), jamais automatique.
+- Cas observé (2026-10-26) : les modifications devenues le commit `3a47dab` ont rendu l'archive `ddfd179` obsolète, `3/3 MISMATCH`, `EXIT=1` ; l'archive `96fd809` de ce Skill différait déjà sur `2/3` fichiers avant l'ajout de `scripts/find_stale_archives.py`.
+
+## Étape 10 — Pousser seulement sur demande
 
 Par défaut, ne pas pousser. Indiquer explicitement « non poussé » dans le rapport.
 
@@ -151,11 +280,11 @@ git -C "<depot>" ls-remote origin "refs/heads/<branche>"
 
 Le hash distant doit correspondre au hash local. Signaler la branche réellement poussée : un push `HEAD:refs/heads/<branche>` peut laisser la branche locale suivre un nom différent.
 
-## Étape 10 — Vérifier la résolution runtime du Skill modifié
+## Étape 11 — Vérifier la résolution runtime du Skill modifié
 
 Après avoir modifié ou commité un Skill, prouver qu'il est réellement résolu par le runtime, et pas seulement présent sur disque :
 
-1. Invoquer le Skill modifié avec l'outil Skill. Un chargement réussi retourne son répertoire de base ; il doit correspondre au dossier réellement modifié.
+1. Invoquer le Skill modifié avec l'outil Skill, après la dernière écriture. Si le runtime renvoie un répertoire de base, il doit correspondre au dossier réellement modifié ; sinon, exiger que le contenu chargé contienne une règle distinctive de la version finale. Une invocation antérieure à une écriture ultérieure ne prouve rien.
 2. Chercher une homonymie qui masquerait la version utilisateur ; les deux racines sont à vérifier :
 
 ```bash
@@ -174,14 +303,25 @@ Un root absent est ignoré ; seul le nombre de résultats compte. Un seul résul
 | `fatal: not a git repository` avec `EXIT=128` à la racine | la racine du projet n'est pas un dépôt | énumérer les `.git`, puis utiliser `git -C` sur le vrai dépôt |
 | `fatal: cannot change to '...ASTRO-Q°ODE_SYSTEME'` | chemin relatif ou non ASCII résolu depuis un autre répertoire courant | vérifier avec `test -d`, puis passer un chemin absolu entre guillemets |
 | `UnicodeEncodeError: 'charmap' codec ... cp1252` | console Windows en cp1252 | forcer `PYTHONIOENCODING=utf-8` ou sortir en ASCII ; le script d'inventaire force l'UTF-8 |
-| `warning: ... CRLF will be replaced by LF` | normalisation des fins de ligne | informationnel ; ne pas réécrire tout le dépôt |
+| `warning: ... CRLF will be replaced by LF` ou `LF will be replaced by CRLF ...` | normalisation des fins de ligne selon `core.autocrlf` | informationnel ; vérifier les blobs (Étape 6) ; avec `autocrlf=true`, signaler que le prochain checkout peut écrire CRLF |
 | `?? scripts/__pycache__/` dans le statut | imports Python | exclure ; ajouter des chemins explicites, ou `.gitignore` après accord |
 | branche `master` sur un dépôt, `main` sur un autre | historiques différents | lire `rev-parse --abbrev-ref HEAD` ; ne rien supposer |
 | tests qui réécrivent des fichiers scellés après le commit | génération relancée par les tests | relire le diff, puis commit `chore(...)` séparé |
 | réponse « TOUT » à une question de périmètre | le périmètre reste ambigu | proposer la liste exacte des dépôts et fichiers, la faire confirmer avant `git add` |
+| deuxième réponse « TOUT » après reformulation | options mutuellement exclusives | ne pas poser une troisième question ; exécuter la combinaison recommandée, la déclarer, exclure push et suppression |
 | push rejeté (non-fast-forward ou historiques sans rapport) | dépôt de Skill sans lien avec `origin` | pousser une branche dédiée ; ne jamais forcer |
 | `nothing to commit` alors qu'un commit est attendu | changements déjà commités ou mauvais dépôt | vérifier `git log` et `git status` dans le dépôt réel |
 | `Fingerprint (final)` inchangé après modification de `scripts/` ou `references/` | le fingerprint ne couvre que `SKILL.md` | recalculer les SHA-256 des ressources ; ne pas conclure que rien n'a changé |
+| SHA-256 du blob d'index différent de la source | filtre eol attendu (`core.autocrlf`, `.gitattributes`) ou mauvais fichier | comparer les OID (`hash-object --path` vs index) ; si les OID sont égaux, consigner la normalisation ; sinon ne pas committer |
+| PASS obtenu, puis `SKILL.md` ou la traduction réédité | la preuve porte sur une version qui n'existe plus | rejouer parité, `skill-file-qa`, SHA-256 et invocation dans cet ordre, puis figer les empreintes |
+| `diff` du manifeste non vide avant `git add` | écriture concurrente après la validation | ne pas indexer ; rejouer parité, QA, tests et invocation, réenregistrer le manifeste, puis recommencer le contrôle |
+| `Fingerprint (final)` de QA absent du manifeste | QA ne porte pas sur la version courante | ne pas committer ; revalider et réenregistrer le manifeste |
+| manifeste absent ou placé dans le dossier du Skill | validation non tracée, ou manifeste auto-inclus | enregistrer le manifeste hors du Skill après la dernière écriture ; sinon reprendre l'Étape 4 |
+| `RESULT PASS` mais `Files (N)` liste `__pycache__/*.pyc` | le validateur ne prouve pas l'absence de caches | supprimer les caches créés par la session, relancer QA, exiger `Files (N)` égal à l'inventaire sans cache |
+| archive `MISMATCH`/`MISSING` après le commit | copie archivée non republiée, ou déjà obsolète avant le commit | signaler `STALE` avec ref/commit ; ne pas recopier ni pousser automatiquement |
+| `find_stale_archives.py` sort en 1 | archive obsolète détectée, pas un crash | lire le rapport ; sortie 2 = usage/environnement |
+| archive trouvée seulement sur une ref locale `[ahead 1]` | commit non poussé | la marquer `local`, ne pas la présenter comme publiée |
+| OID vide ou `cat-file` en échec mais pipeline à 0 | chemin non indexé, OID multiple, ou `pipefail` absent | tester `[ -n "$oid" ]` et `git cat-file -e`, puis relancer |
 | Skill modifié non résolu ou introuvable | index runtime non rechargé, ou homonyme projet qui masque | invoquer le Skill, vérifier les deux racines, puis demander `/skills reload` à l'utilisateur |
 
 ## Checklist finale
@@ -190,11 +330,21 @@ Un root absent est ignoré ; seul le nombre de résultats compte. Un seul résul
 - [ ] Changements SESSION et PREEXISTANT séparés ; préexistants confirmés.
 - [ ] Aucun `git add -A` ni `git add .` ; chemins explicites.
 - [ ] Tests exécutés et résultats consignés ; `RESULT PASS` si un Skill change.
+- [ ] `skill-file-qa` : `Files (N)` égal à l'inventaire sans cache ; aucun `__pycache__`/`*.pyc` créé par les tests ou `py_compile`.
 - [ ] Diff relu ; aucun secret, binaire volumineux ni `__pycache__`.
 - [ ] Un commit par sujet, message aligné sur l'historique.
 - [ ] Statut post-commit propre, ou effets de bord expliqués et commités.
+- [ ] Archives voisines vérifiées après le dernier commit : `NONE`, `FRESH`, ou `STALE` signalée avec ref/commit.
+- [ ] Aucune archive recopiée, commitée ni poussée automatiquement.
 - [ ] Push uniquement sur demande ; remote, branche et hash vérifiés.
 - [ ] Empreintes SHA-256 de `SKILL.md`, `scripts/` et `references/` relevées ; le `Fingerprint` seul ne couvre que `SKILL.md`.
+- [ ] Blobs d'index et blobs `HEAD` comparés par OID à la source filtrée ; écart SHA-256 expliqué par un filtre eol si applicable.
+- [ ] Après la dernière écriture : parité, `skill-file-qa`, SHA-256 et invocation rejoués dans cet ordre ; empreintes finales consignées.
+- [ ] Manifeste SHA-256 enregistré hors du Skill après la dernière écriture ; `Fingerprint (final)` de QA égal au `./SKILL.md` du manifeste.
+- [ ] `diff` du manifeste vide avant et après `git add` ; aucune écriture entre validation et indexation.
+- [ ] Écart de manifeste traité par revalidation complète, jamais par un simple recalcul de SHA-256.
+- [ ] `core.autocrlf` lu avec `--show-origin` ; risque de conversion au checkout signalé.
+- [ ] Réponse « TOUT » répétée traitée sans troisième question, combinaison déclarée.
 - [ ] Skill modifié résolu par invocation réelle ; aucune homonymie projet/utilisateur ; `/skills reload` laissé à l'utilisateur.
 
 ## Rapport
@@ -203,11 +353,16 @@ Un root absent est ignoré ; seul le nombre de résultats compte. Un seul résul
 Dépôt : <chemin absolu> | Branche : <nom>
 Commits : <hash court> <sujet>
 Fichiers : <N> | Tests : <résultat>
+Intégrité : blobs source <N>/<N> | autocrlf <valeur> | checkout <identique|converti>
 Push : non effectué | <remote> <branche> <hash distant>
-Skill : <nom> | résolution : <base-dir> | empreintes : <sha SKILL.md> <n scripts> <n references> (si un Skill est modifié)
+Archives : aucune | <ref> <commit> <FRESH|STALE n/N> [published|local]
+Gate : manifeste <n> fichiers | QA=manifeste <oui|non> | avant add <identique|écart> | après add <identique|écart>
+Skill : <nom> | résolution : <base-dir|contenu vérifié> | empreintes finales : <sha SKILL.md> <n scripts> <n references> (si un Skill est modifié)
+Contrôles rejoués après la dernière écriture : parité <PASS/N/A> | QA <PASS> | SHA-256 <n> | invocation <OK>
 ```
 
 ## Ressources
 
 - `scripts/inspect_git_state.py` : inventaire lecture seule des dépôts, branches, statuts, diffs et remotes ; sortie ASCII, codes 0/1/2.
+- `scripts/find_stale_archives.py` : détection lecture seule des copies archivées du Skill dans les dépôts voisins ; compare les OID des blobs au source et signale `NONE`/`FRESH`/`STALE` ; codes 0 (NONE/FRESH), 1 (STALE), 2 (usage/environnement).
 - `references/skill-zh.md` : version chinoise complète, à maintenir structurellement parallèle ; les règles de parité sont décrites par `skill-doc-translation-parity`.
