@@ -1,6 +1,6 @@
 ---
 name: commit-skill-work
-description: "Committer des modifications de Skill ou de dépôts imbriqués sur Windows : localiser le vrai dépôt (git -C … rev-parse --show-toplevel), séparer SESSION et préexistant, lancer tests et skill-file-qa, exiger un paquet sans __pycache__ malgré PASS, relever les empreintes de toutes les ressources (Fingerprint = SKILL.md seul), ajouter par chemins explicites, séparer les artefacts régénérés, ne pousser que sur demande, puis vérifier la résolution runtime par invocation. Après la dernière écriture, rejouer parité, QA, SHA-256 et invocation ; toute écriture ultérieure annule la preuve. Après le commit, signaler les archives devenues obsolètes sans les republier. Utiliser pour « commit », « git commit », versionner un Skill hors dépôt, dépôts imbriqués, __pycache__/fichiers générés, Skill sans origin, OID blob/source et core.autocrlf=true, ou résolution runtime sans /skills reload. 中文触发：提交 Skill、git commit、嵌套仓库、显式暂存、测试生成物、默认不 push、重载验证、运行时可解析性、辅助文件指纹、索引 blob 校验、autocrlf 风险、最终写入后重验、验证后编辑失效、QA PASS 仍含缓存、归档过期不重发。"
+description: "Committer des modifications de Skill ou de dépôts imbriqués sur Windows : localiser le vrai dépôt (git -C … rev-parse --show-toplevel), séparer SESSION et préexistant, lancer tests et skill-file-qa, exiger un paquet sans __pycache__ malgré PASS, relever les empreintes de toutes les ressources (Fingerprint = SKILL.md seul), ajouter par chemins explicites, séparer les artefacts régénérés, ne pousser que sur demande, puis vérifier la résolution runtime par invocation. Après la dernière écriture, rejouer parité, QA, SHA-256 et invocation ; toute écriture ultérieure annule la preuve. Après le commit, signaler les archives devenues obsolètes sans les republier. Utiliser pour « commit », « git commit », versionner un Skill hors dépôt, instantané gelé, __pycache__/fichiers générés, Skill sans origin, OID blob/source et core.autocrlf=true, ou résolution runtime sans /skills reload. 中文触发：提交 Skill、git commit、嵌套仓库、显式暂存、测试生成物、默认不 push、重载验证、运行时可解析性、辅助文件指纹、索引 blob 校验、autocrlf 风险、最终写入后重验、验证后编辑失效、QA PASS 仍含缓存、归档过期不重发、冻结快照。"
 ---
 
 # Committer les modifications d'un Skill ou d'un dépôt imbriqué
@@ -20,7 +20,11 @@ Identifier le dépôt qui contient réellement les fichiers modifiés, committer
 - revalidation après une écriture tardive de `SKILL.md`, d'un script ou de la traduction ;
 - `skill-file-qa` renvoie `RESULT PASS` alors que `Files (N)` contient un cache ;
 - archive du Skill présente dans un autre dépôt après le commit ;
-- écriture concurrente entre la validation et le `git add`, ou manifeste d'empreintes divergent.
+- `git status` vide alors qu'un commit est attendu (commit créé par une autre session) ;
+- écriture concurrente entre la validation et le `git add`, ou manifeste d'empreintes divergent ;
+- écritures concurrentes persistantes : la source change encore toutes les 10–30 s pendant la validation, malgré les fenêtres stables ;
+- exécution d'un plan de mise à jour approuvé alors que la taille, le mtime, le SHA-256 ou les lignes ont changé depuis la planification ;
+- mise à jour de la seule source, traduction laissée intacte (parité attendue en échec).
 
 ## Étape 1 — Localiser le dépôt réel
 
@@ -74,6 +78,19 @@ Réponse « TOUT » : reformuler une première fois avec des options mutuellemen
 N'exécuter `git init` qu'après accord explicite. Ne pas modifier la configuration Git : vérifier `git config user.name` et `git config user.email`, sans les réécrire. Ne jamais committer un Skill utilisateur dans la branche `main` d'un dépôt public sans rapport.
 
 ## Étape 4 — Vérifier avant de committer
+
+### Avant d'écrire : ré-ancrer un plan approuvé
+
+Un plan approuvé décrit le fichier au moment de sa rédaction, pas au moment de l'écriture. Avant chaque écriture, rééchantillonner la cible et comparer au baseline consigné dans le plan :
+
+```bash
+stat -c '%s %y' "<fichier>"
+sha256sum "<fichier>"
+```
+
+Répéter après au moins 2 secondes et exiger des sorties identiques. Si la taille, le mtime ou le SHA-256 diffèrent du baseline, ne pas appliquer le plan tel quel : relire le fichier courant, retrouver chaque ancre par son texte exact (jamais par un numéro de ligne), puis appliquer des `Edit` minimaux. Préserver les ajouts concurrents ; ne pas restaurer une sauvegarde ni réécrire le fichier entier. Si une ancre a disparu ou entre en conflit avec un ajout concurrent, s'arrêter et demander au lieu de deviner. Si le fichier bouge encore pendant cette vérification, ne pas écrire : attendre une fenêtre stable ou appliquer la section « Écriture concurrente : valider un instantané gelé ». La validation obtenue sur l'ancien baseline est caduque : revalider les octets finaux (parité si traduction, `skill-file-qa`, SHA-256, invocation).
+
+Cas observé (2026-10-26) : plan établi sur `SKILL.md` `8fc96497…` (28 077 B) et `skill-zh.md` `1944a214…` ; à l'écriture, `SKILL.md` était `855b791a…` (28 112 B) et `skill-zh.md` `37c02eb5…` ; relecture puis 5 `Edit` minimaux sur le texte courant, ajouts concurrents conservés ; état final `SKILL.md` `23d5ac1d…` (30 812 B). Aucune sauvegarde restaurée, aucune réécriture intégrale.
 
 Lancer la suite du dépôt avec son entrée documentée. Dans ce projet, la suite observée est `tests.test_suite_complete` (11 tests) :
 
@@ -150,9 +167,75 @@ py -3 "<skills-root>/skill-doc-translation-parity/scripts/check_translation_pari
 
 Consigner le manifeste et les empreintes finales, puis les associer à la version validée. Une écriture après l'étape 4 impose de reprendre à l'étape 1. Ne jamais présenter un PASS obtenu avant la dernière écriture comme la validation du fichier actuel. La parité est structurelle (blocs de code, tableaux, titres, listes, identifiants, nombres) et ne prouve pas la qualité sémantique de la traduction.
 
+### Périmètre partiel : source seule, traduction non modifiée
+
+Si l'utilisateur n'autorise que le fichier source, ne pas modifier `references/<nom>-zh.md` pour rétablir la parité et ne pas traduire silencieusement. Lancer les deux contrôles et les rapporter séparément :
+
+- `skill-file-qa` peut renvoyer `RESULT PASS` : il valide la structure du paquet, pas la parité.
+- `check_translation_parity.py` renverra `RESULT FAIL` ; c'est le résultat attendu du périmètre partiel, pas une panne du script.
+
+Détailler les écarts réels (nombre de blocs de code, séquence de titres, nombre d'éléments de checklist, identifiants et nombres manquants) et conclure : « source validée par QA, parité en échec, paquet non validé ». Ne jamais présenter un `RESULT PASS` non qualifié comme la validation du Skill complet. Un manifeste et des empreintes peuvent être consignés pour les octets courants, mais les étiqueter « source seule, parité en attente » ; l'invocation prouve la résolution runtime de la source, pas la parité. Pour clore l'écart, demander l'autorisation de répliquer les changements dans la traduction, puis rejouer parité et QA.
+
+Cas observé (2026-10-26) : après mise à jour de la seule source, QA `RESULT PASS` (9/0, `Files (4)`, 394 lignes, 30 812 B, `23d5ac1d…`) ; parité `RESULT FAIL` (3 PASS / 5 FAIL : blocs 25 vs 23, H3 supplémentaire, checklist 21 vs 20, identifiants `--allow-empty`, `778a547`, `HEAD`, `PASS`, `RESULT PASS`, `SKILL.md`, `c08c9461…` et nombres manquants) ; tables et frontmatter PASS ; paquet non déclaré validé ; manifeste `MANIFEST_MATCH` après invocation.
+
 Après l'ajout (Étape 6) puis le commit (Étape 7), vérifier l'identité des blobs par OID : l'OID indexé doit égaler `git hash-object --path` de la source, et l'OID de `HEAD` doit égaler celui de l'index. Un `Fingerprint` ou un `git status` propre ne prouve pas cette identité ; l'égalité SHA-256 octet à octet n'est attendue que sans filtre eol (voir Étape 6).
 
 Attention : la suite peut réécrire des fichiers générés (cas observé : 5 sceaux dans `memoire_aq/`). Les traiter après le commit, pas les ignorer.
+
+### Écriture concurrente : valider un instantané gelé
+
+Cas observé (2026-10-26, 11:54–12:04) : le dossier du Skill a été réécrit au moins six fois par d'autres sessions ; parité et QA ont été invalidées deux fois, et le `diff` du manifeste n'est jamais resté vide. Revalider en boucle le dossier vivant ne converge pas : figer un instantané immuable, le valider entièrement, puis archiver exactement ces octets.
+
+1. Attendre une fenêtre stable : échantillonner toutes les 5 s le SHA-256 de l'ensemble `SKILL.md` + `scripts/` + `references/` et exiger 4 échantillons identiques consécutifs (≥ 20 s). Un `diff` vide isolé ne suffit pas.
+
+```bash
+stable=0; prev=""
+while [ "$stable" -lt 3 ]; do
+  cur=$(cd "<dossier-skill>" && find ./SKILL.md ./scripts ./references -type f \
+    ! -path '*/__pycache__/*' ! -name '*.pyc' ! -name '*.pyo' -print0 \
+    | sort -z | xargs -0 sha256sum | sha256sum)
+  [ "$cur" = "$prev" ] && stable=$((stable + 1)) || stable=0
+  prev=$cur; echo "stable=$stable $cur"; sleep 5
+done
+```
+
+2. Copier exactement `SKILL.md`, `scripts/` et `references/` (sans cache) vers un dossier neuf hors du Skill et hors du dépôt : `<tmp>/snapshot-<AAAAMMJJ-HHMM>/<nom-skill>/`. Ne pas copier `.git` ni les fichiers temporaires.
+
+```bash
+snap="<tmp>/snapshot-<AAAAMMJJ-HHMM>/<nom-skill>"
+mkdir -p "$snap/scripts" "$snap/references"
+cp "<dossier-skill>/SKILL.md" "$snap/"
+cp "<dossier-skill>/scripts/"*.py "$snap/scripts/"
+cp "<dossier-skill>/references/"*.md "$snap/references/"
+```
+
+3. Prouver `instantané == live` immédiatement après la copie : enregistrer le manifeste de l'état live hors du dossier du Skill, puis exiger un `diff` vide avec les mêmes chemins relatifs calculés dans l'instantané. La copie n'est pas atomique : un `diff` non vide impose de refaire l'instantané, pas de corriger un fichier isolé.
+
+```bash
+manifest="$(dirname "$snap")/fingerprints-<nom-skill>.txt"
+(
+  cd "<dossier-skill>" || exit 2
+  find ./SKILL.md ./scripts ./references -type f \
+    ! -path '*/__pycache__/*' ! -name '*.pyc' ! -name '*.pyo' -print0 \
+    | sort -z | xargs -0 sha256sum
+) > "$manifest"
+(
+  cd "$snap" || exit 2
+  find ./SKILL.md ./scripts ./references -type f \
+    ! -path '*/__pycache__/*' ! -name '*.pyc' ! -name '*.pyo' -print0 \
+    | sort -z | xargs -0 sha256sum
+) | diff -u "$manifest" - || { echo "FAIL: instantané != live"; exit 1; }
+```
+
+4. Exécuter toute la porte sur l'instantané, avec `$snap` à la place de `<dossier-skill>` : parité, scan des caches, `skill-file-qa --stable-seconds 2`. QA sur l'instantané prouve ces octets, pas le dossier vivant. L'invocation du Skill résout toujours le dossier live : ne l'exécuter que si `live == instantané`, puis recomparer immédiatement.
+
+5. Juste avant `git add`, rejouer le `diff` live vs manifeste. S'il n'est pas vide, abandonner l'instantané et reprendre à l'étape 1 ; ne jamais réutiliser une validation portant sur un autre état.
+
+6. Archiver et indexer les octets de l'instantané : recopier l'instantané vers `.qoder/skills/<nom>`, `git add` par chemins explicites, puis calculer l'OID attendu avec `git hash-object --path` sur le fichier de l'instantané, pas sur le live.
+
+7. Après le commit et le push, lancer `find_stale_archives.py --skill "<instantané>"` puis `--skill "<dossier-skill>"` ; la nouvelle ref doit être `FRESH`, les anciennes `STALE` sont signalées sans republication. Un écart entre les deux rapports signale une écriture postérieure au commit.
+
+8. Si le live a changé après le commit, ces octets appartiennent à une autre session : les signaler, ne pas les absorber dans le commit ni réécrire l'instantané. L'instantané est la preuve ; le live n'est qu'un état observé.
 
 ## Étape 5 — Relire le diff
 
@@ -218,6 +301,33 @@ EOF
 ```
 
 Reprendre le style des messages existants. Un commit par sujet. Ne pas utiliser `--no-verify`, ne pas amender un commit déjà publié. Après le commit, exécuter `git -C "<depot>" status --porcelain=v1` et `git -C "<depot>" log -1 --stat`.
+
+### Cas : `git status` vide alors qu'un commit est attendu
+
+Une autre session peut avoir créé le commit pendant la nôtre. Ne pas créer de commit vide (`--allow-empty`), ne pas amender, ne pas réinitialiser. Établir si `HEAD` contient déjà le travail :
+
+```bash
+git -C "<depot>" status --porcelain=v1
+git -C "<depot>" diff --stat
+git -C "<depot>" log --oneline -5
+git -C "<depot>" reflog -5
+```
+
+1. Comparer les SHA-256 courants au dernier SHA-256 validé (manifeste ou empreinte consignée). S'ils diffèrent, l'ancien `PASS` ne vaut plus : rejouer les contrôles applicables (parité si traduction, `skill-file-qa`, invocation) sur les octets courants avant toute conclusion.
+2. Prouver l'inclusion fichier par fichier : l'OID de `HEAD` doit égaler le `hash-object --path` de la source filtrée.
+3. Chercher dans `HEAD` un marqueur unique de la modification de la session. L'égalité d'OID prouve l'état du fichier, pas l'auteur du commit ; le marqueur relie le contenu au travail décrit.
+
+```bash
+head_oid=$(git -C "<depot>" rev-parse "HEAD:<chemin-relatif-depot>")
+src_oid=$(git -C "<depot>" hash-object --path="<chemin-relatif-depot>" "<chemin-source>")
+[ "$head_oid" = "$src_oid" ] || { echo "FAIL: HEAD ne contient pas la source"; exit 1; }
+git -C "<depot>" grep -F -n "<marqueur-unique>" HEAD -- "<chemin-relatif-depot>" \
+  || { echo "FAIL: marqueur absent de HEAD"; exit 1; }
+```
+
+4. Si l'inclusion est prouvée, ne rien committer pour ce travail : rapporter le commit existant et préciser que son message peut décrire le travail d'une autre session (comparer `reflog`, mtime et message). Si elle échoue, investiguer (mauvais dépôt, stash, commit partiel) ; ne pas fabriquer de commit ni amender.
+
+Cas observé (2026-10-26) : `SKILL.md` validé à `c08c9461…` puis courant à `cc40b069…` ; `status` et `diff` vides ; commit initial `778a547` à 11:54 après des écritures concurrentes à 11:44–11:45 ; `skill-file-qa` rejoué `RESULT PASS` sur les octets courants ; OID `HEAD` égal à la source filtrée pour les 2 fichiers ; marqueurs en L66/L141 et script L530. Aucun commit vide, aucun amend ; le message du commit décrivait le travail concurrent.
 
 Vérifier les blobs commités et leur stabilité :
 
@@ -310,11 +420,14 @@ Un root absent est ignoré ; seul le nombre de résultats compte. Un seul résul
 | réponse « TOUT » à une question de périmètre | le périmètre reste ambigu | proposer la liste exacte des dépôts et fichiers, la faire confirmer avant `git add` |
 | deuxième réponse « TOUT » après reformulation | options mutuellement exclusives | ne pas poser une troisième question ; exécuter la combinaison recommandée, la déclarer, exclure push et suppression |
 | push rejeté (non-fast-forward ou historiques sans rapport) | dépôt de Skill sans lien avec `origin` | pousser une branche dédiée ; ne jamais forcer |
-| `nothing to commit` alors qu'un commit est attendu | changements déjà commités ou mauvais dépôt | vérifier `git log` et `git status` dans le dépôt réel |
+| `nothing to commit` ou `status`/`diff` vides alors qu'un commit est attendu | changements déjà commités par une autre session, ou mauvais dépôt | ne pas créer de commit vide ni amender ; revalider les octets courants, prouver l'inclusion par marqueur et OID, rapporter le commit existant (Étape 7) |
 | `Fingerprint (final)` inchangé après modification de `scripts/` ou `references/` | le fingerprint ne couvre que `SKILL.md` | recalculer les SHA-256 des ressources ; ne pas conclure que rien n'a changé |
 | SHA-256 du blob d'index différent de la source | filtre eol attendu (`core.autocrlf`, `.gitattributes`) ou mauvais fichier | comparer les OID (`hash-object --path` vs index) ; si les OID sont égaux, consigner la normalisation ; sinon ne pas committer |
 | PASS obtenu, puis `SKILL.md` ou la traduction réédité | la preuve porte sur une version qui n'existe plus | rejouer parité, `skill-file-qa`, SHA-256 et invocation dans cet ordre, puis figer les empreintes |
 | `diff` du manifeste non vide avant `git add` | écriture concurrente après la validation | ne pas indexer ; rejouer parité, QA, tests et invocation, réenregistrer le manifeste, puis recommencer le contrôle |
+| `diff` du manifeste non vide à chaque passe, source modifiée toutes les 10–30 s | une autre session réécrit le dossier sans s'arrêter | ne pas boucler : figer un instantané hors du Skill, le valider, archiver ses octets (Étape 4) |
+| parité et QA réussies puis invalidées une deuxième fois | la preuve porte sur un état qui a changé pendant les contrôles | instantané immuable, `diff` live vs manifeste juste avant `git add` ; repartir de l'étape 1 au moindre écart |
+| invocation réussie mais live modifié juste après | le runtime résout le dossier live, pas l'instantané | recomparer live == instantané immédiatement après l'invocation ; sinon l'invocation ne prouve pas l'instantané |
 | `Fingerprint (final)` de QA absent du manifeste | QA ne porte pas sur la version courante | ne pas committer ; revalider et réenregistrer le manifeste |
 | manifeste absent ou placé dans le dossier du Skill | validation non tracée, ou manifeste auto-inclus | enregistrer le manifeste hors du Skill après la dernière écriture ; sinon reprendre l'Étape 4 |
 | `RESULT PASS` mais `Files (N)` liste `__pycache__/*.pyc` | le validateur ne prouve pas l'absence de caches | supprimer les caches créés par la session, relancer QA, exiger `Files (N)` égal à l'inventaire sans cache |
@@ -323,6 +436,8 @@ Un root absent est ignoré ; seul le nombre de résultats compte. Un seul résul
 | archive trouvée seulement sur une ref locale `[ahead 1]` | commit non poussé | la marquer `local`, ne pas la présenter comme publiée |
 | OID vide ou `cat-file` en échec mais pipeline à 0 | chemin non indexé, OID multiple, ou `pipefail` absent | tester `[ -n "$oid" ]` et `git cat-file -e`, puis relancer |
 | Skill modifié non résolu ou introuvable | index runtime non rechargé, ou homonyme projet qui masque | invoquer le Skill, vérifier les deux racines, puis demander `/skills reload` à l'utilisateur |
+| plan approuvé, mais taille/mtime/SHA-256 ou lignes différents avant écriture | fichier réécrit depuis la planification | rééchantillonner, relire, ré-ancrer par texte exact, préserver les ajouts concurrents ; ne pas restaurer de sauvegarde ; revalider les octets finaux |
+| `RESULT PASS` QA mais parité `RESULT FAIL` après mise à jour de la seule source | traduction volontairement intacte (périmètre partiel) | rapporter QA et parité séparément avec les écarts ; ne pas déclarer le paquet validé ; proposer le miroir |
 
 ## Checklist finale
 
@@ -333,6 +448,7 @@ Un root absent est ignoré ; seul le nombre de résultats compte. Un seul résul
 - [ ] `skill-file-qa` : `Files (N)` égal à l'inventaire sans cache ; aucun `__pycache__`/`*.pyc` créé par les tests ou `py_compile`.
 - [ ] Diff relu ; aucun secret, binaire volumineux ni `__pycache__`.
 - [ ] Un commit par sujet, message aligné sur l'historique.
+- [ ] Travail déjà absorbé par un commit concurrent : aucun commit vide, aucun amend ; octets courants revalidés, inclusion prouvée par marqueur et OID, message attribué avec prudence.
 - [ ] Statut post-commit propre, ou effets de bord expliqués et commités.
 - [ ] Archives voisines vérifiées après le dernier commit : `NONE`, `FRESH`, ou `STALE` signalée avec ref/commit.
 - [ ] Aucune archive recopiée, commitée ni poussée automatiquement.
@@ -343,22 +459,31 @@ Un root absent est ignoré ; seul le nombre de résultats compte. Un seul résul
 - [ ] Manifeste SHA-256 enregistré hors du Skill après la dernière écriture ; `Fingerprint (final)` de QA égal au `./SKILL.md` du manifeste.
 - [ ] `diff` du manifeste vide avant et après `git add` ; aucune écriture entre validation et indexation.
 - [ ] Écart de manifeste traité par revalidation complète, jamais par un simple recalcul de SHA-256.
+- [ ] Si la source bouge encore : instantané figé hors du Skill, `instantané == live` avant `git add`, validation et archive portant sur ces octets.
+- [ ] Invocation faite seulement si `live == instantané`, avec recomparaison immédiate.
 - [ ] `core.autocrlf` lu avec `--show-origin` ; risque de conversion au checkout signalé.
 - [ ] Réponse « TOUT » répétée traitée sans troisième question, combinaison déclarée.
 - [ ] Skill modifié résolu par invocation réelle ; aucune homonymie projet/utilisateur ; `/skills reload` laissé à l'utilisateur.
+- [ ] Plan approuvé : baseline (taille/mtime/SHA-256) rééchantillonné avant écriture ; ancres relues par texte ; ajouts concurrents préservés ; aucune sauvegarde restaurée.
+- [ ] Périmètre partiel (source seule) : traduction intacte ; QA et parité rapportés séparément avec écarts ; paquet non déclaré validé.
 
 ## Rapport
 
 ```text
 Dépôt : <chemin absolu> | Branche : <nom>
 Commits : <hash court> <sujet>
+Commit concurrent : aucun | <hash> inclus (OID+marqueur), message d'origine incertaine
 Fichiers : <N> | Tests : <résultat>
 Intégrité : blobs source <N>/<N> | autocrlf <valeur> | checkout <identique|converti>
 Push : non effectué | <remote> <branche> <hash distant>
 Archives : aucune | <ref> <commit> <FRESH|STALE n/N> [published|local]
 Gate : manifeste <n> fichiers | QA=manifeste <oui|non> | avant add <identique|écart> | après add <identique|écart>
+Instantané : aucun | <chemin> | live=instantané <oui|non> | gate <PASS/N/A>
+Plan : baseline <sha> rééchantillonné <identique|écart> | ré-ancrage <n> édition(s) | ajouts concurrents <préservés|aucun>
+Périmètre : complet | source seule (traduction intacte, parité en attente)
+Paquet : validé | non validé (source QA PASS, parité FAIL <n>)
 Skill : <nom> | résolution : <base-dir|contenu vérifié> | empreintes finales : <sha SKILL.md> <n scripts> <n references> (si un Skill est modifié)
-Contrôles rejoués après la dernière écriture : parité <PASS/N/A> | QA <PASS> | SHA-256 <n> | invocation <OK>
+Contrôles rejoués après la dernière écriture : parité <PASS|FAIL|N/A> | QA <PASS> | SHA-256 <n> | invocation <OK>
 ```
 
 ## Ressources
