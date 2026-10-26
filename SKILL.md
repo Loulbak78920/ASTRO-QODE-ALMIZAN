@@ -331,7 +331,7 @@ Cas observé (2026-10-26) : `SKILL.md` validé à `c08c9461…` puis courant à 
 
 ### Cas : `HEAD` avance entre la revue et le commit
 
-Si `git commit` retourne `nothing to commit` après une revue `+N/−M` et une QA PASS, une autre session a créé le commit pendant la validation. Ne pas amender, réinitialiser, créer un commit vide ni relancer `git add`.
+Si `git commit` retourne `nothing to commit` après une revue `+N/−M` et une QA PASS, une autre session a créé le commit pendant la validation. Ne pas amender, réinitialiser, créer un commit vide ni relancer `git add`. Si `git diff HEAD --name-only` liste encore nos fichiers et que `git diff HEAD` ne montre que nos deltas, l'autre session a commité un thème différent : prouver son inclusion (`git show --stat HEAD`, marqueur via `git grep -F`), ne pas rejouer parité/QA si le manifeste disque est inchangé (sinon les rejouer toutes), puis réindexer nos seuls fichiers, recalculer l'OID contre le nouveau `HEAD` et committer avec un message limité à notre thème. Cas observé (2026-10-26) : `HEAD` `6de399e`→`9d20a14` (2 fichiers, +2/−2, autre thème) pendant la validation ; `git diff --stat HEAD` restait +8/−8 sur nos 2 fichiers ; `git show --stat HEAD` et deux marqueurs dans `HEAD` ont établi la frontière ; disque inchangé, parité/QA non rejouées, invocation ensuite sur `9d20a14` avec manifeste identique.
 
 1. Avant de committer, figer `reviewed_oid=$(git -C "<depot>" rev-parse ":<chemin-relatif-depot>")` et exiger que `git hash-object --path="<chemin-relatif-depot>" "<chemin-source>"` soit égal ; consigner le diff relu (`git diff --cached --stat`).
 2. Après l'échec, comparer `git -C "<depot>" rev-parse "HEAD:<chemin-relatif-depot>"` à `reviewed_oid`, puis vérifier un marqueur unique dans `HEAD`. Un `git show --stat HEAD` identique est un indice, pas une preuve de contenu. Si l'OID diffère, arrêter et ne pas pousser.
@@ -342,7 +342,7 @@ git -C "<depot>" ls-tree -r HEAD -- "<chemin-relatif-depot>"
 head_oid=$(git -C "<depot>" rev-parse "HEAD:<chemin-relatif-depot>")
 ```
 
-Vérifier les blobs commités et leur stabilité : l'OID de `HEAD` doit égaler celui vérifié à l'Étape 6. Si un hook a pu modifier l'index pendant le commit, refaire la comparaison d'OID avec `git hash-object --path` ; ne pas comparer SHA-256 octet à octet quand un filtre eol s'applique. Le harnais `scripts/run-fixture.sh` rejoue les deux branches de ce cas hors production.
+Vérifier les blobs commités et leur stabilité : l'OID de `HEAD` doit égaler celui vérifié à l'Étape 6. Si un hook a pu modifier l'index pendant le commit, refaire la comparaison d'OID avec `git hash-object --path` ; ne pas comparer SHA-256 octet à octet quand un filtre eol s'applique. Le harnais `scripts/run-fixture.sh` rejoue hors production les branches « adoption » et « rejet » de ce cas ; la variante « autre thème déjà commité » n'y est pas couverte.
 
 ## Étape 8 — Traiter les effets de bord
 
@@ -423,7 +423,7 @@ Un root absent est ignoré ; seul le nombre de résultats compte. Un seul résul
 | push rejeté (non-fast-forward ou historiques sans rapport), ou candidat `ls-remote --heads` en échec / branche `refs/heads/skill/<nom>` déjà présente | dépôt de Skill sans lien avec `origin`, URL injoignable, ou collision de branche | ne pas pousser ni forcer ; re-sonder en lecture seule, choisir une cible valide ou demander ; pousser une branche dédiée |
 | « merge to main » avec `git merge-base origin/main HEAD` vide (exit 1) | histoires sans ancêtre commun ; `main` porte l'arbre projet | ne pas fusionner (`--allow-unrelated-histories`) ni extraire `main` dans ce worktree ; sur accord explicite, appliquer le contenu à `main` via `references/contenu-vers-main.md` |
 | `nothing to commit` ou `status`/`diff` vides alors qu'un commit est attendu | changements déjà commités par une autre session, ou mauvais dépôt | ne pas créer de commit vide ni amender ; revalider les octets courants, prouver l'inclusion par marqueur et OID, rapporter le commit existant (Étape 7) |
-| `git commit` retourne `nothing to commit` après une revue `+N/−M` et une QA PASS, ou `git show --stat HEAD` identique mais contenu différent | commit créé par une autre session pendant la validation ; `--stat` ne prouve pas le contenu | geler `reviewed_oid` avant le commit ; comparer `HEAD:<chemin>` et `hash-object --path` à cet OID ; si égal et push demandé, pousser le commit existant et vérifier l'OID distant ; sinon ne pas pousser |
+| `git commit` retourne `nothing to commit` après une revue `+N/−M` et une QA PASS, `git show --stat HEAD` identique mais contenu différent, ou `HEAD` avancé alors que `git diff HEAD --name-only` liste encore nos fichiers | commit créé par une autre session pendant la validation, avec nos octets ou un thème différent ; `--stat` ne prouve pas le contenu | geler `reviewed_oid` avant le commit ; comparer `HEAD:<chemin>` et `hash-object --path` à cet OID ; si égal et push demandé, pousser le commit existant et vérifier l'OID distant ; si nos fichiers restent modifiés, prouver l'inclusion de l'autre thème (`git show --stat HEAD`, `git grep -F`) et committer nos seuls fichiers sur le nouveau `HEAD`, sans rejouer parité/QA si le manifeste est inchangé ; sinon ne pas pousser |
 | `Fingerprint (final)` inchangé après modification de `scripts/`/`references/`, ou absent du manifeste | le fingerprint ne couvre que `SKILL.md`, ou QA ne porte pas sur la version courante | recalculer les SHA-256 des ressources ; revalider et réenregistrer le manifeste ; ne pas conclure que rien n'a changé |
 | SHA-256 du blob d'index différent de la source | filtre eol attendu (`core.autocrlf`, `.gitattributes`) ou mauvais fichier | comparer les OID (`hash-object --path` vs index) ; si les OID sont égaux, consigner la normalisation ; sinon ne pas committer |
 | PASS obtenu, puis `SKILL.md` ou la traduction réédité | la preuve porte sur une version qui n'existe plus | rejouer parité, `skill-file-qa`, SHA-256 et invocation dans cet ordre, puis figer les empreintes |
@@ -454,7 +454,7 @@ Un root absent est ignoré ; seul le nombre de résultats compte. Un seul résul
 - [ ] Diff relu ; aucun secret, binaire volumineux ni `__pycache__`.
 - [ ] Un commit par sujet, message aligné sur l'historique ; hunks concurrents inséparables dans un même fichier : octets entiers adoptés, portes rejouées, un seul message d'une ligne couvrant les deux thèmes, session écrivaine citée.
 - [ ] Travail déjà absorbé par un commit concurrent : aucun commit vide, aucun amend ; octets courants revalidés, inclusion prouvée par marqueur et OID, message attribué avec prudence.
-- [ ] `HEAD` avancé entre la revue et le commit : `reviewed_oid` figé avant le commit, `HEAD:<chemin>` égal à cet OID avant le push, commit existant poussé sans nouveau commit ni amend, OID distant vérifié.
+- [ ] `HEAD` avancé entre la revue et le commit : `reviewed_oid` figé avant le commit, `HEAD:<chemin>` égal à cet OID avant le push, commit existant poussé sans nouveau commit ni amend, OID distant vérifié ; si `HEAD` porte un autre thème et que `git diff HEAD --name-only` liste encore nos fichiers, inclusion de l'autre thème prouvée (`git show --stat HEAD`, `git grep -F`), parité/QA non rejouées si le manifeste est inchangé, nos seuls fichiers commités sur le nouveau `HEAD` avec un message sans l'autre thème, aucun amend.
 - [ ] Commit racine : index validé par `git rev-parse ":<chemin>"` = `git hash-object --path` avant le premier commit, puis `HEAD:<chemin>` ; `HEAD^{tree}`, `ls-tree -r HEAD`, `ls-files -s` et `hash-object --path` réconciliés avec l'index, puis `status` relancé immédiatement.
 - [ ] Statut post-commit propre, ou effets de bord expliqués et commités.
 - [ ] Archives voisines vérifiées après le dernier commit : `NONE`, `FRESH`, ou `STALE` signalée avec ref/commit ; si le live diffère de `HEAD`, rapport sur l'arbre gelé `HEAD` avec `source=HEAD <oid>` et `source=live <oid>`, sans réattribution ni republication.
@@ -479,7 +479,7 @@ Un root absent est ignoré ; seul le nombre de résultats compte. Un seul résul
 ```text
 Dépôt : <chemin absolu> | Branche : <nom> | <LOCAL-ONLY|remote>
 Commits : <hash court> <sujet>
-Commit concurrent : aucun | <hash> inclus (OID+marqueur), message d'origine incertaine | écrivain <session> | message couvrant <n> thème(s)
+Commit concurrent : aucun | <hash> inclus (OID+marqueur), message d'origine incertaine | écrivain <session> | message couvrant <n> thème(s) | thème séparé déjà dans `HEAD` (inclusion prouvée, nos seuls fichiers commités)
 Fichiers : <N> | Tests : <résultat>
 Intégrité : blobs source <N>/<N> | autocrlf <valeur> | checkout <identique|converti>
 Push : non effectué | <remote> <branche> <pushed_oid = hash distant> | main distant <avant>=<après> | main par contenu : aucun (<commit>)

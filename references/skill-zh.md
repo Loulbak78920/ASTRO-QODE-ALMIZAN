@@ -326,7 +326,7 @@ git -C "<depot>" grep -F -n "<marqueur-unique>" HEAD -- "<chemin-relatif-depot>"
 
 ### 情况：审阅与提交之间 `HEAD` 前进
 
-若在 `+N/−M` 的审阅与 QA PASS 之后，`git commit` 返回 `nothing to commit`，说明另一会话在验证期间创建了提交。不要 amend、reset、创建空提交，也不要重新执行 `git add`。
+若在 `+N/−M` 的审阅与 QA PASS 之后，`git commit` 返回 `nothing to commit`，说明另一会话在验证期间创建了提交。不要 amend、reset、创建空提交，也不要重新执行 `git add`。若 `git diff HEAD --name-only` 仍列出我们的文件，且 `git diff HEAD` 只显示我们的差异，则另一会话提交的是不同主题：用 `git show --stat HEAD` 与 `git grep -F` 标记证明其已入库，磁盘清单未变时不要重跑对等/QA（否则全部重跑），然后只重新索引我们的文件、按新 `HEAD` 重算 OID，并以只描述本主题的消息提交。已观察（2026-10-26）：验证期间 `HEAD` 从 `6de399e` 前进到 `9d20a14`（2 个文件，+2/−2，另一主题）；`git diff --stat HEAD` 仍为我们的 2 个文件 +8/−8；`git show --stat HEAD` 与 `HEAD` 中两个标记划定了边界；磁盘未变，对等/QA 未重跑，随后在 `9d20a14` 上调用且清单一致。
 
 1. 提交前固定 `reviewed_oid=$(git -C "<depot>" rev-parse ":<chemin-relatif-depot>")`，并要求 `git hash-object --path="<chemin-relatif-depot>" "<chemin-source>"` 与它相等；记录已审阅的 diff（`git diff --cached --stat`）。
 2. 失败后，将 `git -C "<depot>" rev-parse "HEAD:<chemin-relatif-depot>"` 与 `reviewed_oid` 比较，并在 `HEAD` 中核对唯一标记。`git show --stat HEAD` 相同只是线索，不是内容证明。OID 不同则停止，不要推送。
@@ -337,7 +337,7 @@ git -C "<depot>" ls-tree -r HEAD -- "<chemin-relatif-depot>"
 head_oid=$(git -C "<depot>" rev-parse "HEAD:<chemin-relatif-depot>")
 ```
 
-校验已提交 blob 及其稳定性：`HEAD` 的 OID 必须与步骤 6 校验的 OID 一致。若 hook 可能在提交期间改动索引，用 `git hash-object --path` 重新比对 OID；存在 eol 过滤器时不要比较字节级 SHA-256。`scripts/run-fixture.sh` 在生产之外重放此情况的两个分支。
+校验已提交 blob 及其稳定性：`HEAD` 的 OID 必须与步骤 6 校验的 OID 一致。若 hook 可能在提交期间改动索引，用 `git hash-object --path` 重新比对 OID；存在 eol 过滤器时不要比较字节级 SHA-256。`scripts/run-fixture.sh` 在生产之外重放此情况的「采纳」与「拒绝」两个分支；「另一主题已入库」变体未覆盖。
 
 ## 步骤 8 — 处理副作用
 
@@ -418,7 +418,7 @@ find "C:/Users/Administrateur/.qoder/skills" "<racine-espace>/.qoder/skills" -ma
 | push 被拒（non-fast-forward 或历史无关），或候选 `ls-remote --heads` 失败 / 分支 `refs/heads/skill/<nom>` 已存在 | Skill 仓库与 `origin` 无关联、URL 不可达，或分支冲突 | 不推送、不强制；只读复探，选择有效目标或询问；推送专用分支 |
 | `git merge-base origin/main HEAD` 为空（退出 1）的「merge to main」 | 历史无共同祖先；`main` 承载项目树 | 不合并（`--allow-unrelated-histories`），也不在本 worktree 中检出 `main`；经明确同意，按 `references/contenu-vers-main.md` 将内容应用到 `main` |
 | 预期有提交却显示 `nothing to commit`，或 `status`/`diff` 为空 | 改动已被另一会话提交，或仓库选错 | 不创建空提交也不 amend；重新验证当前字节，用标记与 OID 证明包含关系，报告已有提交（步骤 7） |
-| 已审阅 `+N/−M` 且 QA PASS 后 `git commit` 返回 `nothing to commit`，或 `git show --stat HEAD` 与已审阅 diff 相同但内容不同 | 另一会话在验证期间创建了提交；`--stat` 不证明内容 | 提交前固定 `reviewed_oid`；比较 `HEAD:<chemin>` 与 `hash-object --path` 到该 OID；相等且要求推送时，推送已有提交并核对远端 OID；否则不要推送 |
+| 已审阅 `+N/−M` 且 QA PASS 后 `git commit` 返回 `nothing to commit`，`git show --stat HEAD` 与已审阅 diff 相同但内容不同，或 `HEAD` 前进而 `git diff HEAD --name-only` 仍列出我们的文件 | 另一会话在验证期间创建了提交（包含我们的字节或另一主题）；`--stat` 不证明内容 | 提交前固定 `reviewed_oid`；比较 `HEAD:<chemin>` 与 `hash-object --path` 到该 OID；相等且要求推送时，推送已有提交并核对远端 OID；若我们的文件仍有改动，证明另一主题已入库（`git show --stat HEAD`、`git grep -F`），只把我们的文件提交到新 `HEAD`，清单未变时不重跑对等/QA；否则不要推送 |
 | 修改 `scripts/`/`references/` 后 `Fingerprint (final)` 不变，或清单中缺少该指纹 | 指纹只覆盖 `SKILL.md`，或 QA 证明的不是当前版本 | 重算资源文件的 SHA-256；重新验证并重新记录清单；不要据此认为没有变化 |
 | 索引 blob 的 SHA-256 与源文件不同 | 预期 eol 过滤（`core.autocrlf`、`.gitattributes`）或文件选错 | 比较 OID（`hash-object --path` 与索引）；OID 相等时记录规范化，否则不要提交 |
 | 已获得 PASS，随后又修改 `SKILL.md` 或译本 | 证明针对的版本已不存在 | 按顺序重跑对等、`skill-file-qa`、SHA-256 与实际调用，然后固定指纹 |
@@ -449,7 +449,7 @@ find "C:/Users/Administrateur/.qoder/skills" "<racine-espace>/.qoder/skills" -ma
 - [ ] 已审阅差异；无密钥、大体积二进制或 `__pycache__`。
 - [ ] 一个主题一个提交，消息与历史风格一致；同一文件内并发 hunk 无法拆分时，整体采纳字节、重跑门禁、单行消息覆盖两个主题并指名写入会话。
 - [ ] 工作已被并发提交吸收：不创建空提交、不 amend；重新验证当前字节，用标记与 OID 证明包含关系，谨慎归属提交消息。
-- [ ] 审阅与提交之间 `HEAD` 前进：提交前固定 `reviewed_oid`，推送前 `HEAD:<chemin>` 等于该 OID，推送已有提交且未新建提交或 amend，远端 OID 已核对。
+- [ ] 审阅与提交之间 `HEAD` 前进：提交前固定 `reviewed_oid`，推送前 `HEAD:<chemin>` 等于该 OID，推送已有提交且未新建提交或 amend，远端 OID 已核对；若 `HEAD` 承载另一主题且 `git diff HEAD --name-only` 仍列出我们的文件，则证明另一主题已入库（`git show --stat HEAD`、`git grep -F`），清单未变时不重跑对等/QA，只把我们的文件提交到新 `HEAD`，消息不提另一主题，不 amend。
 - [ ] 根提交：首次提交前先用 `git rev-parse ":<chemin>"` = `git hash-object --path` 校验索引，提交后再校验 `HEAD:<chemin>`；`HEAD^{tree}`、`ls-tree -r HEAD`、`ls-files -s` 与 `hash-object --path` 已与索引核对，随后立即重跑 `status`。
 - [ ] 提交后状态干净，或副作用已解释并单独提交。
 - [ ] 最后一次提交后已检查邻近归档：`NONE`、`FRESH`，或报告了带 ref/commit 的 `STALE`；若 live 与 `HEAD` 不同，报告冻结 `HEAD` 树的结果与 `source=HEAD <oid>`、`source=live <oid>`，不重新归因也不重新发布。
@@ -474,7 +474,7 @@ find "C:/Users/Administrateur/.qoder/skills" "<racine-espace>/.qoder/skills" -ma
 ```text
 Dépôt : <chemin absolu> | Branche : <nom> | <LOCAL-ONLY|remote>
 Commits : <hash court> <sujet>
-Commit concurrent : aucun | <hash> inclus (OID+marqueur), message d'origine incertaine | écrivain <session> | message couvrant <n> thème(s)
+Commit concurrent : aucun | <hash> inclus (OID+marqueur), message d'origine incertaine | écrivain <session> | message couvrant <n> thème(s) | thème séparé déjà dans `HEAD` (inclusion prouvée, nos seuls fichiers commités)
 Fichiers : <N> | Tests : <résultat>
 Intégrité : blobs source <N>/<N> | autocrlf <valeur> | checkout <identique|converti>
 Push : non effectué | <remote> <branche> <pushed_oid = hash distant> | main distant <avant>=<après> | main par contenu : aucun (<commit>)
