@@ -63,14 +63,22 @@ rm -f "$idx"
 ```bash
 git -C "<depot>" cat-file -p "$commit" | head -3
 git -C "<depot>" diff-tree --no-commit-id --name-status -r "$commit"
-git -C "<depot>" ls-tree "$commit" -- ".qoder/skills/<nom>/SKILL.md"
-git -C "<depot>" hash-object --path=".qoder/skills/<nom>/SKILL.md" "<dossier-skill>/SKILL.md"
+prefix=".qoder/skills/<nom>"
+for f in $files; do
+  coid=$(git -C "<depot>" ls-tree --format='%(objectname)' "$commit" -- "$prefix/$f") || exit 1
+  n=$(printf '%s\n' "$coid" | grep -c . || true)
+  exp=$(git -C "<depot>" hash-object --path="$prefix/$f" "<dossier-skill>/$f") || exit 1
+  [ "$n" -eq 1 ] && [ "$coid" = "$exp" ] || { echo "MISMATCH $f count=$n commit=$coid exp=$exp"; exit 1; }
+  echo "MATCH $f $coid"
+done
 git -C "<depot>" status --porcelain=v1
 ```
 
 - Le parent doit être `origin/main` ; `diff-tree` ne doit lister que les chemins attendus.
-- Chaque OID de `ls-tree` doit égaler le `hash-object --path` correspondant.
-- `cat-file blob <oid> | sha256sum` égale la source seulement sans filtre eol ; avec `core.autocrlf=true`, comparer les OID.
+- `--format='%(objectname)'` doit précéder le commit et le pathspec : placé après `-- <chemin>`, Git le traite comme un chemin et l'ignore silencieusement (`RC=0`), en renvoyant le format par défaut `<mode> <type> <oid>\t<chemin>`.
+- La sortie par défaut est tabulée en deux champs : `cut -f1` renvoie `100644 blob <oid>` (jamais l'OID) et `cut -f3` est vide ; extraire avec `--format`, jamais avec `cut`.
+- Exiger exactement une ligne non vide (`n=1`) : un chemin absent renvoie une sortie vide avec `RC=0`.
+- Chaque OID de `ls-tree` doit égaler le `hash-object --path` correspondant ; avec `core.autocrlf=true`, comparer les OID, pas les SHA-256 (`cat-file blob <oid> | sha256sum` n'égale la source que sans filtre eol).
 - `git status` doit rester vide et la branche courante inchangée : le worktree n'a pas bougé.
 
 ## Push et vérification distante
@@ -105,11 +113,13 @@ py -3 "C:/Users/Administrateur/.qoder/skills/commit-skill-work/scripts/find_stal
 | push rejeté (non-fast-forward) | `origin/main` a avancé après le `fetch` | refaire diagnostic, arbre et commit depuis le nouveau `origin/main` ; jamais `--force` |
 | `diff-tree` liste des chemins inattendus | arbre de base incomplet ou index temporaire pollué | repartir de `read-tree origin/main` avec un index neuf |
 | OID différent entre `ls-tree` et `hash-object --path` | filtre eol, chemin ou fichier erroné | vérifier `--path`, `core.autocrlf` et l'identité du fichier ; ne pas pousser |
+| `MISMATCH … commit=100644 blob <oid>` alors que les OID semblent identiques | extraction par `cut -f1` sur la sortie par défaut : le premier champ tabulé vaut `<mode> blob <oid>`, et `cut -f3` est vide | extraire avec `ls-tree --format='%(objectname)'` |
+| `--format='%(objectname)'` sans effet (`RC=0`, sortie par défaut `<mode> <type> <oid>\t<chemin>`) | option placée après le pathspec : Git la traite comme un chemin et l'ignore | placer `--format` avant le commit : `ls-tree --format='%(objectname)' "$commit" -- "$prefix/$f"` |
 | SHA-256 source différent du blob | normalisation eol attendue | comparer les OID ; ne pas conclure à une corruption |
 
 ## Cas observé (2026-10-26)
 
-Dépôt du Skill : `HEAD=fe57c7c` sur `master`, `origin/main=4f18419` ; `git merge-base origin/main HEAD` vide (exit 1) ; les blobs de `HEAD` égalent ceux de `origin/main` (contenu identique, histoires distinctes). La recette a été rejouée dans deux fixtures jetables (un fichier modifié ; un modifié et un ajouté) : parent = base, `diff-tree` limité aux chemins attendus, blobs identiques au disque, push fast-forward accepté, `ls-remote` égal au commit local, worktree et branche inchangés.
+Dépôt du Skill : `HEAD=fe57c7c` sur `master`, `origin/main=4f18419` ; `git merge-base origin/main HEAD` vide (exit 1) ; les blobs de `HEAD` égalent ceux de `origin/main` (contenu identique, histoires distinctes). La recette a été rejouée dans deux fixtures jetables (un fichier modifié ; un modifié et un ajouté) : parent = base, `diff-tree` limité aux chemins attendus, blobs identiques au disque, push fast-forward accepté, `ls-remote` égal au commit local, worktree et branche inchangés. Lors de la publication du commit `966bac0` (4 fichiers), `cut -f1` puis `--format` placé après le pathspec ont produit deux faux `MISMATCH` successifs (`commit=100644 blob <oid>`, `RC=0`) ; la forme `ls-tree --format='%(objectname)' "$commit" -- "$prefix/$f"` avec exactement une ligne non vide a donné `MATCH` 4/4 avant le push (git 2.52.0.windows.1).
 
 ## 中文版
 
@@ -166,12 +176,18 @@ rm -f "$idx"
 ```bash
 git -C "<depot>" cat-file -p "$commit" | head -3
 git -C "<depot>" diff-tree --no-commit-id --name-status -r "$commit"
-git -C "<depot>" ls-tree "$commit" -- ".qoder/skills/<nom>/SKILL.md"
-git -C "<depot>" hash-object --path=".qoder/skills/<nom>/SKILL.md" "<dossier-skill>/SKILL.md"
+prefix=".qoder/skills/<nom>"
+for f in $files; do
+  coid=$(git -C "<depot>" ls-tree --format='%(objectname)' "$commit" -- "$prefix/$f") || exit 1
+  n=$(printf '%s\n' "$coid" | grep -c . || true)
+  exp=$(git -C "<depot>" hash-object --path="$prefix/$f" "<dossier-skill>/$f") || exit 1
+  [ "$n" -eq 1 ] && [ "$coid" = "$exp" ] || { echo "MISMATCH $f count=$n commit=$coid exp=$exp"; exit 1; }
+  echo "MATCH $f $coid"
+done
 git -C "<depot>" status --porcelain=v1
 ```
 
-父提交必须是 `origin/main`；`diff-tree` 只应出现预期路径；每个 OID 必须等于对应的 `hash-object --path`；`core.autocrlf=true` 时比较 OID 而非 SHA-256；`git status` 保持为空且当前分支不变。
+父提交必须是 `origin/main`；`diff-tree` 只应出现预期路径。`--format='%(objectname)'` 必须位于 commit 与 pathspec 之前：放在 `-- <chemin>` 之后会被当作路径而静默忽略（`RC=0`），返回默认格式 `<mode> <type> <oid>\t<chemin>`。默认输出按 Tab 分为两个字段：`cut -f1` 返回 `100644 blob <oid>`（永远不是 OID），`cut -f3` 为空；应使用 `--format` 提取，而不是 `cut`。要求恰好一行非空（`n=1`）：路径不存在时输出为空且 `RC=0`。每个 OID 必须等于对应的 `hash-object --path`；`core.autocrlf=true` 时比较 OID 而非 SHA-256；`git status` 保持为空且当前分支不变。
 
 ### 推送与远端核对
 
@@ -196,8 +212,10 @@ git -C "<depot>" ls-remote origin refs/heads/main
 | push 被拒（non-fast-forward） | `fetch` 后 `origin/main` 又前进 | 重新诊断并基于新 `origin/main` 重建；绝不 `--force` |
 | `diff-tree` 出现意外路径 | 基线树不完整或临时索引被污染 | 用全新索引重新 `read-tree origin/main` |
 | `ls-tree` 与 `hash-object --path` 的 OID 不同 | eol 过滤器、路径或文件错误 | 核对 `--path`、`core.autocrlf` 与文件；不要推送 |
+| `MISMATCH … commit=100644 blob <oid>` 但 OID 看似相同 | 用 `cut -f1` 截取默认输出：第一个 Tab 字段是 `<mode> blob <oid>`，而 `cut -f3` 为空 | 用 `ls-tree --format='%(objectname)'` 提取 |
+| `--format='%(objectname)'` 无效（`RC=0`，仍返回默认 `<mode> <type> <oid>\t<chemin>`） | 选项放在 pathspec 之后，Git 把它当路径并忽略 | 把 `--format` 放在 commit 之前：`ls-tree --format='%(objectname)' "$commit" -- "$prefix/$f"` |
 | 源 SHA-256 与 blob 不同 | 预期 eol 规范化 | 比较 OID，不要判定为损坏 |
 
 ### 已观察案例（2026-10-26）
 
-Skill 仓库：`HEAD=fe57c7c`（`master`），`origin/main=4f18419`；`git merge-base origin/main HEAD` 为空（退出 1）；`HEAD` 与 `origin/main` 的 blob 相同（内容一致、历史不同）。该做法已在两个一次性夹具中重放（一个修改文件；一个修改加一个新增）：父提交 = 基线，`diff-tree` 仅预期路径，blob 与磁盘一致，fast-forward 推送成功，`ls-remote` 等于本地提交，worktree 与分支未变。
+Skill 仓库：`HEAD=fe57c7c`（`master`），`origin/main=4f18419`；`git merge-base origin/main HEAD` 为空（退出 1）；`HEAD` 与 `origin/main` 的 blob 相同（内容一致、历史不同）。该做法已在两个一次性夹具中重放（一个修改文件；一个修改加一个新增）：父提交 = 基线，`diff-tree` 仅预期路径，blob 与磁盘一致，fast-forward 推送成功，`ls-remote` 等于本地提交，worktree 与分支未变。发布提交 `966bac0`（4 个文件）时，`cut -f1` 与放在 pathspec 之后的 `--format` 连续产生两次假 `MISMATCH`（`commit=100644 blob <oid>`，`RC=0`）；使用 `ls-tree --format='%(objectname)' "$commit" -- "$prefix/$f"` 并断言恰好一行非空后，推送前 `MATCH` 4/4（git 2.52.0.windows.1）。
