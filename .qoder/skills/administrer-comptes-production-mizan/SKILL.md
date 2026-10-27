@@ -71,7 +71,7 @@ py -3 -B module_comptes_utilisateurs_mizan.py --help 2>&1 | grep -E -- "--creer-
 ssh ubuntu@<hôte> 'cd /opt/al-mizan/ASTRO-Q°ODE_SYSTEME && python3 -B module_comptes_utilisateurs_mizan.py --help' | grep -E -- '--creer-admin|--mot-de-passe-stdin|--email|--handle|--nom'; echo "RC=${PIPESTATUS[0]}"
 ```
 
-Attendu : `RC=0` et les cinq drapeaux dans les deux sorties. Un écart entre local et VPS signale une version déployée différente : arrêter et aligner via `deployer-site-sans-dol-vps` avant toute création. `-B` évite d'écrire `__pycache__` dans le dépôt. La commande locale a été exécutée le 27/10/2026 (`RC=0`) ; la variante VPS reste à exécuter au premier préflight.
+Attendu : `RC=0` et les cinq drapeaux dans les deux sorties. Un écart entre local et VPS signale une version déployée différente : arrêter et aligner via `deployer-site-sans-dol-vps` avant toute création. `-B` évite d'écrire `__pycache__` dans le dépôt. Les deux variantes ont été exécutées le 27/10/2026 (`RC=0`, cinq drapeaux, VPS Python 3.12.3). Sans clé SSH, rejouer les commandes via `C:\Users\Administrateur\Desktop\IMAM8MAHDI\ASTRO-Q°ODE_SYSTEME\deploiement_vps\charger_credentials_ovh.py` et paramiko avec `RejectPolicy` : ne jamais ajouter une clé d'hôte inconnue automatiquement.
 
 Décider ensuite, avant de générer quoi que ce soit :
 
@@ -110,7 +110,7 @@ Attendu : un seul principal (`<machine>\<compte>:(F)`), aucun `(I)` hérité. Ad
 
 ### 4.3 Créer le compte (secret sur stdin)
 
-Le mot de passe est relu depuis le fichier local, transmis par here-string à `ssh`, puis la variable est effacée. La here-string ajoute un saut de ligne ; la CLI lit une ligne et la nettoie (`rstrip("\r\n")`), donc c'est compatible — mais le mot de passe lui-même ne doit contenir aucun saut de ligne.
+Le mot de passe est relu depuis le fichier local, transmis par here-string à `ssh`, puis la variable est effacée. La here-string ajoute un saut de ligne ; la CLI lit une ligne et la nettoie (`rstrip("\r\n")`), donc c'est compatible — mais le mot de passe lui-même ne doit contenir aucun saut de ligne. Sans clé SSH, écrire le mot de passe sur stdin du canal paramiko (`stdin.write(mdp + "\n")` puis `shutdown_write()`), jamais en argument.
 
 La commande ci-dessous rejoue l'identité constatée (`archonte`). Pour un nouvel administrateur, remplacer email, nom, handle et le chemin du secret par ceux du nouveau compte, avec un mot de passe neuf.
 
@@ -204,6 +204,7 @@ Attendu : un seul principal (`<machine>\<compte>:(F)`), aucun `(I)` hérité. Ne
 | `python` local | alias Microsoft Store en échec | `py -3` |
 | Here-string | ajoute un `\n` | accepté par la CLI ; interdit seulement les mots de passe multilignes |
 | Mot de passe en argument | visible dans l'historique et `ps` | uniquement `--mot-de-passe-stdin` |
+| Compte suspendu | email et handle restent réservés ; re-création → `COMPTE_EXISTANT` | `--reactiver USER_ID --admin-id …` ou choisir un autre handle ; la CLI ne supprime pas |
 
 ## 6. Limites et effets connus
 
@@ -212,6 +213,9 @@ Attendu : un seul principal (`<machine>\<compte>:(F)`), aucun `(I)` hérité. Ne
 - SMTP non configuré : la double validation par email est inutilisable ; ne pas l'activer depuis l'espace compte.
 - La création ne déclenche aucun email ; `email_verifie` est forcé à vrai pour un admin.
 - La rotation du mot de passe administrateur et du mot de passe SSH n'est pas automatique ; elle demande une décision explicite.
+- La CLI locale ne supprime pas de compte : un compte suspendu reste en base et réserve son email et son handle ; seule la réactivation est disponible.
+- Connexion d'un compte suspendu : 403 `COMPTE_SUSPENDU` sans cookie ; un mauvais mot de passe renvoie le 401 générique, le statut n'est révélé qu'avec le bon mot de passe.
+- Sessions : `POST /api/v1/comptes/sessions/revoquer` révoque **toutes** les sessions (courante comprise) et exige mot de passe + CSRF ; un mauvais mot de passe renvoie 401 `MOT_DE_PASSE_INVALIDE` sans rien révoquer ; aucun point d'entrée ne cible une session distante précise.
 
 ## 7. Checklist finale
 
@@ -228,6 +232,6 @@ Attendu : un seul principal (`<machine>\<compte>:(F)`), aucun `(I)` hérité. Ne
 
 ## Références
 
-- `references/preuves-session-2026-10-27.md` — sorties brutes, traceback, horodatage et limites de la session source.
+- `references/preuves-session-2026-10-27.md` — sorties brutes, traceback, horodatages et limites : préflight VPS, contrôles 4.5, création/suspension, connexion suspendue, gestion des sessions.
 - `C:\Users\Administrateur\Desktop\IMAM8MAHDI\ASTRO-Q°ODE_SYSTEME\docs\COMPTES_ET_SECURITE.md` — §10.1 CLI d'administration.
 - Skill `deployer-site-sans-dol-vps` — déploiement, sauvegarde et étape `chown` liée au blocage constaté.
