@@ -62,12 +62,13 @@ py -3 scripts/validate_skill.py <skill-dir> --workspace <workspace-root> \
    - 外部资源：默认退出 1；有 `--allow-external` 时退出 0 + WARN。
    - 仅警告（过期日期、旧 docstring、硬编码派生值）：默认退出 0 + WARN；有 `--strict-warnings` 时退出 1。
    - 算法等价性破坏：退出 1。
-4. 逐例断言退出码精确相等，输出包含预期 FAIL/WARN 关键词；0 退出不得伴随 FAIL，1/2 必须给出可定位错误。日期/mtime 用例固定时钟或动态推导预期；复制后显式设置 mtime，避免复制时间造成假阴性或假阳性。
+   内容夹具按字节改写（`read_bytes`/`write_bytes`），不要用文本模式读写：编码或换行往返会改变字节，夹具就不再只破坏一个不变量。目标验证器同时校验输入完整性（源码 SHA-256、字节数、行数）时，内容夹具必须同步重算副本中的完整性字段；否则失败来自完整性门，目标门没有被隔离。
+4. 逐例断言退出码精确相等，输出包含预期 FAIL/WARN 关键词，且失败只命中目标门：完整性项仍 OK，FAIL 条数与预期一致（如 `RESULT FAIL (1)`）；0 退出不得伴随 FAIL，1/2 必须给出可定位错误。日期/mtime 用例固定时钟或动态推导预期；复制后显式设置 mtime，避免复制时间造成假阴性或假阳性。
 5. 用 `finally` 或 `TemporaryDirectory` 清理临时副本，并确认临时目录不存在。Windows 上夹具含只读文件（如 `VERROU.json`）时，`copytree` 或 `copy2` 会保留只读位，`rmtree` 抛 `PermissionError [WinError 5]`：复制时用 `copy_function=shutil.copyfile`，删除前对副本文件 `chmod(0o666)`，复制后再统一 `chmod(0o666)`。
 6. 在运行开始时记录验证器读取的全部项目文件的 SHA-256，结束后重算比对；每次重新取基线，不复用旧会话哈希。原件哈希变化时停止并报告，不能宣称通过。
 7. 在报告中列出负向用例表、退出码和未触发分支（例如目标验证器没有 `--strict-warnings`、Node 不可用、日期用例未固定）。
 
-详细 harness 模板、来源会话已验证的 14 个用例和跨 Skill 引用自测边界见 `references/validator-negative-tests.md`。
+详细 harness 模板、来源会话已验证的 14 个用例、字节级夹具与完整性耦合和跨 Skill 引用自测边界见 `references/validator-negative-tests.md`。
 
 ### 5. 全部测试后的最终指纹门
 
@@ -219,6 +220,7 @@ FAIL skill reference 'target-c': SKILL.md missing in C:\...\target-c
 - [ ] 至少一条验收断言已在真实产物上运行。
 - [ ] 目标 Skill 若带 CLI 验证器，至少覆盖成功、校验失败、输入/用法错误三类退出码；不适用时说明原因。
 - [ ] 负向用例只改临时副本，逐例恢复；原件 SHA-256 前后一致。
+- [ ] 内容夹具按字节改写；目标验证器同时校验完整性时，副本的完整性字段已重算，失败只命中目标门。
 - [ ] 目标验证器的开关（如 `--strict-warnings`、`--allow-external`）两侧行为均验证，或标注未触发。
 - [ ] 日期/mtime 敏感用例已固定时钟或动态推导预期。
 - [ ] 临时目录已清理，报告列出负向用例和未触发分支。

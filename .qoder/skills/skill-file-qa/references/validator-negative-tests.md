@@ -105,6 +105,48 @@ def case(
 - 日期/mtime 用例用 `datetime.date.today()` 推导过期日期，复制后显式 `os.utime` 设置 mtime，不要硬编码某一天。
 - Windows 上用 `py -3` 运行；`python` 可能是 Microsoft Store 别名。
 
+## 字节级夹具与完整性耦合（已验证）
+
+来源：会话 `3bf92c7b-23d2-4480-a92f-ab30f1f19e94`（2026-10-27），目标验证器为 `livrer-contrat-solidity-et-portefeuille-non-custodial` 的 `scripts/verifier_artefact.py`（6,403 B / `4ab4a2ff…`）。该回合没有用户纠正；代理自检发现夹具未隔离目标门后改道。
+
+首轮“禁止模式”负例用文本模式改写源码，并把禁止模式源的 SHA-256 写进副本 artefact。退出码 rc=1 本来就正确，但两个门同时失败：
+
+```text
+=== interdit rc=1
+FAIL artefact perime : source a1db38de4988da50 != artefact 6af02d0b19233f08
+FAIL motif interdit present : selfdestruct
+RESULT FAIL (2)
+```
+
+按字节重建夹具并重算副本 artefact 的 `source_sha256` 后，同一用例只命中目标门：
+
+```text
+CRLF dans la source : 0
+sha interdite 6af02d0b19233f08
+INTERDIT rc=1
+OK   fraicheur : source 6af02d0b19233f08
+FAIL motif interdit present : selfdestruct
+RESULT FAIL (1)
+```
+
+本次用同一验证器在系统临时目录复现（真实 source `38f6e03a…` 与 artefact 副本，只读原件）：
+
+| 情形 | 夹具 | 实测 |
+|---|---|---|
+| 基线 | 未改 | rc=0，`RESULT PASS`，`fraicheur : source 38f6e03a…` |
+| A 字节变异，未重算完整性 | 源末尾按字节追加 `selfdestruct(` | rc=1，`FAIL (2)`：`artefact perime` + `motif interdit` |
+| B 字节变异，重算完整性 | 同上 + 副本 `source_sha256` 改为新哈希 | rc=1，`FAIL (1)`：仅 `motif interdit`，`OK fraicheur` |
+| C 文本模式往返，内容不变 | `read_text`/`write_text` 原文件 | 20,154 B → 20,661 B（+507 = 507 个换行，CRLF 0 → 507），哈希改变，rc=1 `artefact perime` |
+
+操作顺序：
+
+- 内容夹具一律按字节读写。文本模式在 Windows 会把 `\n` 翻成 `\r\n`；C 的字节差正好等于换行数，目标缺陷之外的漂移足以让完整性门先失败。
+- 验证器同时校验完整性（源码哈希、字节数、行数）时，先写内容，再在副本中重算这些字段；A→B 的差别就是这一步。
+- 断言 rc 之外还要断言“只命中目标门”：完整性项 OK、FAIL 条数等于预期、`RESULT FAIL (N)` 的 N 与失败门数一致。`rc=1` 伴随两条 FAIL 不算隔离。
+- “变异确实写入副本”由 `verifier-mutation-fixture-appliquee` 负责；本节只规定内容夹具的字节模式与完整性字段同步。
+
+证据分级：会话中的两段输出、`a1db38de`/`6af02d0b` 哈希与 `CRLF dans la source : 0` 来自工具结果，已核实；文本模式导致字节漂移是代理自述，快照未包含工具输入中的字面 `read_bytes`/`write_bytes` 调用，具体函数名为推断；A/B/C 三种情形为本次实跑复现，临时目录已清理。
+
 ## 来源会话已验证的 14 个用例
 
 来源：会话 `4958a992-f36f-4d91-8ade-0826edb1ec6e`（2026-10-25），目标验证器为 `tableau-maitre-sequentiel` 的 `verifier_tableau_maitre.py`。脚本输出 `ALL NEGATIVE CASES PASSED`，随后清理临时目录。具体值（SEQ、S6 40/313/63、182 行）属于该目标 Skill，不是通用不变量；目标验证器版本变化后要重新确认预期。关键输出为摘要。
