@@ -46,6 +46,8 @@ Remplacer uniquement la valeur `description` d'un `SKILL.md` lorsque la limite d
 13. Enregistrer séparément les SHA-256 de `SKILL.md` et de chaque référence modifiée.
 14. La propagation se prouve par couches séparées : injection de l'appel, attachement `skill_listing`, panneau client. Une couche non mesurée reste « non vérifiée ».
 15. Une entrée de liste sans description avant rechargement est normale ; ne jamais écrire dans `SKILL.md` pour forcer un rechargement.
+16. Le JSONL de session se choisit par la ligne d'injection exacte de ce Skill (première ligne égale au dossier résolu), jamais par le `mtime` le plus récent : un fichier récent peut ne contenir aucune injection.
+17. Deux longueurs ne se comparent que si elles mesurent le même fichier : `inspect description_len` et `check disk_description_chars` portent sur la cible passée en argument.
 
 ## Procédure
 
@@ -102,7 +104,7 @@ py -3 -B "$GUARD" anchors "$SKILL_DIR" \
   --require-unique
 ```
 
-Copier les ancres depuis la valeur parsée, jamais de mémoire : la ponctuation fait partie de l'ancre. Un code de sortie 1 signifie qu'au moins une ancre n'apparaît pas exactement une fois ; abandonner le `Edit` partiel et remplacer la ligne entière à l'étape 5.
+Copier les ancres depuis la valeur parsée, jamais de mémoire : la ponctuation fait partie de l'ancre. Un code de sortie 1 signifie qu'au moins une ancre n'apparaît pas exactement une fois ; abandonner le `Edit` partiel et remplacer la ligne entière à l'étape 5. Capturer le code juste après l'appel (`rc=$?`) ou lancer la commande seule : un `ls` ou un `sha256sum` ajouté au même compound écrase `$?`.
 
 ### 4. Sauvegarde
 
@@ -124,7 +126,7 @@ py -3 -B "$GUARD" replace "$SKILL_DIR" \
   --backup-dir "$BACKUP_DIR"
 ```
 
-Exiger `"dry_run": true`, `"changed": true`, `"new_len"` ≤ 1024, puis recalculer le SHA-256 du fichier pour prouver qu'aucun octet n'a été écrit.
+Exiger `"dry_run": true`, `"changed": true`, `"new_len"` ≤ 1024, puis recalculer le SHA-256 du fichier pour prouver qu'aucun octet n'a été écrit. Lire le code de retour du garde immédiatement : le dry-run renvoie 0, ne crée ni dossier de sauvegarde ni `.bak` ; un `ls` final sur `--backup-dir` échoue en 2 et masque ce 0.
 
 ### 6. Apply
 
@@ -155,7 +157,7 @@ Confirmer :
 - diff limité à la ligne de description ;
 - comptes CRLF/LF et présence de BOM inchangés.
 
-La QA définit le nombre de lignes du corps comme `len(body.splitlines())` après le `---` fermant ; le script utilise la même définition.
+La QA définit le nombre de lignes du corps comme `len(body.splitlines())` après le `---` fermant ; le script utilise la même définition. Sur une copie hors dépôt, les commandes `git` ci-dessus ne produisent rien : utiliser le diff ligne à ligne de la recette d'acceptation.
 
 ### 8. QA et attribution des WARN
 
@@ -190,6 +192,12 @@ Un agent ne peut pas exécuter `/skills reload`. Trois couches distinctes, jamai
 7. Si un `skill_listing` postérieur au `mtime` existe, retrouver l'entrée de liste commençant par `-` puis le nom du Skill, suivie de `: ` et de la description : segment de 300 caractères finissant par `…`, dont les 299 premiers égalent les 299 premiers du disque. Si le dernier attachement précède l'écriture, écrire « liste non vérifiée ».
 8. Conclure par « panneau client non vérifié, rafraîchissement manuel » et ne plus écrire dans `SKILL.md` pendant cette phase.
 
+#### 9.0 Identifier la session
+
+`SESSION_ID` ne se déduit ni du JSONL le plus récent ni d'une recherche de sous-chaîne. Pour chaque `~/.qoder/projects/$PROJECT_DIR/*.jsonl`, parser chaque ligne en JSON et compter les messages `type: user`, `isMeta: true`, dont `message.content` est une chaîne commençant exactement par `Base directory for this skill:` et dont la première ligne vaut le dossier résolu du Skill. Retenir le fichier avec au moins une injection ; si plusieurs en ont, prendre celle dont l'horodatage d'injection est le plus récent et le consigner. Écrire le compteur dans un `.py` temporaire hors du Skill, jamais dans un `py -3 -c` contenant un chemin Windows.
+
+Cas vérifié : le JSONL alors le plus récent (`55f63550…`) comptait 0 injection de ce Skill et `check` y renvoie le code 2 `no injection record found` ; `db72d65b…` en comptait au moins une et a produit `INJECTION_OK_LISTING_OK`. Consigner les `mtime` et les comptes par fichier avant de choisir.
+
 Renseigner `PROJECT_DIR` et `SESSION_ID`, puis exécuter le vérificateur :
 
 ```bash
@@ -205,6 +213,19 @@ Le script exécute les étapes 3 à 7 et renvoie `verdict` : `INJECTION_OK_LISTI
 
 Consigner : mode, ancienne et nouvelle longueur, ligne, style de citation, EOL, BOM, chemin de sauvegarde, SHA-256 avant/après, comptes QA et nouvel ensemble de WARN, puis le verdict de propagation de l'étape 9.
 
+## Recette d'acceptation sur copie
+
+Exécuter une fois après toute modification du garde ou de la procédure, dans `$HOME/.qoder/tmp/skill-acceptance-<horodatage>/`, sans écrire dans l'installation.
+
+1. Copier un Skill de référence (par exemple `inventory-installed-skills`) en gardant le nom du dossier égal au `name` ; relever `size` et SHA-256 de sa `SKILL.md`.
+2. `inspect` la copie ; noter `description_line`, `description_len`, `quote_style`, `eol`, `bom`, `body_lines`.
+3. `anchors --require-unique` avec une ancre copiée de la valeur parsée et une ancre absente : exiger `count: 1` / `count: 0` et le code 1 ; abandonner le remplacement partiel.
+4. Rédiger un candidat d'une ligne hors du Skill. En dry-run : code 0, `status: would-apply`, SHA-256 inchangé, aucun `.bak`, aucun dossier de sauvegarde.
+5. `replace --apply --backup-dir` hors du Skill : `status: applied`, les 12 invariants à `true`, sauvegarde de SHA-256 égal à l'original.
+6. Vérifier indépendamment dans un `.py` hors du Skill : même nombre de lignes, seule la ligne de description diffère, autres lignes identiques octet pour octet. `git diff` ne prouve rien sur une copie hors dépôt.
+7. Restaurer depuis le `.bak` et exiger un SHA-256 égal à l'original ; lancer `skill-file-qa` avant, après apply et après restauration (mêmes compteurs, `Files (N)` stable).
+8. Supprimer le répertoire jetable et vérifier qu'aucun `__pycache__`/`.pyc` n'existe dans l'installation, dont le SHA-256 doit être inchangé.
+
 ## Contrat du script
 
 Sortie JSON ASCII échappée, sans traceback. Exécuter avec `py -3 -B` pour éviter `__pycache__`.
@@ -217,6 +238,8 @@ Sortie JSON ASCII échappée, sans traceback. Exécuter avec `py -3 -B` pour év
 | `check <dir>` | `--session-jsonl` requis, `--sentinel` requis et répétable, `--injection-timestamp` | relit le JSONL, compare injection, corps normalisé et listings ; aucune écriture | 0 injection conforme sans contradiction ; 1 écart ; 2 JSONL absent, aucune injection, sentinelle manquante ou usage |
 
 `replace` refuse : candidat multiligne, vide ou > 1024 ; caractère de contrôle ; valeur qui ne fait pas l'aller-retour dans le style de citation existant ; description multiligne ou clé non top-level ; ligne de description non canonique (commentaire ou contenu supplémentaire) ; sauvegarde dans le Skill.
+
+`disk_description_chars` compte la description parsée de la cible `check` ; ne le comparer qu'à `inspect description_len` sur le même dossier. Un `--session-jsonl` sans injection de ce Skill donne le code 2, pas un verdict. Un dry-run n'écrit ni dossier de sauvegarde ni `.bak` ; capturer son code avant toute autre commande.
 
 ## Pièges vérifiés
 
@@ -238,6 +261,10 @@ Sortie JSON ASCII échappée, sans traceback. Exécuter avec `py -3 -B` pour év
 | Filtre par sous-chaîne sur `Base directory` | 5 faux positifs dans les sorties d'outils et les scripts de vérification | exiger `type: user`, `isMeta: true` et `startswith` |
 | Hash du corps injecté | 11 807 vs 11 808 caractères bruts mais hachages égaux | `strip()` des deux côtés et déclarer la normalisation |
 | Appel avec arguments | 16 542 caractères et SHA `7107c5d4…` pour un corps disque à jour : l'injection ajoute 63 caractères `\n\nARGUMENTS: …` | retirer le bloc `ARGUMENTS:` avant le hash (le script le fait) ; ou appeler sans argument |
+| JSONL le plus récent | `55f63550…` (alors mtime max) sans injection ; `db72d65b…` en contenait | compter les injections exactes par fichier ; ne pas trier par `mtime` |
+| Longueurs croisées | `inspect` 934 sur la fixture, `check` 963 sur l'installation : aucune incohérence | comparer deux mesures du même fichier |
+| Code de retour masqué | dry-run à 0, compound affiché à 2 par le `ls` final | lancer le garde seul ou `rc=$?` juste après |
+| `git diff` sur une copie | copie hors dépôt : aucune sortie, aucune preuve | diff ligne à ligne en Python hors du Skill |
 
 ## Checklist finale
 
@@ -252,6 +279,10 @@ Sortie JSON ASCII échappée, sans traceback. Exécuter avec `py -3 -B` pour év
 - [ ] SHA-256 de `SKILL.md` et des références enregistrés séparément.
 - [ ] Appel lecture seule après écriture ; injection `isMeta` avec dossier exact et hash du corps normalisé égal.
 - [ ] Statut de la liste consigné (préfixe 299 + ellipse, ou « non vérifiée ») ; panneau client déclaré manuel.
+- [ ] Session choisie par injection exacte, pas par `mtime` ; comptes par fichier consignés.
+- [ ] Code de retour de chaque sous-commande capturé juste après l'appel.
+- [ ] Longueurs comparées sur la même cible uniquement.
+- [ ] Recette d'acceptation exécutée sur copie : dry-run sans octet, invariants, restauration SHA = original, QA aux trois états.
 - [ ] Aucun `__pycache__`/`.pyc`, aucun autre Skill modifié.
 
 ## Ressources
@@ -260,6 +291,7 @@ Sortie JSON ASCII échappée, sans traceback. Exécuter avec `py -3 -B` pour év
 - [scripts/propagation_check.py](scripts/propagation_check.py) — `check` : injection, corps normalisé, `skill_listing` ; lecture seule, verdict explicite.
 - [references/cas-description-1018-vers-1004.md](references/cas-description-1018-vers-1004.md) — cas vérifié du 2026-10-27, preuves et statuts.
 - [references/cas-propagation-reload-2026-10-27.md](references/cas-propagation-reload-2026-10-27.md) — cas vérifié : injection 12:04:32.702Z, `eb2a411c…`, 299 + ellipse.
+- [references/cas-acceptation-2026-10-27.md](references/cas-acceptation-2026-10-27.md) — recette exécutée de bout en bout : fixture 934, dry-run 961 sans écriture, restauration SHA identique, QA 9/0/0.
 
 ## Skills liés
 

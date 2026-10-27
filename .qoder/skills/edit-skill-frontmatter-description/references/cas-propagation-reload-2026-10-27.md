@@ -82,6 +82,7 @@ Un compte supérieur à 1 est normal pour un chemin de référence ou un libell�
 - Comparer le corps après `strip()` des deux côtés et déclarer la normalisation.
 - Retirer un bloc final `ARGUMENTS:` avant le hachage ; sinon un corps à jour paraît périmé.
 - N'accepter une preuve de liste que si son horodatage est postérieur au `mtime` de `SKILL.md` ; sinon écrire « liste non vérifiée ».
+- Choisir la session par injection exacte (première ligne = dossier résolu), jamais par le JSONL le plus récent : un fichier plus récent peut n'en contenir aucune.
 - Une entrée en nom seul n'est pas une panne : elle précède le rechargement.
 - Le panneau client reste manuel ; ne jamais écrire dans `SKILL.md` pour forcer un rechargement.
 - Sous Windows/Git Bash, ne pas placer un chemin Windows dans `py -3 -c "..."` : écrire un `.py` temporaire hors du Skill et lancer `py -3 -B`.
