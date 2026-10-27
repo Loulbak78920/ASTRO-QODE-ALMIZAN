@@ -1,6 +1,6 @@
 ---
 name: edit-skill-frontmatter-description
-description: "Modifier ou compresser la description d'un SKILL.md proche de 1024 caractères, ajouter des déclencheurs ou raccourcir les anciens : inspecter le YAML et mesurer la longueur, préalablement simuler chaque ancre sur la description réelle et exiger exactement une occurrence, sauvegarder hors du dossier du Skill, ne remplacer que la ligne de description en conservant CRLF, BOM et style de citation, puis re-parser et vérifier name, longueur, nombre de lignes du corps et plage de diff, enfin exécuter skill-file-qa et exiger RESULT PASS sur une empreinte stable avec zéro nouveau WARN par rapport à la référence. Utiliser pour description à 1018 caractères, candidat 1139 refusé, ancre sans correspondance, Edit signalant file changed, attribution des WARN de layout. 中文触发：修改 description、压缩描述、新增触发词、1024 上限、锚点预演、保留 CRLF、目录外备份、YAML 复解析、WARN 基线。English: rewrite skill description, 1024 limit, anchor preflight, preserve EOL and quote style, re-parse frontmatter, baseline warn diff."
+description: "Modifier ou compresser la description d'un SKILL.md proche de 1024 caractères, ajouter ou raccourcir des déclencheurs : inspecter le YAML, simuler chaque ancre sur la valeur parsée (1 occurrence exacte), sauvegarder hors du Skill, remplacer la seule ligne en gardant CRLF, BOM et style de citation, re-parser name, longueur, corps et diff, puis skill-file-qa PASS sur empreinte stable sans nouveau WARN ; vérifier la propagation : Base directory, SHA-256 du corps injecté égal au disque, entrée skill_listing préfixe + ellipse si rechargement, panneau client manuel. Utiliser pour description à 1018, ancre à 0, Edit file changed, WARN de layout, reload skills, 注入正文核对. 中文触发：修改 description、压缩描述、新增触发词、1024 上限、锚点预演、保留 CRLF、目录外备份、YAML 复解析、WARN 基线、skill_listing、description 传播。English: rewrite skill description, 1024 limit, anchor preflight, preserve EOL and quote style, re-parse frontmatter, baseline warn diff, verify injected body and skill listing propagation."
 ---
 
 # Éditer la description d'un frontmatter de Skill
@@ -44,6 +44,8 @@ Remplacer uniquement la valeur `description` d'un `SKILL.md` lorsque la limite d
 11. Un PASS de QA ne couvre que l'empreinte mesurée : après toute écriture ultérieure, relancer.
 12. `file changed` ou un SHA-256 inattendu impose l'arrêt, la relecture et la reprise ; jamais de remplacement forcé.
 13. Enregistrer séparément les SHA-256 de `SKILL.md` et de chaque référence modifiée.
+14. La propagation se prouve par couches séparées : injection de l'appel, attachement `skill_listing`, panneau client. Une couche non mesurée reste « non vérifiée ».
+15. Une entrée de liste sans description avant rechargement est normale ; ne jamais écrire dans `SKILL.md` pour forcer un rechargement.
 
 ## Procédure
 
@@ -53,6 +55,7 @@ Variables utilisées ci-dessous :
 SKILLS_ROOT="$HOME/.qoder/skills"
 SKILL_DIR="$SKILLS_ROOT/example-skill"
 GUARD="$SKILLS_ROOT/edit-skill-frontmatter-description/scripts/description_guard.py"
+PROPAGATION="$SKILLS_ROOT/edit-skill-frontmatter-description/scripts/propagation_check.py"
 CANDIDATE="$HOME/.qoder/tmp/desc-candidates/candidate.txt"
 BACKUP_DIR="$HOME/.qoder/tmp/skill-backup/example-skill"
 ```
@@ -170,9 +173,37 @@ diff <(grep '^WARN' "$HOME/.qoder/tmp/qa-before.txt" | sort) \
 
 ### 9. Rapport
 
-Consigner : mode, ancienne et nouvelle longueur, ligne, style de citation, EOL, BOM, chemin de sauvegarde, SHA-256 avant/après, comptes QA et nouvel ensemble de WARN.
+Consigner : mode, ancienne et nouvelle longueur, ligne, style de citation, EOL, BOM, chemin de sauvegarde, SHA-256 avant/après, comptes QA et nouvel ensemble de WARN, puis le verdict de propagation de l'étape 10.
 
-Propagation : un agent ne peut pas exécuter `/skills reload` ; le rafraîchissement du panneau client reste manuel. La pièce jointe de liste de Skills dans le JSONL de session peut être comparée à la description sur disque, mais elle ne prouve que la couche liste.
+### 10. Vérifier la propagation de la description
+
+Un agent ne peut pas exécuter `/skills reload`. Trois couches distinctes, jamais interchangeables :
+
+| Couche | Preuve | Ce qu'elle ne prouve pas |
+|---|---|---|
+| Injection à l'appel | message `user`, `isMeta: true`, contenu commençant par `Base directory for this skill:` | le panneau client |
+| Liste de Skills | attachement `skill_listing` (`isInitial: true`) du JSONL de session | que le client a rafraîchi |
+| Panneau client | action utilisateur | non vérifiable par l'agent |
+
+1. Échantillonner `size`, `mtime_ns` et SHA-256 de `SKILL.md` avant et après l'appel : un appel en lecture seule ne doit rien écrire.
+2. Appeler le Skill en lecture seule ; le résultat de l'outil ne contient que `Launching skill:` suivi du nom, sans chemin ni corps.
+3. Dans `~/.qoder/projects/$PROJECT_DIR/$SESSION_ID.jsonl`, ne retenir que les messages `type: user`, `isMeta: true`, dont le contenu est une chaîne commençant exactement par `Base directory for this skill:`. Un filtre par sous-chaîne est faux : des sorties d'outils citent la même chaîne plus loin.
+4. Exiger que la première ligne déclarée égale le dossier résolu du Skill.
+5. Extraire le corps injecté (texte après la première ligne vide), retirer un éventuel bloc final `ARGUMENTS:` ajouté quand le Skill est appelé avec des arguments, puis `strip()` les deux côtés ; comparer son SHA-256 à celui du corps disque `strip()`. Annoncer « identique après normalisation », jamais « octet pour octet » : les longueurs brutes diffèrent (11 807 vs 11 808 dans le cas vérifié).
+6. Compter 2 ou 3 fragments du nouveau corps ; exiger ≥ 1 chacun et expliquer tout compte supérieur à 1.
+7. Si un `skill_listing` postérieur au `mtime` existe, retrouver l'entrée de liste commençant par `-` puis le nom du Skill, suivie de `: ` et de la description : segment de 300 caractères finissant par `…`, dont les 299 premiers égalent les 299 premiers du disque. Si le dernier attachement précède l'écriture, écrire « liste non vérifiée ».
+8. Conclure par « panneau client non vérifié, rafraîchissement manuel » et ne plus écrire dans `SKILL.md` pendant cette phase.
+
+Renseigner `PROJECT_DIR` et `SESSION_ID`, puis exécuter le vérificateur :
+
+```bash
+SESSION_JSONL="$HOME/.qoder/projects/$PROJECT_DIR/$SESSION_ID.jsonl"
+py -3 -B "$PROPAGATION" check "$SKILL_DIR" \
+  --session-jsonl "$SESSION_JSONL" \
+  --sentinel "fragment 1" --sentinel "fragment 2"
+```
+
+Le script exécute les étapes 3 à 7 et renvoie `verdict` : `INJECTION_OK_LISTING_OK`, `INJECTION_OK_LISTING_UNVERIFIED` ou `FAIL`. Une couche non mesurée reste `unverified` ; `panel` vaut toujours `unverified_manual`.
 
 ## Contrat du script
 
@@ -183,6 +214,7 @@ Sortie JSON ASCII échappée, sans traceback. Exécuter avec `py -3 -B` pour év
 | `inspect <dir>` | `SKILL.md` unique | lit et mesure, aucune écriture | 0 lisible et éditable ; 1 structure non prise en charge ; 2 environnement |
 | `anchors <dir>` | `--anchor` répétable, `--require-unique` | compte chaque ancre sur la description parsée | 0 ; 1 si `--require-unique` et un compte ≠ 1 ; 2 environnement |
 | `replace <dir>` | `--candidate-file`, `--backup-dir`, `--apply`, `--expect-sha256` | dry-run par défaut ; écriture ciblée avec sauvegarde et invariants | 0 ; 1 candidat ou invariant ; 2 environnement, EOL mixte, sauvegarde interne, SHA inattendu |
+| `check <dir>` | `--session-jsonl`, `--injection-timestamp`, `--sentinel` répétable | relit le JSONL, compare injection, corps normalisé et listings ; aucune écriture | 0 injection conforme sans contradiction ; 1 écart ; 2 JSONL absent, aucune injection ou usage |
 
 `replace` refuse : candidat multiligne, vide ou > 1024 ; caractère de contrôle ; valeur qui ne fait pas l'aller-retour dans le style de citation existant ; description multiligne ou clé non top-level ; ligne de description non canonique (commentaire ou contenu supplémentaire) ; sauvegarde dans le Skill.
 
@@ -201,6 +233,11 @@ Sortie JSON ASCII échappée, sans traceback. Exécuter avec `py -3 -B` pour év
 | Nombre de lignes | 308 lignes au moment du remplacement, 337 après des éditions de corps dans la même session | limiter l'invariant à l'étape description seule |
 | WARN de layout | 10 WARN préexistants dus à `.gitattributes` et aux archives `.qoder/skills/...` | comparer les ensembles, pas seulement les comptes |
 | Longueur | `len()` compte les points de code, pas les octets UTF-8 | ne pas utiliser la taille du fichier |
+| `py -3 -c` inline (Git Bash) | chemin Windows dans des guillemets doubles : `SyntaxError: (unicode error) 'unicodeescape' ... position 33-34` | écrire un `.py` temporaire hors du Skill puis lancer `py -3 -B` |
+| Entrée de liste sans description | 36 caractères, nom seul à 12:03:43 et 12:04:29 ; description seulement à 12:05:08.952Z | comparer les horodatages au `mtime` ; normal avant rechargement |
+| Filtre par sous-chaîne sur `Base directory` | 5 faux positifs dans les sorties d'outils et les scripts de vérification | exiger `type: user`, `isMeta: true` et `startswith` |
+| Hash du corps injecté | 11 807 vs 11 808 caractères bruts mais hachages égaux | `strip()` des deux côtés et déclarer la normalisation |
+| Appel avec arguments | 16 542 caractères et SHA `7107c5d4…` pour un corps disque à jour : l'injection ajoute 63 caractères `\n\nARGUMENTS: …` | retirer le bloc `ARGUMENTS:` avant le hash (le script le fait) ; ou appeler sans argument |
 
 ## Checklist finale
 
@@ -213,12 +250,16 @@ Sortie JSON ASCII échappée, sans traceback. Exécuter avec `py -3 -B` pour év
 - [ ] Diff limité à la ligne de description ; corps et autres clés identiques.
 - [ ] QA `RESULT PASS` sur empreinte stable, zéro nouveau WARN.
 - [ ] SHA-256 de `SKILL.md` et des références enregistrés séparément.
+- [ ] Appel lecture seule après écriture ; injection `isMeta` avec dossier exact et hash du corps normalisé égal.
+- [ ] Statut de la liste consigné (préfixe 299 + ellipse, ou « non vérifiée ») ; panneau client déclaré manuel.
 - [ ] Aucun `__pycache__`/`.pyc`, aucun autre Skill modifié.
 
 ## Ressources
 
 - [scripts/description_guard.py](scripts/description_guard.py) — `inspect`, `anchors`, `replace` ; dry-run par défaut, sauvegarde externe, invariants et restauration.
+- [scripts/propagation_check.py](scripts/propagation_check.py) — `check` : injection, corps normalisé, `skill_listing` ; lecture seule, verdict explicite.
 - [references/cas-description-1018-vers-1004.md](references/cas-description-1018-vers-1004.md) — cas vérifié du 2026-10-27, preuves et statuts.
+- [references/cas-propagation-reload-2026-10-27.md](references/cas-propagation-reload-2026-10-27.md) — cas vérifié : injection 12:04:32.702Z, `eb2a411c…`, 299 + ellipse.
 
 ## Skills liés
 
@@ -226,3 +267,5 @@ Sortie JSON ASCII échappée, sans traceback. Exécuter avec `py -3 -B` pour év
 - `skill-update-concurrency-safe` : concurrence, sauvegardes et édition minimale.
 - `bilingual-skill-parity` : parité après modification d'un Skill bilingue.
 - `verifier-unicode-fichiers-windows` : assertions exactes sur du texte non ASCII.
+- `verify-skill-runtime-binding` : preuve générique du dossier réellement chargé.
+- `verify-injected-skill-body-freshness` : fraîcheur du corps injecté lors d'un rechargement. Ici, seule la propagation de la description est traitée ; ces deux Skills restent la référence pour les preuves génériques.
