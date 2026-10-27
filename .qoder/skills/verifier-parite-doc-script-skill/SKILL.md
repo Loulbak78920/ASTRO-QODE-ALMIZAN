@@ -72,7 +72,24 @@ Lire la source du script et relever :
 - les options `argparse` et leur mode d'erreur ;
 - les branches qui produisent `NA` ou qui omettent une clé.
 
-Le rapport de `scripts/verifier_parite_cles.py` émet ses en-têtes avant le détail : `SCOPE_FALLBACK_ALL=no|yes`, `DOC_KEYS=<n>`, `MATCHED=<n>`, `DOC_ONLY=<n>`, `RUNTIME_ONLY=<n>`, `RESULT=PASS|FAIL`. Il sépare :
+Le rapport de `scripts/verifier_parite_cles.py` émet ses en-têtes dans cet ordre, avant le détail :
+
+```text
+SKILL=<dossier>
+DOCS=<n>
+SCRIPTS=<n>
+SCOPE_FALLBACK_ALL=no|yes
+DOC_KEYS=<n>
+RUNTIME_KEYS=<n>
+MATCHED=<n>
+DOC_ONLY=<n>
+RUNTIME_ONLY=<n>
+ALLOWED=<n>
+OUT_OF_SCOPE=<n>
+RESULT=PASS|FAIL
+```
+
+`SCOPE_FALLBACK_ALL=yes` signale qu'aucun document ne nomme un script : toutes les clés documentées passent alors en portée. Il sépare :
 
 | Ensemble | Signification | Décision |
 |---|---|---|
@@ -83,6 +100,16 @@ Le rapport de `scripts/verifier_parite_cles.py` émet ses en-têtes avant le dé
 | `ALLOWED` | illustrative, exclue volontairement | justifier dans le rapport |
 
 `DOC_ONLY` non vide ⇒ `RESULT FAIL`, code 1. `RUNTIME_ONLY` est informatif et ne fait pas échouer. Si une vraie clé tombe dans `OUT_OF_SCOPE`, déplacer la clé dans la section qui nomme le script, ou forcer l'inclusion avec `--scope-key`.
+
+Après les en-têtes, le détail émet une ligne par élément : `DOC_ONLY_KEY=<clé> | occurrences=<n> | first=<fichier>:<ligne> | section=<titre>`, `RUNTIME_ONLY_KEY=<clé> | scripts=<noms>`, `ALLOWED_KEY=<clé>`, `OUT_OF_SCOPE_KEY=<clé> | first=<fichier>:<ligne>`. En cas d'erreur d'usage ou d'environnement, seule `ERROR=<message>` est émise, avec le code 2.
+
+### Options et mode JSON
+
+- `--allow-key` exclut une clé illustrative du contrat ; `--scope-key` force une clé hors section dans la portée.
+- `--doc` choisit le document à examiner et `--script` le script dont les clés sont extraites (tous deux répétables ; par défaut `SKILL.md` + `references/**/*.md` et `scripts/**/*.py`). Les restreindre réduit `DOCS`, `SCRIPTS` et `OUT_OF_SCOPE` sans changer les clés en portée.
+- `--json` remplace les lignes `clé=valeur` par un unique objet JSON : mêmes ensembles, en listes triées au lieu de compteurs, avec `result` à `PASS` ou `FAIL`. Le code de retour reste 0, 1 ou 2.
+
+Mesuré le 2026-10-27 sur ce paquet : `--json` rend 12 clés (`allowed`, `doc_keys`, `doc_only`, `docs`, `matched`, `out_of_scope`, `result`, `runtime_keys`, `runtime_only`, `scope_fallback_all`, `scripts`, `skill`) ; un cas `DOC_ONLY` non vide rend `result=FAIL` et le code 1 ; `--doc SKILL.md --script <script>` fait passer `OUT_OF_SCOPE` de 33 à 5 sans changer `DOC_KEYS`.
 
 ## Étape 3 — Fixtures par branche
 
@@ -155,6 +182,7 @@ Le modèle complet, avec `force_rmtree`, preuve de mutation et les 12 cas de la 
 | `--allow-key` masque un vrai défaut | clé illustrative déclarée à tort | justifier chaque exclusion dans le rapport |
 | `DOC_KEYS=0` avec `RESULT=PASS` | aucun jeton en portée, ou auto-contrôle lancé sur un document qui ne nomme pas le script | documenter les en-têtes réels dans la section du script, puis exiger `MATCHED` non nul |
 | `DOC_ONLY` sur un placeholder méta | un exemple de forme `clé=valeur` écrit en majuscules est extrait comme clé promise | passer le placeholder en minuscules, garder les vraies clés en majuscules |
+| mode `--json` absent du contrat | seules les lignes `clé=valeur` ont été documentées | documenter la forme JSON mesurée et assertir `result` contre le code de retour |
 
 ## Checklist
 
@@ -168,6 +196,8 @@ Le modèle complet, avec `force_rmtree`, preuve de mutation et les 12 cas de la 
 - [ ] Les valeurs sont comparées exactement, pas seulement `rc`.
 - [ ] Script, liste d'acceptation et fixture mis à jour ensemble.
 - [ ] Auto-contrôle du paquet non vide : `DOC_KEYS>0`, `MATCHED=DOC_KEYS`, `DOC_ONLY=0`.
+- [ ] Tous les en-têtes, lignes de détail et options émis sont documentés dans la section du script.
+- [ ] Mode `--json` couvert par un fixture : 12 clés, `result` cohérent avec le code de retour.
 - [ ] `skill-file-qa` PASS et empreintes finales enregistrées.
 - [ ] Aucun `__pycache__`, fixture ou backup dans le paquet.
 
