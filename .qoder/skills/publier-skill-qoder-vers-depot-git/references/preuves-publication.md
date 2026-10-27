@@ -237,6 +237,17 @@ Enseignements :
 
 Les compteurs, hashes, commits et horodatages ci-dessus sont des faits datés, pas des constantes à réutiliser.
 
+## Repérage du clone et fins de ligne (2026-10-27)
+
+Source : session Qoder `421c7f08-da31-4ddb-a2e0-1dc29e264103`, tour « 提交并推送这些更改 » (2026-10-27T05:36Z). Aucune correction utilisateur ; deux impasses côté agent, puis publication réussie.
+
+1. Recherche par nom, sans résultat : `ls -d Desktop/IMAM8MAHDI/ASTRO-QODE-ALMIZAN */*/ASTRO-QODE-ALMIZAN` ne rend rien, puis `find /c/Users/Administrateur -maxdepth 4 -type d -name 'ASTRO-QODE-ALMIZAN*'` rend seulement `---`.
+2. Recherche par URL : `find /c/Users/Administrateur/Desktop -maxdepth 6 -path '*/.git/config' | grep -l 'ASTRO-QODE-ALMIZAN'` → `/c/Users/Administrateur/Desktop/IMAM8MAHDI/GITHUB_DEPOT_PUBLIC_IMAM8MAHDI/.git/config`. Le nom du dossier diffère donc du nom du remote.
+3. Fins de ligne de la source avant copie : `SKILL.md CRLF= 0 LF= 233 bytes= 17287`, `preuves-session-2026-10-27.md CRLF= 0 LF= 169 bytes= 10294` ; `core.autocrlf=true`, `.gitattributes` présent (`* text=auto eol=lf`). Publication de `administrer-comptes-production-mizan` : `--from worktree` → `RESULT PASS 2/2` (`d021b593…`, `6b1366ea…`), commit `9aa317e`, fusion `dd9e7ae..9aa317e`, push `dd9e7ae..9aa317e  main -> main`, `--ref origin/main --from remote` → `RESULT PASS 2/2`, branche supprimée par `-d`.
+4. Fixture de contrôle (2026-10-27, dépôt jetable sous `~/.qoder/tmp`, supprimé ensuite) : source `sonde-crlf/SKILL.md` en CRLF, dépôt avec `* text=auto eol=lf` et `core.autocrlf=true` → `--from worktree` `RESULT PASS` (`f209c300`), `--ref HEAD --from remote` `MISMATCH source=f209c300 HEAD=881d1551`, `git ls-files --eol` → `i/lf w/crlf`. Confirme qu'une source CRLF produit un faux `MISMATCH` distant alors que la publication est correcte.
+
+Les hashes, horodatages et chemins ci-dessus sont des faits datés.
+
 ## Réserve
 
 La copie publiée est une **archive** : les chemins relatifs du Skill peuvent viser l'arborescence du projet principal, absente du dépôt public. Le Skill fonctionnel reste dans le dossier utilisateur. La branche distante indépendante `skill/mesure-cesium-133-geolocalisee` n'a pas été fusionnée et reste sur `origin` ; sa suppression éventuelle exige une instruction explicite.

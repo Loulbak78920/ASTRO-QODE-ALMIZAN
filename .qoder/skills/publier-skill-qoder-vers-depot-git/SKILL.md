@@ -62,6 +62,15 @@ git -C "<depot>" reflog show --date=iso origin/main -n 10
 
 Exiger `RESULT PASS`, la branche `main`, un worktree propre et un `origin` qui correspond au dépôt visé. Consigner la branche, `HEAD`, `origin/main`, les branches `merge/skill-<nom>*` existantes et les dernières entrées de reflog (HEAD et `origin/main`) : c'est la baseline des étapes 6 et 7. Un nom déjà pris impose la variante horodatée de l'étape 2. Le dépôt peut être partagé avec une autre session Qoder ; ne pas supposer que cet état reste vrai pendant l'opération. Si la branche n'est pas `main` ou si le worktree est sale : ne rien écrire dans ce dépôt (aucun `switch`, `stash`, `add`, `commit`, `clean`), lister les chemins, attribuer avec `git reflog --date=iso` et `git reflog show --date=iso origin/main`, puis demander (voir `commit-skill-work`). Si l'utilisateur autorise une publication isolée, suivre l'étape 0b ; sinon s'arrêter. Si un autre clone du même remote est propre sur `main`, appliquer d'abord l'étape 0a. La racine du projet n'est pas forcément un dépôt : localiser le vrai dépôt avec `git -C`, ne pas en déduire un chemin.
 
+Si le chemin du clone d'archive n'est pas connu, ne pas le déduire du nom du remote ni du nom du Skill : le nom du dossier peut différer. Observé le 2026-10-27 : `ls -d …/ASTRO-QODE-ALMIZAN` puis `find … -maxdepth 4 -name 'ASTRO-QODE-ALMIZAN*'` n'ont rien rendu, le clone étant `GITHUB_DEPOT_PUBLIC_IMAM8MAHDI` pour le remote `Loulbak78920/ASTRO-QODE-ALMIZAN`. Chercher l'URL dans les configurations locales :
+
+```bash
+find "/c/Users/Administrateur/Desktop" -maxdepth 6 -path '*/.git/config' 2>/dev/null |
+while IFS= read -r f; do grep -l 'ASTRO-QODE-ALMIZAN' "$f" 2>/dev/null; done
+```
+
+La sortie est un `<clone>/.git/config` : prendre `dirname` deux fois pour obtenir `<clone>`, puis appliquer l'étape 0a et l'étape 0. Lecture seule ; ne rien modifier dans les dépôts trouvés.
+
 ### 0a. Choisir l'unique clone d'archive (rapport STALE multi-dépôts)
 
 À exécuter quand le rapport d'archives liste plusieurs dépôts ou refs, ou quand le clone nommé n'est pas sur `main`. Lecture seule dans tous les candidats : ni `fetch`, ni `switch`, ni `stash`, ni commit.
@@ -177,13 +186,23 @@ find "$dest" \( -name __pycache__ -o -name '*.pyc' -o -name '*.pyo' \) -print
 
 La seconde commande `find` doit ne rien afficher : elle prouve l'absence de cache dans l'archive. Copier les deux dossiers seulement s'ils existent dans la source. Ne jamais copier le dossier source entier : il peut contenir son propre `.git/` (cas observé d'un Skill versionné localement). Un `.gitignore` qui ignore `__pycache__/` empêche le commit du cache, pas sa présence dans le worktree : ne pas s'y fier.
 
+Contrôler les fins de ligne avant de committer. Un dépôt qui impose `* text=auto eol=lf` avec `core.autocrlf=true` (cas du clone d'archive ASTRO-QODE-ALMIZAN, `.gitattributes` lu le 2026-10-27) écrit un blob LF alors que le vérificateur compare les octets bruts de la source : une source CRLF passe en mode `worktree` puis renvoie `MISMATCH` en mode `remote`. Reproduit le 2026-10-27 sur une fixture jetable : source CRLF `f209c300`, blob LF `881d1551`, `git ls-files --eol` → `i/lf w/crlf`.
+
+```bash
+cd "<skill>" && find SKILL.md references scripts -type f 2>/dev/null |
+while IFS= read -r f; do printf '%s CR=%s LF=%s\n' "$f" "$(tr -dc '\r' < "$f" | wc -c)" "$(wc -l < "$f")"; done
+git -C "<depot>" check-attr text eol -- ".qoder/skills/<nom>/SKILL.md"
+```
+
+`CR=0` : l'étape 8 compare les octets bruts. `CR>0` : publier tel quel selon la politique LF du dépôt, comparer l'étape 8 à une copie LF de la source et annoncer la normalisation ; ne pas réécrire la source, ne pas ajouter d'attribut au dépôt. Compter les octets avec `tr` : sous Git Bash, `grep -c $'\r'` renvoie un match par ligne (motif interprété comme `r`), y compris sur un fichier LF.
+
 ### 4. Vérifier la copie
 
 ```bash
 py -3 "C:/Users/Administrateur/.qoder/skills/publier-skill-qoder-vers-depot-git/scripts/verifier_archive_skill.py" --source "<skill>" --repo "<depot>" --from worktree
 ```
 
-Attendre `RESULT PASS` et un `OK` par fichier. En mode `worktree`, un `MISMATCH` signifie que la copie diffère : ne pas committer, recopier le fichier et relancer. En mode `remote` sur une ref antérieure aux dernières modifications, un `MISMATCH` (hashes source et ref différents) signifie **archive périmée** : republier, ne pas recopier dans une ref figée. Le script force déjà `MSYS_NO_PATHCONV` et `MSYS2_ARG_CONV_EXCL` : un `MISMATCH` rendu par le script n'est pas une conversion MSYS. En cas de `MISSING`, vérifier le nom du dossier de destination. Toute ligne `EXTRA` signale un fichier présent dans la destination mais absent de la source, cache compris : retirer les caches ; pour tout autre fichier, demander avant de supprimer.
+Attendre `RESULT PASS` et un `OK` par fichier. En mode `worktree`, un `MISMATCH` signifie que la copie diffère : ne pas committer, recopier le fichier et relancer. En mode `remote` sur une ref antérieure aux dernières modifications, un `MISMATCH` (hashes source et ref différents) signifie **archive périmée** : republier, ne pas recopier dans une ref figée. Exception : après une publication fraîche d'une source CRLF, le `MISMATCH` vient de la normalisation LF du blob (étape 3) ; contrôler les fins de ligne avant de conclure à une archive périmée. Le script force déjà `MSYS_NO_PATHCONV` et `MSYS2_ARG_CONV_EXCL` : un `MISMATCH` rendu par le script n'est pas une conversion MSYS. En cas de `MISSING`, vérifier le nom du dossier de destination. Toute ligne `EXTRA` signale un fichier présent dans la destination mais absent de la source, cache compris : retirer les caches ; pour tout autre fichier, demander avant de supprimer.
 
 ### 5. Committer sur la branche temporaire
 
@@ -376,6 +395,8 @@ Sans variable d'environnement, la commande sort en 128 ; avec `MSYS_NO_PATHCONV=
 | `origin/main` local en retard après une publication isolée | le dépôt d'origine n'a pas fait `fetch` | attendu ; signaler dans le rapport ; ne pas fetch/merge sans instruction |
 | `RESULT STALE` global alors que l'archive cible affiche `FRESH N/N` | le verdict agrège des refs `merge/*` et des `origin/main` d'autres clones | lire par archive, pas le verdict global ; ne rien modifier hors cible |
 | clone nommé sur `master`, autre clone du même remote propre sur `main` à `HEAD == ls-remote` | source fonctionnelle vs clone d'archive | ne pas basculer la source ; publier depuis le clone `main` (étape 0a), sans 0b |
+| `ls -d` ou `find -name '<dépôt>*'` sans résultat alors que le dépôt existe | nom du dossier de clone différent du nom du remote | chercher l'URL dans `*/.git/config` (étape 0), puis `dirname` deux fois ; ne pas déduire le chemin du nom |
+| `MISMATCH` en mode `remote` sur un Skill fraîchement publié, `worktree` en `PASS`, source contenant des CRLF | `git add` normalise en LF, le vérificateur compare les octets bruts | comparer à une copie LF de la source et annoncer la normalisation ; ne pas conclure « archive périmée » ni modifier `.gitattributes` |
 | «继续» ou «继续下一个» traité comme une autorisation de push pour le Skill suivant | contrat 6 : l'autorisation nomme un commit | redemander, ou consigner un accord de lot explicite (dépôt, branche, périmètre) avant de pousser |
 | liste des Skills à archiver réutilisée d'un tour à l'autre | l'archive a gagné le Skill publié au tour précédent | recalculer le diff de l'étape 0c avant chaque Skill |
 | `warning: ... CRLF will be replaced by LF` | normalisation des fins de ligne | informationnel ; ne pas réécrire le dépôt |
@@ -395,6 +416,7 @@ Sans variable d'environnement, la commande sort en 128 ; avec `MSYS_NO_PATHCONV=
 - [ ] Toute dérive externe arrête les écritures, passe en 6b et est attribuée via `git reflog --date=iso` et `git reflog show --date=iso origin/main`, sans revendication.
 - [ ] Achèvement externe : `origin/main` contient le commit, `ls-remote` et blobs vérifiés, rapport « push externe » avec horodatage observé, aucun rollback ni nouveau push.
 - [ ] `MISMATCH` qualifié : archive périmée si la ref est antérieure, MSYS réservé à `fatal: ambiguous argument` hors script.
+- [ ] Fins de ligne contrôlées avant commit : `CR=0` partout, ou normalisation CRLF→LF annoncée et vérification distante faite sur une copie LF.
 - [ ] Rapport : réserve d'archive, branche retenue, push interne/externe/non effectué, reprise 6b et chemins relatifs signalés.
 - [ ] Worktree occupé : arrêt sans écriture, chemins listés, dérive attribuée via reflog, accord explicite avant clone isolé.
 - [ ] Variante isolée : clone depuis l'URL remote, `main` = `origin/main`, worktree propre, étapes 1 à 9 exécutées dans le clone ; dépôt d'origine intact.
@@ -433,7 +455,7 @@ Reserve : archive, chemins relatifs non garantis dans ce depot
 ## Ressources
 
 - `scripts/verifier_archive_skill.py` : compare en lecture seule les SHA-256 de la source avec la copie worktree ou les blobs d'une ref distante, et signale tout fichier `EXTRA` présent dans la destination ; sortie ASCII, codes 0/1/2.
-- `references/preuves-publication.md` : transcription des sorties observées (commit `3a4732a`, 5 hashes, échec MSYS, archivage non poussé `ddfd179`, dérive d'état et archive périmée, collision de branche, push externe et reprise 6b, plusieurs clones du même remote et STALE résiduel) et re-vérifications du 2026-10-26.
+- `references/preuves-publication.md` : transcription des sorties observées (commit `3a4732a`, 5 hashes, échec MSYS, archivage non poussé `ddfd179`, dérive d'état et archive périmée, collision de branche, push externe et reprise 6b, plusieurs clones du même remote et STALE résiduel), repérage du clone par URL du remote et source CRLF (2026-10-27), et re-vérifications du 2026-10-26.
 - `commit-skill-work` : localisation du dépôt, classification des changements, commit et push de base.
 - `skill-file-qa` : validation statique du Skill avant publication.
 - `skill-update-concurrency-safe` : édition sûre du Skill source avant publication.
