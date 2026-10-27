@@ -16,7 +16,8 @@ concurrency:
 
 jobs:
   test-and-verify:
-    runs-on: ubuntu-latest
+    # Épinglé : ubuntu-latest bascule vers Ubuntu 26 à partir du 2026-10-19.
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
       PYTHONIOENCODING: utf-8
