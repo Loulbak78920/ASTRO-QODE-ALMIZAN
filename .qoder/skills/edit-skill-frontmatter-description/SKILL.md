@@ -171,11 +171,7 @@ diff <(grep '^WARN' "$HOME/.qoder/tmp/qa-before.txt" | sort) \
 - Dans le cas de référence, les 10 WARN viennent d'un `.gitattributes` et d'archives `.qoder/skills/...` déjà présents ; ils ne sont pas causés par l'édition.
 - Si le corps a aussi été édité, le nombre de lignes peut légitimement changer ; limiter l'invariant « corps identique » à l'étape de description seule.
 
-### 9. Rapport
-
-Consigner : mode, ancienne et nouvelle longueur, ligne, style de citation, EOL, BOM, chemin de sauvegarde, SHA-256 avant/après, comptes QA et nouvel ensemble de WARN, puis le verdict de propagation de l'étape 10.
-
-### 10. Vérifier la propagation de la description
+### 9. Vérifier la propagation de la description
 
 Un agent ne peut pas exécuter `/skills reload`. Trois couches distinctes, jamais interchangeables :
 
@@ -203,7 +199,11 @@ py -3 -B "$PROPAGATION" check "$SKILL_DIR" \
   --sentinel "fragment 1" --sentinel "fragment 2"
 ```
 
-Le script exécute les étapes 3 à 7 et renvoie `verdict` : `INJECTION_OK_LISTING_OK`, `INJECTION_OK_LISTING_UNVERIFIED` ou `FAIL`. Une couche non mesurée reste `unverified` ; `panel` vaut toujours `unverified_manual`.
+Le script exécute les étapes 3 à 7 et renvoie `verdict` : `INJECTION_OK_LISTING_OK`, `INJECTION_OK_LISTING_UNVERIFIED`, `INJECTION_OK_LISTING_MISMATCH` (code 1 : un listing frais contredit la description) ou `FAIL`. Une couche non mesurée reste `unverified` ; `panel` vaut toujours `unverified_manual`.
+
+### 10. Rapport
+
+Consigner : mode, ancienne et nouvelle longueur, ligne, style de citation, EOL, BOM, chemin de sauvegarde, SHA-256 avant/après, comptes QA et nouvel ensemble de WARN, puis le verdict de propagation de l'étape 9.
 
 ## Contrat du script
 
@@ -214,7 +214,7 @@ Sortie JSON ASCII échappée, sans traceback. Exécuter avec `py -3 -B` pour év
 | `inspect <dir>` | `SKILL.md` unique | lit et mesure, aucune écriture | 0 lisible et éditable ; 1 structure non prise en charge ; 2 environnement |
 | `anchors <dir>` | `--anchor` répétable, `--require-unique` | compte chaque ancre sur la description parsée | 0 ; 1 si `--require-unique` et un compte ≠ 1 ; 2 environnement |
 | `replace <dir>` | `--candidate-file`, `--backup-dir`, `--apply`, `--expect-sha256` | dry-run par défaut ; écriture ciblée avec sauvegarde et invariants | 0 ; 1 candidat ou invariant ; 2 environnement, EOL mixte, sauvegarde interne, SHA inattendu |
-| `check <dir>` | `--session-jsonl`, `--injection-timestamp`, `--sentinel` répétable | relit le JSONL, compare injection, corps normalisé et listings ; aucune écriture | 0 injection conforme sans contradiction ; 1 écart ; 2 JSONL absent, aucune injection ou usage |
+| `check <dir>` | `--session-jsonl` requis, `--sentinel` requis et répétable, `--injection-timestamp` | relit le JSONL, compare injection, corps normalisé et listings ; aucune écriture | 0 injection conforme sans contradiction ; 1 écart ; 2 JSONL absent, aucune injection, sentinelle manquante ou usage |
 
 `replace` refuse : candidat multiligne, vide ou > 1024 ; caractère de contrôle ; valeur qui ne fait pas l'aller-retour dans le style de citation existant ; description multiligne ou clé non top-level ; ligne de description non canonique (commentaire ou contenu supplémentaire) ; sauvegarde dans le Skill.
 

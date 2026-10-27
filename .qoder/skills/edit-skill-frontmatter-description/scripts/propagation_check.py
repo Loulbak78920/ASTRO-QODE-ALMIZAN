@@ -239,7 +239,7 @@ def main(argv=None) -> int:
     check.add_argument("skill_dir")
     check.add_argument("--session-jsonl", required=True)
     check.add_argument("--injection-timestamp")
-    check.add_argument("--sentinel", action="append", default=[])
+    check.add_argument("--sentinel", action="append", default=[], required=True)
     args = parser.parse_args(argv)
     try:
         skill = read_skill(Path(args.skill_dir))
