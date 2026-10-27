@@ -151,3 +151,13 @@ La session de création `05dfc264-a669-4139-8c6b-9a0418997931` a lancé le véri
 | 4 | Rejeu sur le paquet livré, puis le 2026-10-26 avant cette mise à jour | mêmes compteurs, `RESULT=PASS`, code 0 |
 
 Un `DOC_KEYS=0` avec `RESULT=PASS` n'aurait comparé aucun jeton : le PASS serait vide. La correction a consisté à documenter les en-têtes réels et à écrire les placeholders en minuscules, jamais à retirer une promesse.
+
+## Remédiation 2026-10-27 — mode JSON et options (session f38c2627)
+
+- Session `f38c2627-432b-4f25-a08e-86c5129f4b14`, 14 messages, révision 16, `hasMoreBefore=false`, `runtimeState=running` au snapshot : l'activité ne prouve pas qu'un tour d'écriture restait ouvert.
+- Aucune correction utilisateur sur le contenu : le défaut a été trouvé en appliquant `reparer-contrat-sortie-skill` au paquet lui-même (message 6 de la session).
+- Défauts mesurés avant correction : `--json` absent du document (0 occurrence), seules `--allow-key` et `--scope-key` documentées, 6 en-têtes listés sur 11 réels, lignes de détail et `ERROR` absentes.
+- Correction : 12 en-têtes documentés, lignes de détail, options `--doc`/`--script`/`--json`, valeurs mesurées (compteurs `DOCS` et `SCRIPTS` à 1, `OUT_OF_SCOPE` 33→5, JSON 12 clés, négatif `result=FAIL` rc 1).
+- Auto-contrôle avant/après : `DOC_KEYS=6`, `RUNTIME_ONLY=11`, `DOC_ONLY=0` → `DOC_KEYS=17`, `MATCHED=17`, `DOC_ONLY=0`, `RUNTIME_ONLY=0`, `RESULT=PASS` rc 0. La session rapporte 36 assertions de rejeu et `skill-file-qa` 9 PASS.
+- Re-mesure indépendante le 2026-10-27 : auto-contrôle 17/17/17/0/0, `OUT_OF_SCOPE=33`, rc 0 ; `--json` 12 clés ; restreint compteurs `DOCS` et `SCRIPTS` à 1, `OUT_OF_SCOPE=5`, `DOC_KEYS=17` ; négatif JSON `result=FAIL` rc 1 ; usage JSON : seule la ligne `ERROR` sort, rc 2 ; 6 options `--help`.
+- Limite : les 36 assertions et le PASS QA sont rapportés par la session source, pas rejoués ici ; les mesures ci-dessus ont été rejouées sur le paquet installé.
