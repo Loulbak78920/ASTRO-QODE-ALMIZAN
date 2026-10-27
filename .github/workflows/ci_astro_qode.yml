@@ -1,14 +1,25 @@
-name: ASTRO-Q°ODE & Al-Mizan CI (V5.0)
+name: ASTRO-Q°ODE & Al-Mizan CI (V5.1)
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: ["main", "master"]
   pull_request:
-    branches: [ "main", "master" ]
+    branches: ["main", "master"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test-and-verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PYTHONIOENCODING: utf-8
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -18,14 +29,28 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Exécuter la suite complète des 10 tests (V1.0 à V5.0)
+      - name: Version Python
+        run: python --version
+
+      - name: Suite complète (V1.0 à V5.0)
         run: python astro_qode_cli.py test
 
-      - name: Vérifier la Matrice Fondatrice de l'Unisson (Or & Argent)
+      - name: Matrice fondatrice de l'Unisson (Or & Argent)
         run: python astro_qode_cli.py unisson
 
-      - name: Vérifier le Compilateur Quantique OpenQASM 2.0 (BELL)
+      - name: Compilateur quantique OpenQASM 2.0 (BELL)
         run: python astro_qode_cli.py qasm BELL
 
-      - name: Vérifier l'intégrité des Sceaux Cryptographiques SHA-256
+      - name: Intégrité des sceaux cryptographiques SHA-256
         run: python astro_qode_cli.py seal --verify
+
+      # Ces deux suites n'existent que dans l'arbre complet (passerelle + web_cloud).
+      # Les gardes permettent au même workflow de rester vert sur le dépôt public,
+      # qui ne contient que le noyau ASTRO-Q°ODE.
+      - name: Contrat intelligent V2 — artefact et invariants
+        if: ${{ hashFiles('tests/test_contrat_intelligent_v2.py') != '' }}
+        run: python -m unittest tests.test_contrat_intelligent_v2
+
+      - name: Passerelle — comptes, pages légales et portefeuille
+        if: ${{ hashFiles('tests/test_comptes_http_mizan.py') != '' }}
+        run: python -m unittest tests.test_comptes_http_mizan
