@@ -145,7 +145,7 @@ Une clé non applicable doit être émise avec `NA`, jamais omise ni vide. Le fi
 | 2 | document promet une clé absente du script | rc 1, `DOC_ONLY=1`, `DOC_ONLY_KEY=<clé>` |
 | 3 | clé illustrative exclue | rc 0, `ALLOWED` incrémenté, `DOC_ONLY=0` |
 | 4 | clé hors section forcée par option | rc 1, la clé apparaît dans `DOC_ONLY` |
-| 5 | sortie JSON | rc attendu, JSON parsable avec les mêmes compteurs |
+| 5 | sortie JSON positive | rc attendu, 12 clés exactes (`allowed`, `doc_keys`, `doc_only`, `docs`, `matched`, `out_of_scope`, `result`, `runtime_keys`, `runtime_only`, `scope_fallback_all`, `scripts`, `skill`), `result` cohérent avec le code de retour |
 | 6 | formes runtime variées | `emit`, `print`, f-string et littéral toutes reconnues |
 | 7 | clé dupliquée dans le document | une seule entrée, occurrence comptée |
 | 8 | titre ou texte non ASCII | sortie lisible, pas de `UnicodeEncodeError` |
@@ -153,8 +153,12 @@ Une clé non applicable doit être émise avec `NA`, jamais omise ni vide. Le fi
 | 10 | document absent | rc 2, message d'erreur |
 | 11 | dossier de Skill absent | rc 2, message d'erreur |
 | 12 | erreur de syntaxe Python | rc 2, message d'erreur |
+| 13 | sortie JSON négative (`DOC_ONLY` non vide) | `result=FAIL`, rc 1, `doc_only` non vide |
+| 14 | erreur d'usage avec `--json` (`--skill` absent) | rc 2, message sur stderr, aucun objet JSON, aucune ligne `ERROR=` |
 
-Les cas 9 à 12 sont des erreurs d'environnement ou d'usage : code 2, jamais 1. Le code 1 est réservé à un défaut de contrat constaté.
+Les cas 9 à 12 et 14 sont des erreurs d'environnement ou d'usage : code 2, jamais 1. Le code 1 est réservé à un défaut de contrat constaté, comme le cas 13.
+
+Chaque option de `--help` est exercée : `--doc`/`--script` par le cas restreint, `--allow-key` par le cas 3, `--scope-key` par le cas 4, `--json` par les cas 5, 13 et 14.
 
 ## Matrice de la session source (12 cas)
 

@@ -1,6 +1,6 @@
 ---
 name: verifier-parite-doc-script-skill
-description: "Vérifier la parité entre la documentation d'un Skill et le comportement réel de son script CLI après un PASS de skill-file-qa : extraire tous les jetons KEY=VALUE, codes de retour et assertions d'acceptation promis par SKILL.md et references, énumérer les clés réellement émises par le script (emit/print/argparse), construire des fixtures positives et négatives par branche et vérifier l'existence et la valeur de chaque clé (pas seulement le code de retour), puis corriger le script ou la documentation et rejouer fixtures, skill-file-qa et empreintes finales. Utiliser quand un QA 9 PASS/0 FAIL laisse des clés documentées absentes, quand les fixtures n'assertent que le rc, quand un mode NA n'est pas couvert, ou avant de livrer un Skill avec vérificateur CLI. 中文触发：文档承诺的键不存在、SKILL.md 与脚本输出不一致、KEY=VALUE 契约、QA 全 PASS 仍漏检、负向夹具只断言退出码、NA 分支、修复脚本后重跑、最终指纹。"
+description: "Vérifier la parité entre la documentation d'un Skill et le comportement réel de son script CLI après un PASS de skill-file-qa : extraire tous les jetons KEY=VALUE, codes de retour et assertions d'acceptation promis par SKILL.md et references, énumérer les clés réellement émises par le script (emit/print/argparse), construire des fixtures positives et négatives par branche et vérifier l'existence et la valeur de chaque clé (pas seulement le code de retour), puis corriger le script ou la documentation et rejouer fixtures, skill-file-qa et empreintes finales. Utiliser quand un QA 9 PASS/0 FAIL laisse des clés documentées absentes, quand les fixtures n'assertent que le rc, quand un mode NA n'est pas couvert, ou avant de livrer un Skill avec vérificateur CLI. 中文触发：文档承诺的键不存在、SKILL.md 与脚本输出不一致、KEY=VALUE 契约、QA 全 PASS 仍漏检、负向夹具只断言退出码、NA 分支、修复脚本后重跑、最终指纹、argparse 选项未文档化、`--json` 模式、RUNTIME_ONLY 非零。"
 ---
 
 # Parité entre la documentation d'un Skill et les sorties de son script
@@ -57,6 +57,7 @@ Construire ensuite un tableau manuel :
 Appliquer d'abord le vérificateur à ce Skill lui-même, avec `--skill` pointant sur son propre dossier. Un PASS n'est significatif que si des jetons ont réellement été comparés :
 
 - viser `DOC_KEYS>0`, `MATCHED=DOC_KEYS`, `DOC_ONLY=0` ;
+- viser `RUNTIME_ONLY=0` sur un paquet mono-script sans champ interne : une valeur non nulle signale une clé émise mais absente du contrat ; documenter la clé ou la déclarer explicitement interne. Mesuré sur ce paquet le 2026-10-27 : `11` avant la mise à jour du contrat, `0` après, avec `RUNTIME_KEYS=17` ;
 - un `DOC_KEYS=0` avec `RESULT=PASS` est un PASS vide : aucun jeton en portée n'a été comparé, il ne prouve pas la parité ;
 - un `DOC_ONLY_KEY` sur un placeholder méta (forme `clé=valeur` écrite en majuscules, ou `print("clé=…")`) signifie que l'exemple est lu comme une clé promise : écrire les placeholders en minuscules et garder les vraies clés en majuscules entre backticks ;
 - ne jamais supprimer une promesse documentée pour faire baisser `DOC_ONLY` ;
@@ -101,15 +102,17 @@ RESULT=PASS|FAIL
 
 `DOC_ONLY` non vide ⇒ `RESULT FAIL`, code 1. `RUNTIME_ONLY` est informatif et ne fait pas échouer. Si une vraie clé tombe dans `OUT_OF_SCOPE`, déplacer la clé dans la section qui nomme le script, ou forcer l'inclusion avec `--scope-key`.
 
-Après les en-têtes, le détail émet une ligne par élément : `DOC_ONLY_KEY=<clé> | occurrences=<n> | first=<fichier>:<ligne> | section=<titre>`, `RUNTIME_ONLY_KEY=<clé> | scripts=<noms>`, `ALLOWED_KEY=<clé>`, `OUT_OF_SCOPE_KEY=<clé> | first=<fichier>:<ligne>`. En cas d'erreur d'usage ou d'environnement, seule `ERROR=<message>` est émise, avec le code 2.
+Après les en-têtes, le détail émet une ligne par élément : `DOC_ONLY_KEY=<clé> | occurrences=<n> | first=<fichier>:<ligne> | section=<titre>`, `RUNTIME_ONLY_KEY=<clé> | scripts=<noms>`, `ALLOWED_KEY=<clé>`, `OUT_OF_SCOPE_KEY=<clé> | first=<fichier>:<ligne>`. Pour les erreurs détectées par le script (dossier, document ou script introuvable, syntaxe, OS), seule `ERROR=<message>` est émise, avec le code 2 ; un argument requis manquant est rejeté par argparse avant `main()`, avec le code 2 et un message d'usage sur stderr, sans ligne `ERROR=`.
 
 ### Options et mode JSON
 
 - `--allow-key` exclut une clé illustrative du contrat ; `--scope-key` force une clé hors section dans la portée.
-- `--doc` choisit le document à examiner et `--script` le script dont les clés sont extraites (tous deux répétables ; par défaut `SKILL.md` + `references/**/*.md` et `scripts/**/*.py`). Les restreindre réduit `DOCS`, `SCRIPTS` et `OUT_OF_SCOPE` sans changer les clés en portée.
+- `--doc` choisit le document à examiner et `--script` le script dont les clés sont extraites (tous deux répétables ; par défaut `SKILL.md` + `references/**/*.md` et `scripts/**/*.py`). Les restreindre réduit `DOCS`, `SCRIPTS` et `OUT_OF_SCOPE` sans changer les clés en portée. Les chemins relatifs sont résolus depuis le répertoire courant, pas depuis `--skill` : lancer la commande depuis le dossier du Skill ou passer des chemins absolus.
 - `--json` remplace les lignes `clé=valeur` par un unique objet JSON : mêmes ensembles, en listes triées au lieu de compteurs, avec `result` à `PASS` ou `FAIL`. Le code de retour reste 0, 1 ou 2.
+- `--skill` est obligatoire et désigne le dossier inspecté ; `-h` est l'aide. Chaque option listée par `--help` doit apparaître dans cette section et être exercée par au moins un fixture : `--skill` par tous, `--doc`/`--script` par le cas restreint, `--allow-key` par le cas 3, `--scope-key` par le cas 4, `--json` par les cas JSON.
+- Sous `--json`, les erreurs détectées par le script émettent toujours la seule ligne `ERROR` (message inclus) avec le code 2, jamais un objet JSON ; un argument requis manquant reste rejeté par argparse, avec le code 2 et un message sur stderr.
 
-Mesuré le 2026-10-27 sur ce paquet : `--json` rend 12 clés (`allowed`, `doc_keys`, `doc_only`, `docs`, `matched`, `out_of_scope`, `result`, `runtime_keys`, `runtime_only`, `scope_fallback_all`, `scripts`, `skill`) ; un cas `DOC_ONLY` non vide rend `result=FAIL` et le code 1 ; `--doc SKILL.md --script <script>` fait passer `OUT_OF_SCOPE` de 33 à 5 sans changer `DOC_KEYS`.
+Mesuré le 2026-10-27 sur ce paquet : `--json` rend 12 clés (`allowed`, `doc_keys`, `doc_only`, `docs`, `matched`, `out_of_scope`, `result`, `runtime_keys`, `runtime_only`, `scope_fallback_all`, `scripts`, `skill`) ; un cas `DOC_ONLY` non vide rend `result=FAIL` et le code 1 ; `--doc SKILL.md --script <script>` rend les compteurs `DOCS` et `SCRIPTS` à 1 et fait passer `OUT_OF_SCOPE` de 33 à 5 sans changer `DOC_KEYS`.
 
 ## Étape 3 — Fixtures par branche
 
@@ -124,6 +127,8 @@ Chaque cas vérifie le code de retour et des paires exactes, pas une sous-chaîn
 | 5 | mode après action (si le script en a un) | rc et clés propres à ce mode |
 | 6 | lien symbolique ou jonction | rc 1, ou `CASE SKIP` explicite si la création est impossible |
 | 7 | preuve de mutation | le fixture a réellement changé la cible (hash ou comptage avant/après) |
+| 8 | mode `--json` négatif (`doc_only` non vide) | `result=FAIL`, rc 1, `doc_only` non vide |
+| 9 | erreur d'usage ou argument manquant avec `--json` | rc 2, message actionnable, aucun objet JSON |
 
 Règles d'assertion :
 
@@ -174,6 +179,8 @@ Le modèle complet, avec `force_rmtree`, preuve de mutation et les 12 cas de la 
 | `DOC_ONLY=0` mais la branche n'émet pas la clé | le vérificateur lit la source, pas l'exécution | ajouter un fixture pour cette branche |
 | `OUT_OF_SCOPE` contient une vraie clé | la section ne nomme pas le script | déplacer la clé dans la section de contrat ou `--scope-key` |
 | `RUNTIME_ONLY` très large | champs internes ou journalisation | décider : documenter ou accepter comme interne |
+| `RUNTIME_ONLY` non nul alors que le paquet passe | clé émise mais absente du contrat | documenter la clé, l'exclure si illustrative, ou la déclarer interne |
+| une option `--help` n'est jamais exercée | fixture manquant, option non couverte | ajouter un cas qui l'utilise et assertit son effet |
 | `clé=NA` absent sur un cas non applicable | branche qui omet la clé au lieu d'émettre `NA` | émettre `NA` explicitement |
 | un négatif passe comme le baseline | la mutation n'a pas eu lieu | assertir le hash ou le comptage avant/après |
 | `PermissionError [WinError 5]` au nettoyage | objets `.git` en lecture seule | `force_rmtree` avec `chmod` |
@@ -198,6 +205,9 @@ Le modèle complet, avec `force_rmtree`, preuve de mutation et les 12 cas de la 
 - [ ] Auto-contrôle du paquet non vide : `DOC_KEYS>0`, `MATCHED=DOC_KEYS`, `DOC_ONLY=0`.
 - [ ] Tous les en-têtes, lignes de détail et options émis sont documentés dans la section du script.
 - [ ] Mode `--json` couvert par un fixture : 12 clés, `result` cohérent avec le code de retour.
+- [ ] Chaque option de `--help` figure dans la section du script et est exercée par un fixture.
+- [ ] Paquet mono-script sans champ interne : `RUNTIME_ONLY` à 0 (`11` avant, `0` après le 2026-10-27).
+- [ ] Négatif `--json` couvert : `doc_only` non vide ⇒ `result=FAIL`, rc 1.
 - [ ] `skill-file-qa` PASS et empreintes finales enregistrées.
 - [ ] Aucun `__pycache__`, fixture ou backup dans le paquet.
 
