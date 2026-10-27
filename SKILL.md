@@ -101,12 +101,12 @@ RESULT=PASS|FAIL
 
 `DOC_ONLY` non vide ⇒ `RESULT FAIL`, code 1. `RUNTIME_ONLY` est informatif et ne fait pas échouer. Si une vraie clé tombe dans `OUT_OF_SCOPE`, déplacer la clé dans la section qui nomme le script, ou forcer l'inclusion avec `--scope-key`.
 
-Après les en-têtes, le détail émet une ligne par élément : `DOC_ONLY_KEY=<clé> | occurrences=<n> | first=<fichier>:<ligne> | section=<titre>`, `RUNTIME_ONLY_KEY=<clé> | scripts=<noms>`, `ALLOWED_KEY=<clé>`, `OUT_OF_SCOPE_KEY=<clé> | first=<fichier>:<ligne>`. En cas d'erreur d'usage ou d'environnement, seule `ERROR=<message>` est émise, avec le code 2.
+Après les en-têtes, le détail émet une ligne par élément : `DOC_ONLY_KEY=<clé> | occurrences=<n> | first=<fichier>:<ligne> | section=<titre>`, `RUNTIME_ONLY_KEY=<clé> | scripts=<noms>`, `ALLOWED_KEY=<clé>`, `OUT_OF_SCOPE_KEY=<clé> | first=<fichier>:<ligne>`. Pour les erreurs détectées par le script (dossier, document ou script introuvable, syntaxe, OS), seule `ERROR=<message>` est émise, avec le code 2 ; un argument requis manquant est rejeté par argparse avant `main()`, avec le code 2 et un message d'usage sur stderr, sans ligne `ERROR=`.
 
 ### Options et mode JSON
 
 - `--allow-key` exclut une clé illustrative du contrat ; `--scope-key` force une clé hors section dans la portée.
-- `--doc` choisit le document à examiner et `--script` le script dont les clés sont extraites (tous deux répétables ; par défaut `SKILL.md` + `references/**/*.md` et `scripts/**/*.py`). Les restreindre réduit `DOCS`, `SCRIPTS` et `OUT_OF_SCOPE` sans changer les clés en portée.
+- `--doc` choisit le document à examiner et `--script` le script dont les clés sont extraites (tous deux répétables ; par défaut `SKILL.md` + `references/**/*.md` et `scripts/**/*.py`). Les restreindre réduit `DOCS`, `SCRIPTS` et `OUT_OF_SCOPE` sans changer les clés en portée. Les chemins relatifs sont résolus depuis le répertoire courant, pas depuis `--skill` : lancer la commande depuis le dossier du Skill ou passer des chemins absolus.
 - `--json` remplace les lignes `clé=valeur` par un unique objet JSON : mêmes ensembles, en listes triées au lieu de compteurs, avec `result` à `PASS` ou `FAIL`. Le code de retour reste 0, 1 ou 2.
 
 Mesuré le 2026-10-27 sur ce paquet : `--json` rend 12 clés (`allowed`, `doc_keys`, `doc_only`, `docs`, `matched`, `out_of_scope`, `result`, `runtime_keys`, `runtime_only`, `scope_fallback_all`, `scripts`, `skill`) ; un cas `DOC_ONLY` non vide rend `result=FAIL` et le code 1 ; `--doc SKILL.md --script <script>` fait passer `OUT_OF_SCOPE` de 33 à 5 sans changer `DOC_KEYS`.
