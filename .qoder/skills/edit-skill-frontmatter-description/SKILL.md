@@ -48,6 +48,7 @@ Remplacer uniquement la valeur `description` d'un `SKILL.md` lorsque la limite d
 15. Une entrée de liste sans description avant rechargement est normale ; ne jamais écrire dans `SKILL.md` pour forcer un rechargement.
 16. Le JSONL de session se choisit par la ligne d'injection exacte de ce Skill (première ligne égale au dossier résolu), jamais par le `mtime` le plus récent : un fichier récent peut ne contenir aucune injection.
 17. Deux longueurs ne se comparent que si elles mesurent le même fichier : `inspect description_len` et `check disk_description_chars` portent sur la cible passée en argument.
+18. Une sortie JSON se relit avec l'outil Read ou avec un chemin passé en argument : un chemin littéral, Windows ou POSIX, écrit dans la chaîne de code de `py -3 -c` n'est pas converti par MSYS et échoue alors que le fichier existe.
 
 ## Procédure
 
@@ -141,6 +142,14 @@ py -3 -B "$GUARD" replace "$SKILL_DIR" \
 
 Le script re-vérifie le SHA-256 immédiatement avant l'écriture, sauvegarde, écrit de façon atomique, re-parse puis restaure les octets d'origine si un invariant échoue. Un résultat `"restored": true` est un échec : diagnostiquer avant de réessayer.
 
+Pour relire une sortie JSON comme `apply.json`, utiliser l'outil Read ou passer le chemin en argument :
+
+```bash
+py -3 -B -c "import json,sys; d=json.load(open(sys.argv[1],encoding='utf-8')); print(d['status'], d.get('restored'))" "$OUT/apply.json"
+```
+
+Un chemin POSIX (`/c/...`) écrit dans la chaîne de code produit `FileNotFoundError` alors que le fichier existe : MSYS ne convertit que les arguments.
+
 ### 7. Vérification structurelle indépendante
 
 ```bash
@@ -194,7 +203,7 @@ Un agent ne peut pas exécuter `/skills reload`. Trois couches distinctes, jamai
 
 #### 9.0 Identifier la session
 
-`SESSION_ID` ne se déduit ni du JSONL le plus récent ni d'une recherche de sous-chaîne. Pour chaque `~/.qoder/projects/$PROJECT_DIR/*.jsonl`, parser chaque ligne en JSON et compter les messages `type: user`, `isMeta: true`, dont `message.content` est une chaîne commençant exactement par `Base directory for this skill:` et dont la première ligne vaut le dossier résolu du Skill. Retenir le fichier avec au moins une injection ; si plusieurs en ont, prendre celle dont l'horodatage d'injection est le plus récent et le consigner. Écrire le compteur dans un `.py` temporaire hors du Skill, jamais dans un `py -3 -c` contenant un chemin Windows.
+`SESSION_ID` ne se déduit ni du JSONL le plus récent ni d'une recherche de sous-chaîne. Pour chaque `~/.qoder/projects/$PROJECT_DIR/*.jsonl`, parser chaque ligne en JSON et compter les messages `type: user`, `isMeta: true`, dont `message.content` est une chaîne commençant exactement par `Base directory for this skill:` et dont la première ligne vaut le dossier résolu du Skill. Retenir le fichier avec au moins une injection ; si plusieurs en ont, prendre celle dont l'horodatage d'injection est le plus récent et le consigner. Écrire le compteur dans un `.py` temporaire hors du Skill, ou passer le dossier en argument ; jamais un chemin littéral Windows ou POSIX dans la chaîne de code d'un `py -3 -c`.
 
 Cas vérifié : le JSONL alors le plus récent (`55f63550…`) comptait 0 injection de ce Skill et `check` y renvoie le code 2 `no injection record found` ; `db72d65b…` en comptait au moins une et a produit `INJECTION_OK_LISTING_OK`. Consigner les `mtime` et les comptes par fichier avant de choisir.
 
@@ -221,7 +230,7 @@ Exécuter une fois après toute modification du garde ou de la procédure, dans 
 2. `inspect` la copie ; noter `description_line`, `description_len`, `quote_style`, `eol`, `bom`, `body_lines`.
 3. `anchors --require-unique` avec une ancre copiée de la valeur parsée et une ancre absente : exiger `count: 1` / `count: 0` et le code 1 ; abandonner le remplacement partiel.
 4. Rédiger un candidat d'une ligne hors du Skill. En dry-run : code 0, `status: would-apply`, SHA-256 inchangé, aucun `.bak`, aucun dossier de sauvegarde.
-5. `replace --apply --backup-dir` hors du Skill : `status: applied`, les 12 invariants à `true`, sauvegarde de SHA-256 égal à l'original.
+5. `replace --apply --backup-dir` hors du Skill : `status: applied`, les 12 invariants à `true`, sauvegarde de SHA-256 égal à l'original. Écrire la sortie dans `apply.json` et la relire avec l'outil Read ou en passant le chemin en argument : un chemin POSIX dans le code de `py -3 -c` échoue en `FileNotFoundError`.
 6. Vérifier indépendamment dans un `.py` hors du Skill : même nombre de lignes, seule la ligne de description diffère, autres lignes identiques octet pour octet. `git diff` ne prouve rien sur une copie hors dépôt.
 7. Restaurer depuis le `.bak` et exiger un SHA-256 égal à l'original ; lancer `skill-file-qa` avant, après apply et après restauration (mêmes compteurs, `Files (N)` stable).
 8. Supprimer le répertoire jetable et vérifier qu'aucun `__pycache__`/`.pyc` n'existe dans l'installation, dont le SHA-256 doit être inchangé.
@@ -256,7 +265,8 @@ Sortie JSON ASCII échappée, sans traceback. Exécuter avec `py -3 -B` pour év
 | Nombre de lignes | 308 lignes au moment du remplacement, 337 après des éditions de corps dans la même session | limiter l'invariant à l'étape description seule |
 | WARN de layout | 10 WARN préexistants dus à `.gitattributes` et aux archives `.qoder/skills/...` | comparer les ensembles, pas seulement les comptes |
 | Longueur | `len()` compte les points de code, pas les octets UTF-8 | ne pas utiliser la taille du fichier |
-| `py -3 -c` inline (Git Bash) | chemin Windows dans des guillemets doubles : `SyntaxError: (unicode error) 'unicodeescape' ... position 33-34` | écrire un `.py` temporaire hors du Skill puis lancer `py -3 -B` |
+| `py -3 -c` inline (Git Bash), chemin Windows | littéral non brut dans des guillemets doubles : `SyntaxError: (unicode error) 'unicodeescape' ... position 33-34` | écrire un `.py` temporaire hors du Skill qui reçoit son chemin en argument, puis lancer `py -3 -B` |
+| `py -3 -c` inline (Git Bash), chemin POSIX | `open(r'/c/Users/.../apply.json')` : `FileNotFoundError` alors que le fichier existe, code 1 | MSYS ne convertit que les arguments : passer le chemin en argv ou lire avec l'outil Read |
 | Entrée de liste sans description | 36 caractères, nom seul à 12:03:43 et 12:04:29 ; description seulement à 12:05:08.952Z | comparer les horodatages au `mtime` ; normal avant rechargement |
 | Filtre par sous-chaîne sur `Base directory` | 5 faux positifs dans les sorties d'outils et les scripts de vérification | exiger `type: user`, `isMeta: true` et `startswith` |
 | Hash du corps injecté | 11 807 vs 11 808 caractères bruts mais hachages égaux | `strip()` des deux côtés et déclarer la normalisation |
@@ -281,6 +291,7 @@ Sortie JSON ASCII échappée, sans traceback. Exécuter avec `py -3 -B` pour év
 - [ ] Statut de la liste consigné (préfixe 299 + ellipse, ou « non vérifiée ») ; panneau client déclaré manuel.
 - [ ] Session choisie par injection exacte, pas par `mtime` ; comptes par fichier consignés.
 - [ ] Code de retour de chaque sous-commande capturé juste après l'appel.
+- [ ] Sorties JSON relues via l'outil Read ou un chemin en argument ; aucun chemin littéral dans `py -3 -c`.
 - [ ] Longueurs comparées sur la même cible uniquement.
 - [ ] Recette d'acceptation exécutée sur copie : dry-run sans octet, invariants, restauration SHA = original, QA aux trois états.
 - [ ] Aucun `__pycache__`/`.pyc`, aucun autre Skill modifié.
