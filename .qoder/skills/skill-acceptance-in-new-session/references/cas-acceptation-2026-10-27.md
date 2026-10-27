@@ -140,3 +140,19 @@ Recomptage après la fin des tours, en ne retenant que les enregistrements `type
 ### Verdict
 
 **ACCEPTÉ** pour la version testée `24a67513…`, les deux écarts enfant écartés après requalification. Ce run a motivé les corrections du protocole appliquées à 12:58 : nonce, comptage `isMeta` seul, et interdiction de conclure d'un timeout.
+
+## Validation officielle — 2026-10-27
+
+Exécutée après la publication `883f20a`, sans modification du paquet. Commande :
+
+```bash
+py -3 "C:/Users/Administrateur/.qoder/skills/skill-file-qa/scripts/validate_skill.py" \
+  "C:/Users/Administrateur/.qoder/skills/skill-acceptance-in-new-session" \
+  --workspace "C:/Users/Administrateur/Desktop/IMAM8MAHDI" --stable-seconds 2
+```
+
+- `RESULT PASS`, code 0 : 9 pass, 0 fail, 0 warn ; PyYAML 6.0.1.
+- `Files (3)` ; description 1 ligne / 967 caractères ; corps 192 lignes ; 2 références locales et 8 références de Skills résolues.
+- Frappe stable : 16 447 o, mtime 2026-10-27T14:11:45+01:00, SHA-256 `0f1f11bc5aef0b74cda68d52e86a136f00519929698e1fdea06f9e2e454951de`, identique avant et après contrôle.
+- Aucun `__pycache__` ni `*.pyc` créé ; le validateur n'écrit pas dans le Skill.
+- Le SHA-256 validé est celui publié sur `main` (`883f20a`) ; vérification distante des blobs : 3/3 identiques.
