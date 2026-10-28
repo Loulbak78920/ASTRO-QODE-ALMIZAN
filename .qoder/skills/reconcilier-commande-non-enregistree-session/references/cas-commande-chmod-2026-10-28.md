@@ -24,10 +24,12 @@ Mesurés le 2026-10-28 sur les deux artefacts.
 | `S_IWRITE` | 0 | 1 | 0 | faux négatif |
 | `S_IREAD` | 0 | 1 | 0 | faux négatif |
 | `icacls` | 0 | 3 (2 appels) | 0 | faux négatif |
-| `attrib` | 7 | 2 (2 appels) | 10 | partiel |
+| `attrib` | 7 | 11 (6 appels) | 10 | partiel |
 | `takeown` | 2 | **0** | 0 | présent en prose seulement |
 | `PermissionError` | 2 | 0 | 2 | cohérent |
 | `WinError` | 1 | 0 | 1 | cohérent |
+
+La ligne `attrib` illustre le piège inverse : sur 11 occurrences dans les entrées, **une seule** est la commande elle-même (ligne 365, `cmd //c "attrib horloge_noyau\*.py"`). Les autres sont le mot français « attribué » dans des `Write`/`Edit` (lignes 118, 128, 181), « l'attribuer » dans un `echo` (ligne 100) et `read-only attribute(s)` dans deux champs `description` (lignes 358, 365). Un `tool_use.input` porte donc aussi de la prose : compter n'identifie pas une commande, seule la lecture de `command` le fait.
 
 `takeown` est le contrôle inverse : 2 occurrences dans le dump, aucune dans une entrée, car le mot n'apparaît que dans la narration de l'assistant. Un comptage global sur le JSONL (26 occurrences de `chmod`) mélange prose, entrées et sorties et ne tranche rien.
 

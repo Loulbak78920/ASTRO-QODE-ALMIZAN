@@ -27,6 +27,8 @@ Un motif absent du dump de session n'est pas une commande non exécutée : `read
 
 Les messages d'assistant contiennent aussi le motif (narration, bilan) : un comptage global sur le JSONL mélange prose et entrées et ne vaut pas mieux qu'un `grep` sur le dump. Compter par canal.
 
+Un `tool_use.input` porte lui aussi de la prose : `content` d'un `Write`, `old_string`/`new_string` d'un `Edit`, champs `description`. Un comptage brut y attrape du texte rédigé ; seule la lecture de `command` identifie une commande. Cas mesuré : `attrib` rend 11 occurrences dans les entrées pour **une seule** commande exécutée.
+
 Avant toute conclusion, appliquer la règle de `extraire-preuves-session-qoder` §1 : l'absence dans le snapshot est une lacune, pas une preuve d'absence.
 
 ## 2. Compter par canal
@@ -69,7 +71,7 @@ Les accents des sorties enregistrées peuvent être déjà corrompus (`U+FFFD`, 
 
 - Hors installation, sous `%TEMP%`, propriétaire = compte courant ; jamais sur le chemin de production.
 - Reproduire le refus, mesurer `errno`/`winerror`, puis **nettoyer dans l'ordre** : retirer l'ACE, remettre l'attribut inscriptible, supprimer le dossier.
-- Pour un verrou ACL, suivre `diagnostiquer-verrou-acl-windows` : son dossier de preuves contient les résultats mesurés (attribut `R` seul corrigé par `chmod`, `chmod` refusé sous `DENY`, `attrib -R` sortant rc 0 sans effet, `rmtree` en `WinError 5` tant que `R` reste posé). Ne pas recréer une fixture avec `WDAC`/`WO` : l'indélébilité est documentée, pas mesurée ici.
+- Pour un verrou ACL, suivre `diagnostiquer-verrou-acl-windows` : son dossier de preuves contient les résultats mesurés (attribut `R` seul corrigé par `chmod`, `chmod` refusé sous `DENY`, `attrib -R` sortant rc 0 sans effet, `rmtree` en `WinError 5` tant que `R` reste posé). Ne pas recréer une fixture avec `WDAC`/`WO` : l'indélébilité n'est qu'inférée, pas mesurée ici.
 
 ## 6. Statuts de preuve
 
@@ -115,6 +117,8 @@ VERDICT INPUT_RECORDED
 ```
 
 Attendu en contrôle inverse, `--pattern "takeown"` : `count=2` dans le dump, `INPUT_OCCURRENCES 0`, `VERDICT NOT_IN_INPUTS`, rc 10. Un motif inconnu rend le même verdict sans ligne `CALL`.
+
+Le bloc ci-dessus est un extrait : le script émet aussi les `TRACEBACK` 339, 378 et 384 (plus 438, `kind=string`) et les `PAIR` 339, 378 et 384, qui ne portent pas le motif. La référence les liste tous — ne pas conclure à une dérive devant ces lignes supplémentaires.
 
 ## Ressources
 
