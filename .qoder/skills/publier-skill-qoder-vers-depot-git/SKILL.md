@@ -14,6 +14,7 @@ Publier un Skill du dossier utilisateur Qoder dans un dépôt Git sans réécrir
 - Publier ou archiver un Skill utilisateur dans un dépôt existant, sur `main` ou une branche convenue.
 - Reprendre une branche de Skill à historique racine indépendant qui ne peut pas être fusionnée.
 - Vérifier qu'une copie publiée est octet pour octet identique à la source.
+- Prouver, après push, que l'archive est visible quand le dépôt est privé : API anonyme 404 alors que `git ls-remote` réussit.
 - Diagnostiquer `fatal: ambiguous argument 'origin\main;...'` sous Git Bash.
 - Diagnostiquer un `MISMATCH` après modification du Skill (archive périmée) ou une branche/`origin/main` déplacée par une autre session en cours d'opération.
 - Reprendre quand `merge/skill-<nom>` existe déjà (autre session ou essai précédent) et créer une branche horodatée sans réutiliser l'existante.
@@ -310,6 +311,38 @@ MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' git -C "<depot>" show "origin/main:<c
 sha256sum "<skill>/<chemin>"
 ```
 
+### 8a. Visibilité quand le dépôt d'archive est privé
+
+Un 404 sur l'API anonyme ne prouve ni un push absent ni un dépôt public : GitHub renvoie 404 pour un dépôt privé, et `git ls-remote` réussit en parallèle grâce au jeton fourni par Git Credential Manager. Observé le 2026-10-27 sur `IMAM8MAHDI/qoder-skills` : `GET /repos/IMAM8MAHDI/qoder-skills` anonyme → HTTP 404 `{"message": "Not Found"}`, puis 200 avec le jeton, `sha` des contenus égal aux OID locaux. La preuve git de l'étape 8 (hash local = `ls-remote`, script `--from remote` PASS) reste la preuve de contenu ; l'API ne qualifie que la visibilité.
+
+```bash
+owner=<owner>; repo=<repo>; rel=".qoder/skills/<nom>"
+dir="$(mktemp -d "$HOME/.qoder/tmp/api-vis-$repo.XXXXXX")"
+cred=$(printf 'protocol=https\nhost=github.com\n\n' | GIT_TERMINAL_PROMPT=0 git -c credential.interactive=never credential fill 2>/dev/null)
+tok=$(printf '%s\n' "$cred" | sed -n 's/^password=//p'); unset cred
+[ -n "$tok" ] && echo TOKEN_PRESENT=yes || echo TOKEN_PRESENT=no
+curl -sS --max-redirs 0 -H "Authorization: Bearer $tok" -o "$dir/repo.json" -w 'REPO_HTTP=%{http_code}\n' \
+  "https://api.github.com/repos/$owner/$repo"
+curl -sS --max-redirs 0 -H "Authorization: Bearer $tok" -o "$dir/dir.json" -w 'DIR_HTTP=%{http_code}\n' \
+  "https://api.github.com/repos/$owner/$repo/contents/$rel?ref=main"
+unset tok
+py -3 -B - "$dir/dir.json" <<'PY'
+import json, sys
+d = json.load(open(sys.argv[1], encoding='utf-8'))
+if isinstance(d, dict):
+    print('API_ERROR', d.get('status'), d.get('message')); raise SystemExit(2)
+for it in d:
+    print(it['type'], it['path'], it['sha'], it['size'])
+PY
+git -C "<depot>" hash-object --path="$rel/<chemin>" "<skill>/<chemin>"
+```
+
+Comparer chaque `sha` au OID rendu par `hash-object` pour le fichier source correspondant, puis répéter l'appel `contents` sur chaque entrée `type` `dir` (par exemple `references`). `hash-object --path` applique les attributs et `core.autocrlf` de `<depot>` et ne lit aucune ref : ni `fetch`, ni `origin/main` local, ni ref à jour ne sont requis ; un clone du même remote et de la même branche suffit, y compris après la variante 0b — sans aucun clone, la preuve n'est pas possible. `ls-tree -r origin/main` rend les mêmes OID quand la ref existe et est à jour ; `rev-parse "origin/main:<chemin>"` exige `MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*'`. Le `sha` de l'API est un OID de blob Git (SHA-1) : ne jamais le comparer au SHA-256 imprimé par le script.
+
+`TOKEN_PRESENT=no` : ne pas appeler l'API authentifiée, consigner « visibilité non vérifiée » et conserver `ls-remote` + blobs comme seule preuve. Sinon rapporter `privé, vérifié authentifié (200, OID identiques)`, `publique` si l'appel anonyme répond 200, `non vérifiée (<raison>)` autrement ; jamais « public » par défaut, jamais « push absent » sur un 404 anonyme. Ne pas afficher le jeton ni le placer dans l'URL, et supprimer le répertoire temporaire en fin d'étape.
+
+Écrire chaque réponse dans un répertoire créé d'avance : un chemin dérivé du sous-chemin API (`-o "…/api-contents$p.json"` avec `$p=/references`) renvoie `curl: (23) client returned ERROR on write`, un fichier vide, puis `KeyError: 'type'` en itérant le corps d'erreur comme une liste (observé le 2026-10-27).
+
 ### 9. Nettoyer
 
 ```bash
@@ -400,6 +433,8 @@ Sans variable d'environnement, la commande sort en 128 ; avec `MSYS_NO_PATHCONV=
 | «继续» ou «继续下一个» traité comme une autorisation de push pour le Skill suivant | contrat 6 : l'autorisation nomme un commit | redemander, ou consigner un accord de lot explicite (dépôt, branche, périmètre) avant de pousser |
 | liste des Skills à archiver réutilisée d'un tour à l'autre | l'archive a gagné le Skill publié au tour précédent | recalculer le diff de l'étape 0c avant chaque Skill |
 | `warning: ... CRLF will be replaced by LF` | normalisation des fins de ligne | informationnel ; ne pas réécrire le dépôt |
+| `404` sur l'API anonyme alors que `ls-remote` et le script `--from remote` sont `PASS` | dépôt privé : GitHub masque un privé derrière un 404 | étape 8a : prouver la visibilité avec le jeton ; rapporter « privé, vérifié authentifié », jamais « push absent » ni « public » |
+| `curl: (23) client returned ERROR on write` puis `KeyError: 'type'` | `-o` écrit dans un sous-répertoire non créé, puis le corps d'erreur est itéré comme une liste de contenus | créer le répertoire d'avance ; refuser un objet JSON d'erreur avant la boucle |
 
 ## Définition de terminé
 
@@ -411,6 +446,7 @@ Sans variable d'environnement, la commande sort en 128 ; avec `MSYS_NO_PATHCONV=
 - [ ] `main` avancée par `Fast-forward` ; aucun merge commit.
 - [ ] Push effectué seulement sur demande ; si non poussé, l'annoncer et ne pas présenter le distant comme validé. Un push externe est rapporté comme tel, jamais revendiqué.
 - [ ] Si push (interne ou externe) : hash local égal à `ls-remote origin refs/heads/main` et vérificateur en mode remote `RESULT PASS` ; sinon contrôle distant marqué non exécuté.
+- [ ] Visibilité qualifiée : si l'API anonyme répond 404 alors que `ls-remote` et les blobs concordent, preuve authentifiée à l'étape 8a (HTTP 200, `sha` = OID `hash-object` du fichier source) ; rapport « privé », « publique » ou « non vérifiée », jamais « public » par défaut.
 - [ ] Nettoyage : `$branch` supprimée avec `-d` seulement si contenue dans `origin/main` ; sinon conservée et signalée, sans `-D` ; aucune autre branche touchée.
 - [ ] Baseline de l'étape 0 consignée (branche, `HEAD`, `origin/main`, branches `merge/skill-<nom>*`), puis branche/`HEAD`/`origin/main` relus avant le merge et avant le push ; aucun écart inexpliqué.
 - [ ] Toute dérive externe arrête les écritures, passe en 6b et est attribuée via `git reflog --date=iso` et `git reflog show --date=iso origin/main`, sans revendication.
@@ -442,6 +478,7 @@ Autorisation : push par Skill | lot (dépôt/branche/périmètre) | non accordé
 État : <branche>@<hash> | origin/main <hash> | relu avant merge et push | dérive : aucune|<reflog>
 Reprise : aucune | EXTERNAL_MERGED | NOT_MERGED | main locale divergente
 Distant : HEAD <hash> | blobs PASS/FAIL | non exécuté (push non effectué)
+Visibilité : privé, vérifié authentifié | publique | non vérifiée (<raison>)
 Nettoyage : branche supprimée | conservée (non contenue dans origin/main) | autre branche intacte
 Variante : standard | clone isolé
 Cible : <depot> | clone <k>/<N> qualifié | source <chemin> intacte
@@ -455,7 +492,7 @@ Reserve : archive, chemins relatifs non garantis dans ce depot
 ## Ressources
 
 - `scripts/verifier_archive_skill.py` : compare en lecture seule les SHA-256 de la source avec la copie worktree ou les blobs d'une ref distante, et signale tout fichier `EXTRA` présent dans la destination ; sortie ASCII, codes 0/1/2.
-- `references/preuves-publication.md` : transcription des sorties observées (commit `3a4732a`, 5 hashes, échec MSYS, archivage non poussé `ddfd179`, dérive d'état et archive périmée, collision de branche, push externe et reprise 6b, plusieurs clones du même remote et STALE résiduel), repérage du clone par URL du remote et source CRLF (2026-10-27), et re-vérifications du 2026-10-26.
+- `references/preuves-publication.md` : transcription des sorties observées (commit `3a4732a`, 5 hashes, échec MSYS, archivage non poussé `ddfd179`, dérive d'état et archive périmée, collision de branche, push externe et reprise 6b, plusieurs clones du même remote et STALE résiduel), repérage du clone par URL du remote et source CRLF (2026-10-27), visibilité d'un dépôt privé (2026-10-27), comparaison `hash-object` sans ref locale (2026-10-27) et re-vérifications du 2026-10-26.
 - `commit-skill-work` : localisation du dépôt, classification des changements, commit et push de base.
 - `skill-file-qa` : validation statique du Skill avant publication.
 - `skill-update-concurrency-safe` : édition sûre du Skill source avant publication.

@@ -248,6 +248,37 @@ Source : session Qoder `421c7f08-da31-4ddb-a2e0-1dc29e264103`, tour « 提交并
 
 Les hashes, horodatages et chemins ci-dessus sont des faits datés.
 
+## Visibilité d'un dépôt privé (2026-10-27)
+
+Source : session Qoder `34067b39-3056-4294-9e66-c1eddbefe143`, tour « push vers IMAM8MAHDI/qoder-skills » (2026-10-27T14:49Z–14:52Z). Aucune correction utilisateur : l'écart vient d'une étape de contrôle absente de la procédure.
+
+1. Publication : `f56524d..2bced8e  main -> main`, `HEAD = LSREMOTE = 2bced8e2f570c9d4212b000250285306ea551fc9`, puis `--from remote` → `RESULT PASS - 2/2` (`844be857…`, `3b6d5ef4…`).
+2. Contrôle initial par API non authentifiée : `API_HTTP=404 BYTES=141`, puis `API_HTTP=404 BYTES=0`, `curl: (23) client returned ERROR on write of 141 bytes`, `KeyError: 'type'` — le corps d'erreur a été itéré comme une liste de contenus.
+3. Attribution : `GET /repos/IMAM8MAHDI/qoder-skills` anonyme → `{"message": "Not Found", "documentation_url": "...", "status": "404"}` ; idem pour `/contents/.qoder/skills?ref=main`. Un 404 anonyme ne qualifie ni absence de push ni dépôt public.
+4. Preuve authentifiée : `TOKEN_PRESENT=yes`, `REPO_HTTP=200`, `DIR_HTTP=200` ; contenus `sha` = `10ceb340cda99457e0de1395d29b75949e475f03` (12 806 o) et `65f3fdeb7ecf4c618d47bfb3ad11ae4a35750488` (9 862 o), identiques aux OID `ls-tree` locaux.
+5. Nettoyage : branche `merge/skill-verifier-preuves-api-temporelles` supprimée par `-d` (was `2bced8e`), clone temporaire supprimé ; les deux autres clones et la source `master@c343eeb` restés en lecture seule.
+
+Rapport retenu : `Distant : HEAD 2bced8e = ls-remote | blobs PASS 2/2 | API authentifiée 200, OID identiques`. Ces hashes, tailles et horodatages sont des faits datés.
+
+Rejeu de contrôle le 2026-10-27 vers 14:57Z (`api-vis-qoder-skills.*`, supprimé après) : `TOKEN_PRESENT=yes`, anonyme `ANON_REPO_HTTP=404 BYTES=132` (corps `documentation_url`/`message`/`status`), authentifié `REPO_HTTP=200` et `DIR_HTTP=200`, `references` → `65f3fdeb7ecf4c618d47bfb3ad11ae4a35750488` (9 862 o), `ls-remote` toujours `2bced8e…`. La branche d'erreur du parseur rend `API_ERROR 404 Not Found` avec exit 2 sur un corps 404, au lieu du `KeyError: 'type'` d'origine. Le nombre d'octets du corps anonyme varie (141 puis 132) : seul le statut qualifie la visibilité.
+
+## Comparaison de l'OID sans ref locale (2026-10-27)
+
+Contexte : le dépôt du Skill `publier-skill-qoder-vers-depot-git` est local (`git remote -v` vide) ; `git rev-parse origin/main` sort en 128. Lors du rejeu de l'étape 8a, la sonde a exécuté `contents`, la boucle de parsing et `ls-remote`, mais **pas** la ligne documentée `git ls-tree -r origin/main` : sans ref locale, elle n'était pas exécutable.
+
+Forme vérifiée en lecture seule, puis en fixture jetable (supprimée) :
+
+| Contrôle | Résultat |
+|---|---|
+| `git -C <skill> rev-parse HEAD:SKILL.md` (avant cette mise à jour) | `660c7c9360c1be30bedab85ac76cb1070d43a434` |
+| `git -C <skill> hash-object --path=SKILL.md SKILL.md` (même état) | `660c7c93…` (identique au blob `HEAD`) |
+| Fixture : source CRLF, `* text=auto eol=lf`, `core.autocrlf=true` | index = `HEAD` = `ls-tree` = `hash-object --path` = `8d70c32b8190140f28b612201e635d80cc6efb77` |
+| Même fixture : SHA-256 des octets bruts de la source CRLF | `0e49c019…` (différent : l'OID applique la normalisation) |
+| Même fixture : source LF équivalente | `hash-object --path` → `8d70c32b…` (même OID) |
+| `git rev-parse origin/main` dans les deux dépôts | `EXIT=128`, alors que `hash-object` réussit |
+
+Réserve : `hash-object --path` lit les attributs du clone `<depot>` ; il ne remplace pas la preuve de contenu distant (API `sha`, ou `ls-tree` quand la ref existe) et n'est pas exécutable sans aucun clone du dépôt cible. Les OID ci-dessus sont des faits datés, pas des constantes.
+
 ## Réserve
 
 La copie publiée est une **archive** : les chemins relatifs du Skill peuvent viser l'arborescence du projet principal, absente du dépôt public. Le Skill fonctionnel reste dans le dossier utilisateur. La branche distante indépendante `skill/mesure-cesium-133-geolocalisee` n'a pas été fusionnée et reste sur `origin` ; sa suppression éventuelle exige une instruction explicite.
