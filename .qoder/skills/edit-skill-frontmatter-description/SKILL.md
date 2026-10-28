@@ -1,6 +1,6 @@
 ---
 name: edit-skill-frontmatter-description
-description: "Modifier ou compresser la description d'un SKILL.md proche de 1024 caractères, ajouter ou raccourcir des déclencheurs : inspecter le YAML, simuler chaque ancre sur la valeur parsée (1 occurrence exacte), sauvegarder hors du Skill, remplacer la seule ligne en gardant CRLF, BOM et style de citation, re-parser name, longueur, corps et diff, puis skill-file-qa PASS sur empreinte stable sans nouveau WARN ; vérifier la propagation : Base directory, SHA-256 du corps injecté égal au disque, entrée skill_listing préfixe + ellipse si rechargement, panneau client manuel. Utiliser pour description à 1018, ancre à 0, Edit file changed, WARN de layout, reload skills, 注入正文核对. 中文触发：修改 description、压缩描述、新增触发词、1024 上限、锚点预演、保留 CRLF、目录外备份、YAML 复解析、WARN 基线、skill_listing、description 传播。English: rewrite skill description, 1024 limit, anchor preflight, preserve EOL and quote style, re-parse frontmatter, baseline warn diff, verify injected body and skill listing propagation."
+description: "Modifier ou compresser la description d'un SKILL.md proche de 1024 caractères. 触发：修改 description、压缩描述、新增触发词、可见性预算、299 字符、清单截断、写后新会话、1024 上限、锚点预演、保留 CRLF、YAML 复解析、WARN 基线、skill_listing、description 传播。Inspecter le YAML, vérifier chaque ancre (1 occurrence, sinon ligne entière), sauvegarder hors du Skill, remplacer la seule ligne en gardant CRLF, BOM et style de citation, re-parser name, longueur, diff, placer les déclencheurs critiques dans la fenêtre visible (fin ≤ 270), puis skill-file-qa PASS sur empreinte stable sans nouveau WARN ; vérifier la propagation par couches : Base directory, SHA-256 du corps injecté égal au disque, entrée skill_listing (préfixe 299 + ellipse ou session isInitial), panneau client manuel. Utiliser pour description à 1018, ancre à 0, Edit file changed, WARN de layout, reload, 注入正文核对. English: rewrite skill description, 1024 limit, anchor preflight, visible listing prefix, preserve EOL and quote style, baseline warn diff, verify injected body and listing propagation."
 ---
 
 # Éditer la description d'un frontmatter de Skill
@@ -15,7 +15,8 @@ Remplacer uniquement la valeur `description` d'un `SKILL.md` lorsque la limite d
 - un remplacement partiel par ancres risque d'échouer sur la ponctuation ;
 - `Edit` signale `The file changed since your last read` ;
 - il faut conserver CRLF, BOM et style de citation d'un fichier Windows ;
-- il faut prouver qu'une seule ligne a changé et que la QA ne gagne aucun WARN.
+- il faut prouver qu'une seule ligne a changé et que la QA ne gagne aucun WARN ;
+- un déclencheur ajouté en fin de description n'apparaît pas dans la liste du client : il doit être déplacé dans la fenêtre visible.
 
 ## Quand ne pas l'utiliser
 
@@ -49,6 +50,9 @@ Remplacer uniquement la valeur `description` d'un `SKILL.md` lorsque la limite d
 16. Le JSONL de session se choisit par la ligne d'injection exacte de ce Skill (première ligne égale au dossier résolu), jamais par le `mtime` le plus récent : un fichier récent peut ne contenir aucune injection.
 17. Deux longueurs ne se comparent que si elles mesurent le même fichier : `inspect description_len` et `check disk_description_chars` portent sur la cible passée en argument.
 18. Une sortie JSON se relit avec l'outil Read ou avec un chemin passé en argument : un chemin littéral, Windows ou POSIX, écrit dans la chaîne de code de `py -3 -c` n'est pas converti par MSYS et échoue alors que le fichier existe.
+19. La liste du client n'affiche qu'un préfixe de 299 caractères suivi de « … » : tout déclencheur critique doit finir au plus tard au caractère 270, et sa position se mesure par `visibility`, jamais à l'œil.
+20. Une entrée de liste ne prouve l'état courant que si son horodatage est postérieur au `mtime` ; une session ouverte après l'écriture porte un attachement `isInitial` frais, ce qui dispense de `/skills reload`.
+21. Un préfixe visible identique ne prouve pas que la description entière est indexée : un déclencheur au-delà de la fenêtre reste « invisible », jamais « mismatch ». Un test « quel Skill choisirais-tu » est un indice de poids faible, jamais une preuve.
 
 ## Procédure
 
@@ -61,9 +65,12 @@ GUARD="$SKILLS_ROOT/edit-skill-frontmatter-description/scripts/description_guard
 PROPAGATION="$SKILLS_ROOT/edit-skill-frontmatter-description/scripts/propagation_check.py"
 CANDIDATE="$HOME/.qoder/tmp/desc-candidates/candidate.txt"
 BACKUP_DIR="$HOME/.qoder/tmp/skill-backup/example-skill"
+QA_FIXTURE="$HOME/.qoder/tmp/skill-qa-fixture/example-skill"
 ```
 
 ### 0. Référence et QA de départ
+
+Identifier d'abord la forme de `$SKILL_DIR` : Skill simple (`SKILL.md`, `references/`, `scripts/`) ou racine d'un clone d'archive (contient `.gitattributes` et `.qoder/skills/*`). Les deux se valident, mais pas sur la même cible de QA (étape 8).
 
 Enregistrer `size`, `mtime`, SHA-256 et l'ensemble trié des WARN avant toute modification :
 
@@ -93,6 +100,22 @@ py -3 -B -c "import io,sys; s=io.open(sys.argv[1],encoding='utf-8').read().rstri
 ```
 
 Conserver les longueurs dans le rapport. Un candidat à 1139 est refusé ; 1016, 1008 et 1004 passent. Ne jamais écrire le candidat dans `$SKILL_DIR`.
+
+### 2bis. Budget de visibilité
+
+Le client n'affiche que les 299 premiers caractères de la description, suivis de « … ». Placer chaque déclencheur critique de sorte que `position + longueur ≤ 270`, puis le prouver :
+
+```bash
+py -3 -B "$GUARD" visibility "$SKILL_DIR" \
+  --phrase "déclencheur 1" --phrase "déclencheur 2" \
+  --window 299 --safe 270
+```
+
+- `count` doit valoir 1 pour chaque phrase : une formulation dupliquée ne localise rien.
+- `end_pos ≤ 270` pour toutes : verdict `VISIBILITY_OK`, code 0.
+- `within_window` vrai mais `within_safe` faux : `VISIBILITY_PARTIAL`, code 1 — déplacer le déclencheur, pas élargir la fenêtre.
+- Phrase absente ou au-delà de 299 : `VISIBILITY_FAIL` — invisible pour le modèle même si la QA passe.
+- Contrôle négatif obligatoire : une phrase placée après 270 doit faire échouer la commande.
 
 ### 3. Préflight des ancres
 
@@ -170,16 +193,27 @@ La QA définit le nombre de lignes du corps comme `len(body.splitlines())` aprè
 
 ### 8. QA et attribution des WARN
 
+Deux cibles possibles, jamais interchangeables :
+
+| Cible | Commande | Ce qu'elle prouve | Observé |
+|---|---|---|---|
+| Installation | `validate_skill.py "$SKILL_DIR"` | layout réellement installé | Skill simple : `Files (6)`, 0 WARN ; racine d'archive : `Files (15)`, 13 WARN |
+| Fixture à 2 fichiers | copie de `SKILL.md` et des références modifiées dans un dossier du même nom, hors du Skill | édition isolée, empreinte stable, zéro WARN ajouté | `Files (2)`, 0 WARN |
+
 ```bash
-py -3 -B "$SKILLS_ROOT/skill-file-qa/scripts/validate_skill.py" "$SKILL_DIR" \
-  --workspace "$PWD" | tee "$HOME/.qoder/tmp/qa-after.txt"
+VALIDATOR="$SKILLS_ROOT/skill-file-qa/scripts/validate_skill.py"
+# Installation : comparaison avant/après sur la même cible
+py -3 -B "$VALIDATOR" "$SKILL_DIR" --workspace "$PWD" | tee "$HOME/.qoder/tmp/qa-after.txt"
 diff <(grep '^WARN' "$HOME/.qoder/tmp/qa-before.txt" | sort) \
      <(grep '^WARN' "$HOME/.qoder/tmp/qa-after.txt" | sort) || true
+# Fixture à 2 fichiers : contrôle isolé, sans diff avec la baseline d'installation
+py -3 -B "$VALIDATOR" "$QA_FIXTURE" --workspace "$PWD"
 ```
 
-- Exiger `RESULT PASS`, code de sortie 0 et empreinte stable.
-- Le nouvel ensemble de WARN doit être vide ; un simple décompte identique ne suffit pas.
-- Dans le cas de référence, les 10 WARN viennent d'un `.gitattributes` et d'archives `.qoder/skills/...` déjà présents ; ils ne sont pas causés par l'édition.
+- Exiger `RESULT PASS`, code de sortie 0 et empreinte stable sur la cible utilisée.
+- Le nouvel ensemble de WARN doit être vide **par rapport à la même cible** ; un simple décompte identique ne suffit pas, et les 13 WARN de l'archive ne se comparent jamais aux 0 WARN de la fixture.
+- Le nombre de WARN préexistants n'est pas fixe : il dépend du contenu de l'archive (10 puis 13 observés).
+- Si `$SKILL_DIR` est une racine d'archive, lancer les deux QA et consigner les deux jeux ; la fixture ne remplace pas le layout réel.
 - Si le corps a aussi été édité, le nombre de lignes peut légitimement changer ; limiter l'invariant « corps identique » à l'étape de description seule.
 
 ### 9. Vérifier la propagation de la description
@@ -191,6 +225,8 @@ Un agent ne peut pas exécuter `/skills reload`. Trois couches distinctes, jamai
 | Injection à l'appel | message `user`, `isMeta: true`, contenu commençant par `Base directory for this skill:` | le panneau client |
 | Liste de Skills | attachement `skill_listing` (`isInitial: true`) du JSONL de session | que le client a rafraîchi |
 | Panneau client | action utilisateur | non vérifiable par l'agent |
+
+Utiliser les étapes 9.0 et `check` seulement si le Skill a été appelé. Pour une édition de description seule, passer à 9bis : l'appel injecte tout le corps (≈ 38 KB dans le cas vérifié) et n'est pas nécessaire.
 
 1. Échantillonner `size`, `mtime_ns` et SHA-256 de `SKILL.md` avant et après l'appel : un appel en lecture seule ne doit rien écrire.
 2. Appeler le Skill en lecture seule ; le résultat de l'outil ne contient que `Launching skill:` suivi du nom, sans chemin ni corps.
@@ -218,9 +254,31 @@ py -3 -B "$PROPAGATION" check "$SKILL_DIR" \
 
 Le script exécute les étapes 3 à 7 et renvoie `verdict` : `INJECTION_OK_LISTING_OK`, `INJECTION_OK_LISTING_UNVERIFIED`, `INJECTION_OK_LISTING_MISMATCH` (code 1 : un listing frais contredit la description) ou `FAIL`. Une couche non mesurée reste `unverified` ; `panel` vaut toujours `unverified_manual`.
 
+#### 9bis. Description seule, Skill non appelé
+
+Une modification de description ne justifie pas d'appeler le Skill. Dans ce mode, seule la couche liste est mesurable ; l'injection reste `unverified` et le panneau reste manuel.
+
+```bash
+py -3 -B "$PROPAGATION" listing "$SKILL_DIR" \
+  --session-jsonl "$SESSION_JSONL"
+```
+
+- Lire `record['attachment']['content']` : un enregistrement de liste a `message: null` ; chercher dans `message.content` donne 0 entrée.
+- Chercher la ligne exacte `- <name>: `, puis trier toutes les entrées par `record['timestamp']` (ISO ou epoch, millisecondes acceptées). L'ordre du glob n'est pas chronologique : des entrées du 2026-10-26 peuvent sortir en dernier et faire croire à un préfixe à 0.
+- Ne retenir que les entrées postérieures au `mtime` de `SKILL.md` (ou `--after`) et exiger l'égalité complète, ou un segment de 300 caractères finissant par `…` dont les 299 premiers égalent le disque.
+- Verdicts : `LISTING_OK`, `LISTING_UNVERIFIED` (aucune entrée fraîche, code 0) ou `LISTING_MISMATCH` (entrée fraîche contradictoire, code 1) ; `injection` vaut `unverified`, `panel` reste `unverified_manual`.
+- Cas vérifié : re-scan indépendant de 1703 entrées, 17 postérieures à l'écriture (13 au moment de la session), la plus récente `2026-10-27T13:29:31.108Z`, segment de 300 + ellipse, 299 premiers identiques ; la session d'édition portait elle-même l'entrée `13:25:46.611Z`.
+
+**Obtenir une entrée fraîche sans `/skills reload`.** L'agent ne peut pas recharger la liste. Si aucun `skill_listing` postérieur au `mtime` n'existe dans les JSONL connus, ouvrir une session indépendante en lecture seule : son attachement `isInitial` est construit à l'ouverture, donc après l'écriture. Passer son JSONL à `listing` (`--session-jsonl` est répétable) et exiger `entries_fresh ≥ 1`, `is_initial: true` et `latest_timestamp` > `mtime`. Cas vérifié : écriture à `00:51:43Z`, session ouverte à `00:52:15.683Z`, `LISTING_OK`, préfixe 299.
+
+- `LISTING_OK` ne couvre que le préfixe affiché. Un déclencheur absent de l'entrée mais présent sur le disque est tronqué, pas périmé : le déclarer « invisible » et le déplacer (2bis), sans écrire dans `SKILL.md` pour forcer un rechargement.
+- Un test qui demande à la session de choisir un Skill n'a pas de pouvoir de décision quand plusieurs Skills du même domaine concourent : poids faible, jamais une preuve à la place de l'attachement.
+
+`check` exige une injection de **ce** Skill : sans appel, il renvoie 2 `no injection record found for this Skill`. Ne pas lui passer une session où seul un autre Skill a été appelé : avant le filtre par dossier, il sélectionnait l'injection étrangère et rendait `FAIL` (code 1) avec un `declared_base_dir` d'un autre Skill. Le script filtre désormais par `same_dir(declared_base_dir, skill_dir)` et expose `injection_records_total` / `injection_records_for_skill`.
+
 ### 10. Rapport
 
-Consigner : mode, ancienne et nouvelle longueur, ligne, style de citation, EOL, BOM, chemin de sauvegarde, SHA-256 avant/après, comptes QA et nouvel ensemble de WARN, puis le verdict de propagation de l'étape 9.
+Consigner : mode, ancienne et nouvelle longueur, ligne, style de citation, EOL, BOM, clé `backup` (chemin complet), SHA-256 avant/après, comptes QA et nouvel ensemble de WARN par cible, positions `visibility` de chaque déclencheur critique, puis le verdict de propagation de l'étape 9 ou, en mode 9bis, le JSONL de la session fraîche avec l'horodatage `isInitial`, le verdict `LISTING_*` et `injection: unverified`.
 
 ## Recette d'acceptation sur copie
 
@@ -234,6 +292,8 @@ Exécuter une fois après toute modification du garde ou de la procédure, dans 
 6. Vérifier indépendamment dans un `.py` hors du Skill : même nombre de lignes, seule la ligne de description diffère, autres lignes identiques octet pour octet. `git diff` ne prouve rien sur une copie hors dépôt.
 7. Restaurer depuis le `.bak` et exiger un SHA-256 égal à l'original ; lancer `skill-file-qa` avant, après apply et après restauration (mêmes compteurs, `Files (N)` stable).
 8. Supprimer le répertoire jetable et vérifier qu'aucun `__pycache__`/`.pyc` n'existe dans l'installation, dont le SHA-256 doit être inchangé.
+9. Tester `propagation_check.py` hors installation : `check` sur une session contenant l'injection d'un autre Skill doit renvoyer 2 (aucune injection de ce Skill) ; `listing` sur un JSONL jetable dont les entrées sont dans le désordre (une ancienne contradictoire, une fraîche conforme) doit renvoyer `LISTING_OK` ; avec `--after` postérieur, `LISTING_UNVERIFIED` ; avec une description fraîche différente, `LISTING_MISMATCH` (code 1). Vérifier `injection: "unverified"` et `panel: "unverified_manual"`.
+10. Tester `visibility` sur une fixture dédiée hors installation (dossier = `name`, description `"Début" + 271 × "a" + "Fin"`) : `--phrase Début` → `VISIBILITY_OK` (code 0) ; `--phrase Fin` → `VISIBILITY_PARTIAL` (code 1, `end_pos` 279, `within_window` vrai, `within_safe` faux) ; une phrase absente ou dupliquée → `VISIBILITY_FAIL` (code 1). Aucune écriture, `__pycache__` absent.
 
 ## Contrat du script
 
@@ -243,12 +303,14 @@ Sortie JSON ASCII échappée, sans traceback. Exécuter avec `py -3 -B` pour év
 |---|---|---|---|
 | `inspect <dir>` | `SKILL.md` unique | lit et mesure, aucune écriture | 0 lisible et éditable ; 1 structure non prise en charge ; 2 environnement |
 | `anchors <dir>` | `--anchor` répétable, `--require-unique` | compte chaque ancre sur la description parsée | 0 ; 1 si `--require-unique` et un compte ≠ 1 ; 2 environnement |
+| `visibility <dir>` | `--phrase` répétable, `--window` (défaut 299), `--safe` (défaut 270) | mesure `first_pos` / `end_pos` de chaque phrase ; aucune écriture | 0 toutes uniques et `end ≤ safe` ; 1 phrase absente, dupliquée ou hors fenêtre ; 2 environnement ou usage |
 | `replace <dir>` | `--candidate-file`, `--backup-dir`, `--apply`, `--expect-sha256` | dry-run par défaut ; écriture ciblée avec sauvegarde et invariants | 0 ; 1 candidat ou invariant ; 2 environnement, EOL mixte, sauvegarde interne, SHA inattendu |
-| `check <dir>` | `--session-jsonl` requis, `--sentinel` requis et répétable, `--injection-timestamp` | relit le JSONL, compare injection, corps normalisé et listings ; aucune écriture | 0 injection conforme sans contradiction ; 1 écart ; 2 JSONL absent, aucune injection, sentinelle manquante ou usage |
+| `check <dir>` | `--session-jsonl` requis, `--sentinel` requis et répétable, `--injection-timestamp` | relit le JSONL, filtre les injections par dossier cible, compare injection, corps normalisé et listings ; aucune écriture | 0 injection conforme sans contradiction ; 1 écart ; 2 JSONL absent, aucune injection **de ce Skill**, sentinelle manquante ou usage |
+| `listing <dir>` | `--session-jsonl` requis et répétable, `--after` ISO optionnel (défaut `mtime`) | lit les `skill_listing`, trie par timestamp, compare la description ; aucune écriture | 0 `LISTING_OK` ou `LISTING_UNVERIFIED` ; 1 `LISTING_MISMATCH` ; 2 JSONL absent ou usage |
 
 `replace` refuse : candidat multiligne, vide ou > 1024 ; caractère de contrôle ; valeur qui ne fait pas l'aller-retour dans le style de citation existant ; description multiligne ou clé non top-level ; ligne de description non canonique (commentaire ou contenu supplémentaire) ; sauvegarde dans le Skill.
 
-`disk_description_chars` compte la description parsée de la cible `check` ; ne le comparer qu'à `inspect description_len` sur le même dossier. Un `--session-jsonl` sans injection de ce Skill donne le code 2, pas un verdict. Un dry-run n'écrit ni dossier de sauvegarde ni `.bak` ; capturer son code avant toute autre commande.
+`disk_description_chars` compte la description parsée de la cible `check` ; ne le comparer qu'à `inspect description_len` sur le même dossier. Un `--session-jsonl` sans injection de ce Skill donne le code 2, pas un verdict. Un dry-run n'écrit ni dossier de sauvegarde ni `.bak` ; capturer son code avant toute autre commande. `listing` ne lit aucune injection : `injection` reste `unverified`, et un `--after` postérieur à toutes les entrées produit `LISTING_UNVERIFIED` (code 0).
 
 ## Pièges vérifiés
 
@@ -263,11 +325,16 @@ Sortie JSON ASCII échappée, sans traceback. Exécuter avec `py -3 -B` pour év
 | BOM | préservé par le script, mais la QA échoue si `SKILL.md` commence par un BOM | rapporter ; ne pas retirer silencieusement |
 | Console Windows | `UnicodeEncodeError` en cp1252 sur du texte non ASCII | sortie JSON `ensure_ascii=True` |
 | Nombre de lignes | 308 lignes au moment du remplacement, 337 après des éditions de corps dans la même session | limiter l'invariant à l'étape description seule |
-| WARN de layout | 10 WARN préexistants dus à `.gitattributes` et aux archives `.qoder/skills/...` | comparer les ensembles, pas seulement les comptes |
+| WARN de layout | 10 puis 13 WARN préexistants selon le contenu de l'archive (`.gitattributes`, `.qoder/skills/...`) | comparer les ensembles sur la même cible, pas seulement les comptes |
 | Longueur | `len()` compte les points de code, pas les octets UTF-8 | ne pas utiliser la taille du fichier |
 | `py -3 -c` inline (Git Bash), chemin Windows | littéral non brut dans des guillemets doubles : `SyntaxError: (unicode error) 'unicodeescape' ... position 33-34` | écrire un `.py` temporaire hors du Skill qui reçoit son chemin en argument, puis lancer `py -3 -B` |
 | `py -3 -c` inline (Git Bash), chemin POSIX | `open(r'/c/Users/.../apply.json')` : `FileNotFoundError` alors que le fichier existe, code 1 | MSYS ne convertit que les arguments : passer le chemin en argv ou lire avec l'outil Read |
 | Entrée de liste sans description | 36 caractères, nom seul à 12:03:43 et 12:04:29 ; description seulement à 12:05:08.952Z | comparer les horodatages au `mtime` ; normal avant rechargement |
+| `message.content` sur une liste | 0 entrée alors que l'attachement existe | lire `attachment.content` ; `message` vaut `null` |
+| Ordre du glob | les dernières entrées lues dataient du 2026-10-26, préfixe 299 à 0 | trier toutes les entrées par `record['timestamp']` |
+| `backup_path` | `null` alors que la sauvegarde existe | la clé apply est `backup` (chemin complet) ; `backup_dir` donne le dossier |
+| QA sur racine d'archive | `Files (15)` et 13 WARN contre `Files (2)` et 0 WARN sur la fixture | comparer les WARN sur la même cible ; le compte varie (10/13) |
+| Injection étrangère | `check` rend `FAIL` avec un `declared_base_dir` d'un autre Skill | filtrer par dossier cible ; sans injection de ce Skill, attendre le code 2 |
 | Filtre par sous-chaîne sur `Base directory` | 5 faux positifs dans les sorties d'outils et les scripts de vérification | exiger `type: user`, `isMeta: true` et `startswith` |
 | Hash du corps injecté | 11 807 vs 11 808 caractères bruts mais hachages égaux | `strip()` des deux côtés et déclarer la normalisation |
 | Appel avec arguments | 16 542 caractères et SHA `7107c5d4…` pour un corps disque à jour : l'injection ajoute 63 caractères `\n\nARGUMENTS: …` | retirer le bloc `ARGUMENTS:` avant le hash (le script le fait) ; ou appeler sans argument |
@@ -275,34 +342,44 @@ Sortie JSON ASCII échappée, sans traceback. Exécuter avec `py -3 -B` pour év
 | Longueurs croisées | `inspect` 934 sur la fixture, `check` 963 sur l'installation : aucune incohérence | comparer deux mesures du même fichier |
 | Code de retour masqué | dry-run à 0, compound affiché à 2 par le `ls` final | lancer le garde seul ou `rc=$?` juste après |
 | `git diff` sur une copie | copie hors dépôt : aucune sortie, aucune preuve | diff ligne à ligne en Python hors du Skill |
+| Déclencheur en fin de description | 1000 caractères, modification à partir du caractère 309 : les 4 déclencheurs de queue comptent 0 dans la liste et 1 sur le disque | placer les déclencheurs critiques avant 270 (`visibility`) ; ne pas conclure à une liste périmée |
+| Déclencheur dupliqué | `清单截断` compte 2 : la position de la première occurrence ne localise rien | exiger `count == 1` ; choisir une formulation unique |
+| Test « quel Skill choisirais-tu » | la session a choisi `verify-injected-skill-body-freshness` alors que la cible était `planifier-budget-paquet-skill` | poids faible : la preuve est l'attachement `isInitial`, pas le choix du modèle |
 
 ## Checklist finale
 
 - [ ] `inspect` exécuté avant toute écriture ; ligne, longueur, style, EOL et BOM enregistrés.
 - [ ] Chaque ancre compte exactement 1, ou le remplacement partiel a été abandonné.
 - [ ] Candidat sur une ligne, ≤ 1024 points de code, style de citation compatible.
-- [ ] Sauvegarde hors du dossier du Skill et SHA-256 identique.
+- [ ] Sauvegarde hors du dossier du Skill, SHA-256 identique, chemin lu dans la clé `backup` de la sortie apply.
 - [ ] Dry-run sans modification d'octet.
 - [ ] Apply avec `--expect-sha256`, invariants tous vrais, aucune restauration.
 - [ ] Diff limité à la ligne de description ; corps et autres clés identiques.
-- [ ] QA `RESULT PASS` sur empreinte stable, zéro nouveau WARN.
+- [ ] QA `RESULT PASS` sur empreinte stable et zéro nouveau WARN **sur la même cible** ; si racine d'archive, racine et fixture à 2 fichiers consignées séparément.
 - [ ] SHA-256 de `SKILL.md` et des références enregistrés séparément.
 - [ ] Appel lecture seule après écriture ; injection `isMeta` avec dossier exact et hash du corps normalisé égal.
+- [ ] Mode « Skill non appelé » : `listing` exécuté, `LISTING_OK` avec 299 + ellipse, `injection` déclarée non mesurée.
+- [ ] `check` refusé (code 2) quand la session ne contient aucune injection de ce Skill ; aucune injection étrangère sélectionnée.
 - [ ] Statut de la liste consigné (préfixe 299 + ellipse, ou « non vérifiée ») ; panneau client déclaré manuel.
 - [ ] Session choisie par injection exacte, pas par `mtime` ; comptes par fichier consignés.
 - [ ] Code de retour de chaque sous-commande capturé juste après l'appel.
 - [ ] Sorties JSON relues via l'outil Read ou un chemin en argument ; aucun chemin littéral dans `py -3 -c`.
 - [ ] Longueurs comparées sur la même cible uniquement.
+- [ ] Chaque déclencheur critique mesuré par `visibility` : `count == 1` et `end ≤ 270` ; contrôle négatif exécuté.
+- [ ] En mode 9bis, entrée `isInitial` postérieure au `mtime` obtenue (session fraîche au besoin) ou `LISTING_UNVERIFIED` déclaré.
+- [ ] Déclencheur hors fenêtre déclaré « invisible », jamais `MISMATCH` ; test de choix de Skill marqué de poids faible.
 - [ ] Recette d'acceptation exécutée sur copie : dry-run sans octet, invariants, restauration SHA = original, QA aux trois états.
 - [ ] Aucun `__pycache__`/`.pyc`, aucun autre Skill modifié.
 
 ## Ressources
 
-- [scripts/description_guard.py](scripts/description_guard.py) — `inspect`, `anchors`, `replace` ; dry-run par défaut, sauvegarde externe, invariants et restauration.
-- [scripts/propagation_check.py](scripts/propagation_check.py) — `check` : injection, corps normalisé, `skill_listing` ; lecture seule, verdict explicite.
+- [scripts/description_guard.py](scripts/description_guard.py) — `inspect`, `anchors`, `visibility`, `replace` ; dry-run par défaut, sauvegarde externe, invariants et restauration.
+- [scripts/propagation_check.py](scripts/propagation_check.py) — `check` : injection filtrée par dossier, corps normalisé, `skill_listing` ; `listing` : couche liste seule, tri par timestamp ; lecture seule, verdict explicite.
 - [references/cas-description-1018-vers-1004.md](references/cas-description-1018-vers-1004.md) — cas vérifié du 2026-10-27, preuves et statuts.
 - [references/cas-propagation-reload-2026-10-27.md](references/cas-propagation-reload-2026-10-27.md) — cas vérifié : injection 12:04:32.702Z, `eb2a411c…`, 299 + ellipse.
 - [references/cas-acceptation-2026-10-27.md](references/cas-acceptation-2026-10-27.md) — recette exécutée de bout en bout : fixture 934, dry-run 961 sans écriture, restauration SHA identique, QA 9/0/0.
+- [references/cas-listing-sans-invocation-2026-10-27.md](references/cas-listing-sans-invocation-2026-10-27.md) — cas vérifié : 1004 → 834, QA racine d'archive 15/13 vs fixture 2/0, liste seule sans injection, `backup` vs `backup_path`.
+- [references/cas-visibilite-299-2026-10-28.md](references/cas-visibilite-299-2026-10-28.md) — cas vérifié : 1000 → 1007, positions 95–130, session fraîche `isInitial` `00:52:15.683Z`, `LISTING_OK`.
 
 ## Skills liés
 
@@ -312,3 +389,4 @@ Sortie JSON ASCII échappée, sans traceback. Exécuter avec `py -3 -B` pour év
 - `verifier-unicode-fichiers-windows` : assertions exactes sur du texte non ASCII.
 - `verify-skill-runtime-binding` : preuve générique du dossier réellement chargé.
 - `verify-injected-skill-body-freshness` : fraîcheur du corps injecté lors d'un rechargement. Ici, seule la propagation de la description est traitée ; ces deux Skills restent la référence pour les preuves génériques.
+- `skill-acceptance-in-new-session` : prompt auto-suffisant et nonce pour une session indépendante ; utile quand l'entrée `isInitial` fraîche doit être obtenue sans écriture.

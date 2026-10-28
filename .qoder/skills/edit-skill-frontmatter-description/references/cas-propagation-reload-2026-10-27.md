@@ -86,3 +86,4 @@ Un compte supérieur à 1 est normal pour un chemin de référence ou un libell�
 - Une entrée en nom seul n'est pas une panne : elle précède le rechargement.
 - Le panneau client reste manuel ; ne jamais écrire dans `SKILL.md` pour forcer un rechargement.
 - Sous Windows/Git Bash, ne pas placer un chemin Windows dans `py -3 -c "..."` : écrire un `.py` temporaire hors du Skill et lancer `py -3 -B`.
+- Pour une édition de description sans appel du Skill, voir `cas-listing-sans-invocation-2026-10-27.md` : `check` renvoie 2 sans injection de la cible, `listing` évalue la couche liste seule.

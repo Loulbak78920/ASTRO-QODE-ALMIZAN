@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Read-only check that a Skill description propagated into a Qoder session.
+"""Read-only checks that a Skill description propagated into Qoder sessions.
 
-Compares the injected skill body and the skill_listing attachment in a session
-JSONL with the SKILL.md on disk. Never writes.
-Exit codes: 0 injection matches and no contradiction, 1 mismatch, 2 environment.
+`check` compares the injected body and the skill_listing attachments with the
+SKILL.md on disk. `listing` evaluates only the listing layer, for description
+edits where the Skill was deliberately not invoked. Never writes.
+Exit codes: 0 match or no contradiction, 1 mismatch, 2 environment or usage.
 """
 
 from __future__ import annotations
@@ -48,6 +49,11 @@ def sha256_text(value: str) -> str:
 
 
 def parse_timestamp(value):
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float)):
+        seconds = float(value)
+        return seconds / 1000.0 if seconds > 1e11 else seconds
     if not isinstance(value, str):
         return None
     text = value.strip()
@@ -219,7 +225,7 @@ def same_dir(left: str, right: Path) -> bool:
     return os.path.normcase(str(resolved)) == os.path.normcase(str(right.resolve()))
 
 
-def evaluate_listing(item: dict, description: str, mtime: float) -> dict:
+def evaluate_listing(item: dict, description: str, reference_epoch: float) -> dict:
     segment = item.pop("desc_segment")
     prefix_body = segment[:-1] if segment.endswith(ELLIPSIS) else segment
     item["prefix_matches"] = bool(segment) and description.startswith(prefix_body)
@@ -228,8 +234,114 @@ def evaluate_listing(item: dict, description: str, mtime: float) -> dict:
         segment == description
         or (len(segment) == LISTING_DESC_CHARS and segment.endswith(ELLIPSIS) and description.startswith(prefix_body))
     )
-    item["stale"] = item["timestamp_epoch"] is None or item["timestamp_epoch"] < mtime
+    item["stale"] = item["timestamp_epoch"] is None or item["timestamp_epoch"] < reference_epoch
     return item
+
+
+def cmd_check(args) -> int:
+    skill_dir = Path(args.skill_dir)
+    skill = read_skill(skill_dir)
+    injections_all, listings = scan_jsonl(Path(args.session_jsonl), skill["name"])
+    injections = [item for item in injections_all if same_dir(item["declared_base_dir"], skill_dir)]
+    counts = {"injection_records_total": len(injections_all), "injection_records_for_skill": len(injections)}
+    if not injections:
+        raise CheckError("no injection record found for this Skill", EXIT_ENV, **counts)
+    try:
+        injection = pick_injection(injections, args.injection_timestamp)
+    except CheckError as exc:
+        exc.extra.update(counts)
+        raise
+    injected_body = injection.pop("injected_body_text")
+    dir_matches = same_dir(injection["declared_base_dir"], skill_dir)
+    body_matches = injection["injected_body_sha256"] == sha256_text(skill["body_stripped"])
+    sentinel_rows = [{"text": text, "count": injected_body.count(text)} for text in args.sentinel]
+    sentinels_ok = all(row["count"] >= 1 for row in sentinel_rows)
+    report_listings = [evaluate_listing(item, skill["description"], skill["mtime"]) for item in listings]
+    usable = [item for item in report_listings if not item["stale"] and item["desc_present"]]
+    if any(not (item["prefix_matches"] and item["length_ok"]) for item in usable):
+        listing_status = "mismatch"
+    elif any(item["prefix_matches"] and item["length_ok"] for item in usable):
+        listing_status = "ok"
+    else:
+        listing_status = "unverified"
+    injection_ok = dir_matches and body_matches and sentinels_ok
+    verdict = "INJECTION_OK" if injection_ok else "FAIL"
+    if injection_ok:
+        verdict += "_LISTING_" + listing_status.upper()
+    ok = injection_ok and listing_status != "mismatch"
+    payload = {
+        "ok": ok,
+        "command": "check",
+        "skill_dir": str(skill_dir),
+        "skill_name": skill["name"],
+        "disk_size": skill["size"],
+        "disk_mtime_ns": skill["mtime_ns"],
+        "disk_sha256": skill["sha256"],
+        "disk_description_chars": len(skill["description"]),
+        "disk_body_raw_chars": len(skill["body"]),
+        "disk_body_stripped_chars": len(skill["body_stripped"]),
+        "disk_body_sha256": sha256_text(skill["body_stripped"]),
+        "injection_records_total": len(injections_all),
+        "injection_records_for_skill": len(injections),
+        "injection": injection,
+        "dir_matches": dir_matches,
+        "body_matches": body_matches,
+        "sentinels": sentinel_rows,
+        "sentinels_ok": sentinels_ok,
+        "listings": report_listings,
+        "listing_status": listing_status,
+        "panel": "unverified_manual",
+        "verdict": verdict,
+    }
+    emit(payload)
+    return EXIT_OK if ok else EXIT_FAIL
+
+
+def cmd_listing(args) -> int:
+    skill_dir = Path(args.skill_dir)
+    skill = read_skill(skill_dir)
+    reference_epoch = skill["mtime"]
+    if args.after:
+        parsed = parse_timestamp(args.after)
+        if parsed is None:
+            raise CheckError("--after is not an ISO timestamp", EXIT_ENV)
+        reference_epoch = parsed
+    entries = []
+    for raw_path in args.session_jsonl:
+        _, listings = scan_jsonl(Path(raw_path), skill["name"])
+        entries.extend(listings)
+    report = [evaluate_listing(item, skill["description"], reference_epoch) for item in entries]
+    report.sort(key=lambda item: item["timestamp_epoch"] if item["timestamp_epoch"] is not None else -1)
+    fresh = [item for item in report if not item["stale"] and item["desc_present"]]
+    if any(not (item["prefix_matches"] and item["length_ok"]) for item in fresh):
+        status = "mismatch"
+    elif fresh:
+        status = "ok"
+    else:
+        status = "unverified"
+    latest = next((item for item in reversed(report) if item["timestamp_epoch"] is not None), None)
+    payload = {
+        "ok": status != "mismatch",
+        "command": "listing",
+        "skill_dir": str(skill_dir),
+        "skill_name": skill["name"],
+        "disk_size": skill["size"],
+        "disk_mtime_ns": skill["mtime_ns"],
+        "disk_sha256": skill["sha256"],
+        "disk_description_chars": len(skill["description"]),
+        "session_jsonl": [str(Path(item)) for item in args.session_jsonl],
+        "after_epoch": reference_epoch,
+        "after_source": "argument" if args.after else "mtime",
+        "entries_total": len(report),
+        "entries_fresh": len(fresh),
+        "latest_timestamp": latest["timestamp"] if latest else None,
+        "listings": report,
+        "injection": "unverified",
+        "panel": "unverified_manual",
+        "verdict": "LISTING_" + status.upper(),
+    }
+    emit(payload)
+    return EXIT_OK if status != "mismatch" else EXIT_FAIL
 
 
 def main(argv=None) -> int:
@@ -240,53 +352,15 @@ def main(argv=None) -> int:
     check.add_argument("--session-jsonl", required=True)
     check.add_argument("--injection-timestamp")
     check.add_argument("--sentinel", action="append", default=[], required=True)
+    check.set_defaults(func=cmd_check)
+    listing = sub.add_parser("listing", help="read-only listing-layer comparison, without an injection")
+    listing.add_argument("skill_dir")
+    listing.add_argument("--session-jsonl", action="append", required=True, dest="session_jsonl")
+    listing.add_argument("--after")
+    listing.set_defaults(func=cmd_listing)
     args = parser.parse_args(argv)
     try:
-        skill = read_skill(Path(args.skill_dir))
-        injections, listings = scan_jsonl(Path(args.session_jsonl), skill["name"])
-        injection = pick_injection(injections, args.injection_timestamp)
-        injected_body = injection.pop("injected_body_text")
-        dir_matches = same_dir(injection["declared_base_dir"], Path(args.skill_dir))
-        body_matches = injection["injected_body_sha256"] == sha256_text(skill["body_stripped"])
-        sentinel_rows = [{"text": text, "count": injected_body.count(text)} for text in args.sentinel]
-        sentinels_ok = all(row["count"] >= 1 for row in sentinel_rows)
-        report_listings = [evaluate_listing(item, skill["description"], skill["mtime"]) for item in listings]
-        usable = [item for item in report_listings if not item["stale"] and item["desc_present"]]
-        if any(not (item["prefix_matches"] and item["length_ok"]) for item in usable):
-            listing_status = "mismatch"
-        elif any(item["prefix_matches"] and item["length_ok"] for item in usable):
-            listing_status = "ok"
-        else:
-            listing_status = "unverified"
-        injection_ok = dir_matches and body_matches and sentinels_ok
-        verdict = "INJECTION_OK" if injection_ok else "FAIL"
-        if injection_ok:
-            verdict += "_LISTING_" + listing_status.upper()
-        ok = injection_ok and listing_status != "mismatch"
-        payload = {
-            "ok": ok,
-            "command": "check",
-            "skill_dir": str(Path(args.skill_dir)),
-            "skill_name": skill["name"],
-            "disk_size": skill["size"],
-            "disk_mtime_ns": skill["mtime_ns"],
-            "disk_sha256": skill["sha256"],
-            "disk_description_chars": len(skill["description"]),
-            "disk_body_raw_chars": len(skill["body"]),
-            "disk_body_stripped_chars": len(skill["body_stripped"]),
-            "disk_body_sha256": sha256_text(skill["body_stripped"]),
-            "injection": injection,
-            "dir_matches": dir_matches,
-            "body_matches": body_matches,
-            "sentinels": sentinel_rows,
-            "sentinels_ok": sentinels_ok,
-            "listings": report_listings,
-            "listing_status": listing_status,
-            "panel": "unverified_manual",
-            "verdict": verdict,
-        }
-        emit(payload)
-        return EXIT_OK if ok else EXIT_FAIL
+        return args.func(args)
     except CheckError as exc:
         payload = {"ok": False, "command": getattr(args, "command", None), "error": str(exc)}
         payload.update(exc.extra)

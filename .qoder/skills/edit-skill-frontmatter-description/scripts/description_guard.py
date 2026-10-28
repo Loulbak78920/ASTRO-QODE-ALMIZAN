@@ -2,6 +2,7 @@
 """Safely inspect or replace the description scalar of a SKILL.md frontmatter.
 
 Read-only unless `replace --apply` is given. All output is ASCII JSON.
+`visibility` measures where trigger phrases fall inside the client listing window.
 Exit codes: 0 success, 1 invariant or candidate failure, 2 environment or usage.
 """
 
@@ -23,6 +24,8 @@ except ImportError:
     yaml = None
 
 MAX_DESCRIPTION = 1024
+VISIBLE_CHARS = 299
+SAFE_CHARS = 270
 EXIT_OK = 0
 EXIT_FAIL = 1
 EXIT_ENV = 2
@@ -397,6 +400,53 @@ def cmd_anchors(args) -> int:
     return EXIT_OK
 
 
+def cmd_visibility(args) -> int:
+    skill = load_skill(Path(args.skill_dir))
+    if not args.phrase:
+        raise GuardError("at least one --phrase is required", EXIT_ENV)
+    if args.window < 1 or args.safe < 1:
+        raise GuardError("--window and --safe must be positive", EXIT_ENV)
+    if args.safe > args.window:
+        raise GuardError("--safe must not exceed --window", EXIT_ENV)
+    rows = []
+    for phrase in args.phrase:
+        if phrase == "":
+            raise GuardError("empty phrase", EXIT_ENV)
+        first = skill["description"].find(phrase)
+        end = first + len(phrase) if first >= 0 else -1
+        rows.append({
+            "phrase": phrase,
+            "count": skill["description"].count(phrase),
+            "first_pos": first,
+            "end_pos": end,
+            "within_window": first >= 0 and end <= args.window,
+            "within_safe": first >= 0 and end <= args.safe,
+        })
+    unique = all(row["count"] == 1 for row in rows)
+    visible = all(row["within_window"] for row in rows)
+    safe = all(row["within_safe"] for row in rows)
+    ok = unique and safe
+    payload = {
+        "ok": ok,
+        "command": "visibility",
+        "skill_dir": str(args.skill_dir),
+        "description_len": len(skill["description"]),
+        "window": args.window,
+        "safe": args.safe,
+        "phrases": rows,
+        "unique": unique,
+        "visible": visible,
+        "safe_ok": safe,
+        "verdict": "VISIBILITY_OK" if ok else ("VISIBILITY_PARTIAL" if unique and visible else "VISIBILITY_FAIL"),
+    }
+    if not unique:
+        payload["error"] = "each phrase must occur exactly once"
+    elif not safe:
+        payload["error"] = "a phrase ends beyond the safe window"
+    emit(payload)
+    return EXIT_OK if ok else EXIT_FAIL
+
+
 def cmd_replace(args) -> int:
     skill_dir = Path(args.skill_dir)
     skill = load_skill(skill_dir)
@@ -481,6 +531,13 @@ def build_parser() -> JsonArgumentParser:
     anchors_parser.add_argument("--anchor", action="append", default=[])
     anchors_parser.add_argument("--require-unique", action="store_true")
     anchors_parser.set_defaults(func=cmd_anchors)
+
+    visibility_parser = subparsers.add_parser("visibility", help="measure trigger positions inside the listing window")
+    visibility_parser.add_argument("skill_dir")
+    visibility_parser.add_argument("--phrase", action="append", default=[])
+    visibility_parser.add_argument("--window", type=int, default=VISIBLE_CHARS)
+    visibility_parser.add_argument("--safe", type=int, default=SAFE_CHARS)
+    visibility_parser.set_defaults(func=cmd_visibility)
 
     replace_parser = subparsers.add_parser("replace", help="replace the description line, dry-run by default")
     replace_parser.add_argument("skill_dir")
