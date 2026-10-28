@@ -598,3 +598,124 @@ RESULT PASS
 - 写入前冻结重合包全部文件哈希；写入后重算，变化即作废边界。
 - 写入者扫描只统计新目标路径；重合包与临时文件写入者单列。
 - QA 后分别记录 SKILL.md 与 references 哈希；不要用 SKILL.md 指纹代表整个包。
+
+## 案例六 — 来源会话 fdb57827（2026-10-27，决策后目标被归档）
+
+来源会话：`fdb57827-1c2b-4ceb-a8a8-3b805c00447e`，标题「创建 unittest 错误分类 Skill」。读取快照时 `runtimeState=ready`、`activeTurnId=null`、`revision=92`、`hasMoreBefore=false`，共 2 条消息（1 用户 + 1 助手），助手正文在 8,002 字符处截断，69 次工具调用。快照落盘路径：
+
+`C:\Users\Administrateur\.qoder\tmp\C--Users-Administrateur-Desktop-IMAM8MAHDI\31261187-98b3-4e8e-bbb1-9130e53b0815\tool-results\builtin_read_chat_session_77365f407973.txt`，SHA-256 `77365f40…`。
+
+快照的 `tools` 只含 name、status 与 output，没有 input；以下命令原文另取自项目 JSONL 的 `tool_use.input`。哈希、时间与行号都是 2026-10-27 的观测值，不是可复用常量。
+
+### 时间线（UTC）
+
+| 时间 | 事件 | 依据 |
+|---|---|---|
+| 09:41:39.528 | 用户请求创建 `triager-echecs-suite-unittest-decouverte` | 用户消息 |
+| 10:17:32.183 | 本会话 `mkdir` 目标；10:17:47.236 写入草稿 SKILL.md | JSONL `Bash` / `Write` |
+| 10:17:39.741 | `56fad23c` 并发写入 `diagnostiquer-echec-tests-conjoints-env-import/SKILL.md` | JSONL `Write` |
+| 10:18:46 | 并发 Skill 采样：SKILL.md 15,018 B `56b111c7…`；reference 9,096 B `e74804b1…` | `date` 与哈希输出 |
+| 10:18:51 | 只读 QA：15,039 B `88b052d7…`，RESULT PASS | 校验器输出 |
+| 10:19:17 | 用户选择「接管并补缺口（推荐）」 | AskUserQuestion 原文 |
+| 10:20:03 | `wait_chat_sessions` `timeoutMs=60000` → timeout；`56fad23c` rev 68 running | 工具输出 |
+| 10:20:28 | 等待两会话 → `56fad23c` ready rev 83；`33bb030d` running rev 51 | 工具输出 |
+| 10:20:53–10:21:39 | `56fad23c` 改写 `triager…`：6 次成功写入（2 Write + 4 Edit） | JSONL 配对 |
+| 10:21:52.292 | `56fad23c` 用 `mv` 把并发 Skill 移入 `~/.qoder/tmp/archive-skills/…-20261027-1122` | JSONL `Bash` |
+| 10:21:52.944 | 旧路径 `ABSENT_OK`；归档前后逐文件哈希一致 | 命令输出 |
+| 10:24:36.142 | 本会话用 `timeoutSeconds: 90` 调用 `wait_chat_sessions` | JSONL `tool_use.input` |
+| 10:24:41 | 失败：`params must NOT have additional properties` | 失败结果 |
+| 10:24:47 | 改用 `timeoutMs: 60000` 成功 | JSONL 与工具输出 |
+| 10:26:53–10:27:10 | `33bb030d` 又对 `triager…` 成功写入 5 次 | JSONL 配对 |
+| 10:27 左右 | 本会话扫描输出 `writes after cut: 0` | 工具输出 |
+
+### 用户决策原文
+
+```text
+Your questions have been answered: "发现并发重合后，按哪种方式处置？"="接管并补缺口（推荐）". You can now continue with these answers in mind.
+```
+
+决策指向的对象是并发 Skill `diagnostiquer-echec-tests-conjoints-env-import`；该对象在写入前消失，因此原决定无法按原样执行。
+
+### 归档命令与逐文件哈希
+
+```text
+--- before
+15039  .../skills/diagnostiquer-echec-tests-conjoints-env-import/SKILL.md
+9140   .../skills/diagnostiquer-echec-tests-conjoints-env-import/references/cas-echec-conjoint-2026-10-27.md
+88b052d76e2b15363157080d3967a0ff3d5c7b911c8028cc4ea3ef76625e3bbe *SKILL.md
+e2372302b1ef03e2bc03ee763df656f572ed25570b46efbbd5fa0228454c6fa8 *references/cas-echec-conjoint-2026-10-27.md
+--- old path
+ABSENT_OK
+--- archive
+15039  .../tmp/archive-skills/diagnostiquer-echec-tests-conjoints-env-import-20261027-1122/SKILL.md
+9140   .../tmp/archive-skills/diagnostiquer-echec-tests-conjoints-env-import-20261027-1122/references/cas-echec-conjoint-2026-10-27.md
+88b052d76e2b15363157080d3967a0ff3d5c7b911c8028cc4ea3ef76625e3bbe *SKILL.md
+e2372302b1ef03e2bc03ee763df656f572ed25570b46efbbd5fa0228454c6fa8 *references/cas-echec-conjoint-2026-10-27.md
+```
+
+要点：
+
+- 归档用 `mv`，不是删除；旧路径与归档路径的逐文件哈希一致。
+- `SKILL.md` 与 10:18:51 的 QA 指纹一致，可判为整份保留。
+- reference 与 10:18:46 的最早采样 `e74804b1…` 不同（9,096 → 9,140 B），说明它在归档前被重写。逐文件比较必须针对消失前最后一次采样；只比较 `SKILL.md` 会把整包误判为“与基线一致”。
+- 2026-10-27 11:33（+01:00）复核：归档仍存在且两个哈希不变，源路径仍 `ABSENT`。
+
+### 等价状态
+
+`triager…` 在 10:21 被 `56fad23c` 改写为 12,374 B `511b6712…`；`33bb030d` 在 10:26–10:27 再写入后为 13,202 B。11:33（+01:00）复核为 13,202 B、SHA-256 `e6f805a5…`，三处原定缺口均在：
+
+| 缺口 | 位置（该哈希下的观测） |
+|---|---|
+| 过期断言：九个 `.aq`、`partage 50/50`、`Riba 0 %` | SKILL.md:119 |
+| 删除“未用”导入被 `mock.patch.object` 间接依赖 | SKILL.md:28、:109、:210 |
+| 负载敏感测试不改阈值、委派时间阈值类诊断 | SKILL.md:124 |
+
+行号只对该 13,202 B 版本有效；换版本需重新定位。
+
+### 零写入接受
+
+- 本会话在 10:19:17Z 之后没有成功 `Write`/`Edit`：JSONL 配对共 1 次 `Write`（10:17:47.236Z，草稿 SKILL.md），决策后 0 次。
+- 扫描输出 `writes after cut: 0` 只覆盖当时的窗口；`33bb030d` 在 10:26:53–10:27:10 又写入 5 次，因此“最终性”只对 10:27 前有效。
+- 接受依据不是“本会话完成了合并”，而是：目标已被 `mv` 到 skills 根之外、逐文件哈希可核验、现存 Skill 已覆盖原需求。三者同时成立时才可零写入接受。
+
+### 两个工具契约
+
+1. **`wait_chat_sessions`**：schema 只有 `sessionIds`（1–8 个，不含当前会话）与 `timeoutMs`（整数 0–60000，默认 30000），`additionalProperties: false`。传 `timeoutSeconds: 90` 的失败原文：
+
+```text
+Error: wait_chat_sessions (builtin MCP Server) tool parameter validation failed: params must NOT have additional properties
+```
+
+改用 `timeoutMs: 60000` 后返回 `outcome: timeout` 与各会话的 `runtimeState`、`revision`。`timeout` 只表示等待窗口结束，不是会话仍在写入的证据。
+
+2. **JSONL `timestamp`**：对项目 314 个 JSONL 的单遍统计，`timestamp` 为整数的 52,396 条（样例 `1793049536989`），为 ISO 字符串的 80,798 条（样例 `2026-10-26T21:18:57.255Z`）。来源会话的扫描脚本直接比较两种类型，抛：
+
+```text
+TypeError: '<=' not supported between instances of 'int' and 'str'
+```
+
+整数应按 epoch 毫秒（UTC）转换，字符串按 ISO-8601 解析，再统一比较。
+
+### 状态划分
+
+| 项目 | 状态 | 依据 |
+|---|---|---|
+| 用户选择接管并补缺口 | 已观测 | AskUserQuestion 原文 |
+| 并发 Skill 已被 `mv` 到 skills 根之外 | 已观测 | 命令、路径与 `ABSENT_OK` |
+| 归档逐文件哈希与消失前一致 | 已观测 | 前后哈希输出 |
+| reference 与最早采样不同 | 已观测 | `e74804b1…` → `e2372302…` |
+| 决策后本会话零写入 | 已观测 | JSONL 配对，决策后 0 |
+| 三处缺口由 `56fad23c` 补齐 | 已观测 | 10:20:53–10:21:39 写入 + 当前行内容 |
+| `33bb030d` 之后继续写入 | 已观测 | 10:26:53–10:27:10 |
+| `timeoutSeconds` 被拒 | 已观测 | 失败原文与 schema |
+| JSONL `timestamp` 混型 | 已观测 | 314 文件类型统计与 `TypeError` |
+| 归档副本会长期保留 | 未验证 | 只观测到当前存在 |
+| 来源会话之外的其他删除意图 | 未验证 | 只看到 `mv` 与归档说明 |
+
+### 重新使用规则
+
+- 决策后目标消失时，先挂起原决定；不重建、不改写到同名或近似名目录。
+- 归档核验逐文件进行，比较对象是消失前最后一次采样，不是最早的规划基线。
+- 零写入接受必须同时具备：归档在 skills 根之外且哈希可核验、现存 Skill 等价覆盖、决策后本会话零写入；缺一项就回到第 1 节重新决策。
+- `wait_chat_sessions` 只用 `sessionIds` 与 `timeoutMs`（≤60000）循环；JSONL `timestamp` 先统一 int/ISO 类型再排序或相减。
+- 报告写 `TARGET-GONE-ZERO-WRITE`，并注明最终性窗口；后续写入使等价证据与只读 QA 过期。

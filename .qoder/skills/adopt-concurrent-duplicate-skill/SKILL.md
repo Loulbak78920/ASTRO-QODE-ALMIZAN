@@ -1,6 +1,6 @@
 ---
 name: adopt-concurrent-duplicate-skill
-description: "创建 Skill 时发现另一会话已生成职责重合的 Skill，先停写、做能力矩阵并把「接管现有 / 缩窄后新建并存 / 停止 / 只读保留 / 明确分工」交由用户决定；选择保持现状时只读保留：记录创建者与全部写入者、首次时间，双采样 size、mtime、SHA-256，完整读取 SKILL.md、references 与 scripts，运行 skill-file-qa 与默认只读门禁，先做副作用快照并排除会写盘的 --avec-* 分支；选择缩窄后新建时冻结重合包全部哈希、写清委派边界、复查目标仍不存在、只归因新目标路径的写入者，写后重算重合包哈希并分别记录新目标 SKILL.md 与 references 哈希；接管后以磁盘为基线、最小合并并发改动，用目录外单变量 A/B 夹具实测断言并纠正错误，最后重跑 skill-file-qa，记录接管前、并发改写、最终三方哈希。用于规划时目标突然出现、create 命中职责重合、目标不存在但相邻 Skill 部分重合、用户选择保持现状或缩窄后新建、只读复核并发产物、文档断言与校验器行为不一致、编辑期间反复 file changed、Edit 返回 0 occurrences、ready 后又被写入、PASS 后仍需证明未覆盖、脚本范围外仍计入 Files (N)、夹具清理报 WinError 5 或 WinError 32。中文触发：重复 Skill、职责重合、并发创建、接管、缩窄后新建并存、停止创建、只读保留、保持现状、默认只读门禁、创建者会话、多写入者、写入者归因、只统计新目标、重合包哈希、委派边界、Edit 0 命中、漂移计数、接管但缩窄交付、只交付文档与参考文件、脚本范围外、WinError 5、WinError 32、A/B 夹具、围栏块断言、三方哈希、RESULT PASS 复核。关键词：duplicate skill, concurrent creation, takeover, narrowed create, overlap freeze, delegation boundary, creator session, multiple writers, writer attribution, zero-match edit, docs-only delivery, out-of-scope script, cleanup pending."
+description: "创建 Skill 时发现另一会话已生成职责重合的 Skill：先停写、做能力矩阵，把「接管 / 缩窄后新建 / 停止 / 只读保留 / 明确分工」交由用户决定。只读保留：记录写入者与稳定指纹，运行 skill-file-qa 与默认只读门禁，先做副作用快照并排除会写盘的 --avec-* 分支。缩窄后新建：冻结重合包哈希、写清委派边界、复查目标仍不存在、只归因新目标写入者，写后重算哈希并分别记录 SKILL.md 与 references 哈希。接管：以磁盘为基线最小合并并发改动，用目录外 A/B 夹具实测断言，重跑 QA 并记录三方哈希。决策后目标被归档或删除：暂停原决定，按 JSONL 归因、核对 skills 根之外归档的逐文件哈希、确认等价覆盖后零写入接受。用于规划时目标突然出现、create 命中重合、目标不存在但相邻 Skill 部分重合、编辑期间 file changed 或 Edit 0 occurrences、ready 后又被写入、PASS 后仍需证明未覆盖、脚本范围外仍计入 Files (N)、清理报 WinError 5/32、目标消失、wait_chat_sessions 拒绝 timeoutSeconds、JSONL timestamp 混型。中文触发：重复 Skill、并发创建、创建者会话、多写入者、写入者归因、漂移计数、接管但缩窄交付、围栏块断言、RESULT PASS 复核、零写入接受。关键词：duplicate skill, concurrent creation, takeover, narrowed create, multiple writers, writer attribution, zero-match edit, out-of-scope script, cleanup pending, archived target, target gone, zero-write acceptance."
 ---
 
 # 接管并发出现的重复 Skill
@@ -22,6 +22,8 @@ description: "创建 Skill 时发现另一会话已生成职责重合的 Skill�
 - 目标目录不存在，但发现不同名、职责部分重合的 Skill，且其写入者仍活跃。
 - 用户选择“缩窄后新建并存”，需要保留真实增量而不是复制重合 Skill。
 - 夹具删除报 WinError 5（只读 Git 对象）或 WinError 32（目录被占用），需要如实报告待清理。
+- 用户已选择接管或缩窄后新建，等待期间目标目录被第三方归档或删除。
+- 等待工具拒绝 `timeoutSeconds`，或 JSONL 扫描报 int/str 比较错误。
 
 不适用于：普通创建与更新规范（`skill-creator`）；一般并发写入机制（`skill-update-concurrency-safe`）；canonical 与 legacy 迁移（`skill-canonical-migration`）；来源证据提取（`audit-session-evidence`）；夹具重放与校验器自测（`replay-skill-reference-fixtures`）；新 Skill 或只改 SKILL.md 的分阶段交付（`skill-staged-delivery`）；纯已安装 Skill 盘点与跨根冲突（`inventory-installed-skills`）；自动推荐数据对账（`verify-skill-recommendation-claims`）。
 
@@ -44,6 +46,8 @@ description: "创建 Skill 时发现另一会话已生成职责重合的 Skill�
 15. **并存必须有边界。** 缩窄后新建只写真实增量；重合职责必须在“什么时候不用”或委派表写清归属，不得复制重合 Skill 的步骤、触发词或夹具。
 16. **重合包只读冻结。** 写入前记录重合包全部文件的 size、mtime、SHA-256；写入后重算，任一变化即作废边界与验收。
 17. **只归因新目标。** 缩窄后新建的写入者扫描只统计新目标路径；重合包写入者、临时文件写入者与当前会话分列。
+18. **目标消失即停手。** 用户决策后目标目录在写入前消失时，暂停执行该决策；不得改写到另一目录，不得自行重建目标。先用 JSONL 归因最后一次移动/删除，核对归档位于 skills 根之外且逐文件哈希与消失前一致，并确认现存 Skill 已等价满足原需求；三者都成立才可零写入接受，否则回到第 1 节重新决策。
+19. **等待与时间解析按真实契约。** `wait_chat_sessions` 只接受 `sessionIds` 与 `timeoutMs`（0–60000，默认 30000）；传 `timeoutSeconds` 会以 `params must NOT have additional properties` 失败。JSONL 的 `timestamp` 既可能是 epoch 毫秒整数，也可能是 ISO 字符串，比较前必须统一类型。
 
 ## 流程
 
@@ -96,6 +100,8 @@ description: "创建 Skill 时发现另一会话已生成职责重合的 Skill�
 5. **ready 不是终态。** `ready` 只表示该会话当前回合结束；它可以再次变为 running，只读核查者也可能开始写入，还可能出现从未等待过的新写入者。每次编辑前重扫；出现新写入者时回到第 4 步。
 6. **验收后重扫。** 最终 QA 后再次扫描写入记录并采样；QA 之后出现成功写入时，旧 PASS 作废，等新写入者 ready 后重跑。
 7. **报告写全量。** 报告列出全部写入者、潜在写入者、扫描时刻与未等待的只读会话，不只写“创建者会话”。
+8. **等待工具契约。** 用 `wait_chat_sessions` 等待，参数只有 `sessionIds`（1–8 个，不含当前会话）与 `timeoutMs`（0–60000）；单次最多 60 秒，需要更久就循环。`timeout` 只返回当时状态，`turn_completed` 也不代表接受工作。报“等待的 ChatSession 不存在”时按 `diagnostiquer-wait-chat-sessions-introuvable` 处理，不当作会话已结束。
+9. **JSONL 时间混型。** 读取 `timestamp` 前先统一：整数按 epoch 毫秒（UTC）转换，字符串按 ISO-8601 解析。同一批 JSONL 中两种类型共存是常态，直接排序或相减会抛 `TypeError: '<=' not supported between instances of 'int' and 'str'`；报告记录类型分布，而不是假设单一格式。
 
 ### 2bis. 只读保留分支（KEEP-READ-ONLY）
 
@@ -132,6 +138,17 @@ description: "创建 Skill 时发现另一会话已生成职责重合的 Skill�
 5. **最小写入。** 先写 SKILL.md，再写 references；不建脚本、不建空目录，除非增量确实需要。每步写入前重扫第 2 步哈希与第 4 步写入者。
 6. **验收与分离哈希。** 用 `py -3` 运行 `skill-file-qa`，要求稳定指纹上的 `RESULT PASS`，记录 `Files (N)`、body、description 与引用检查；分别记录 SKILL.md 与 references 的完整 SHA-256，因为校验器指纹只覆盖 SKILL.md。
 7. **证明重合包未变。** 写后重算第 2 步全部哈希；任一变化即说明重合包被并发改写，本 Skill 的边界与委派可能过期：重读、重划边界、重跑第 6 步，不得直接宣称完成。报告写 `NARROWED-CREATE`、重合包前后哈希、委派表、新目标写入者与两个文件哈希。
+
+### 2quinquies. 决策后目标消失（TARGET-GONE-ZERO-WRITE）
+
+用户已选定接管或缩窄后新建，但在等待写入者期间目标目录被第三方归档或删除时执行本分支。它既不是 create，也不是接管。
+
+1. **停止执行原决定。** 不写任何目标路径，不重建目录，不改写到同名或近似名目录；原决定因对象消失而失效。
+2. **归因消失。** 在 `~/.qoder/projects/*/*.jsonl` 中按时间窗口查 `Bash`（`mv`/`rm`/归档）与 `Write`/`Edit`，确认哪个会话移动或删除了目标。快照不含工具输入时，用同会话后续命令、目标 mtime 与归档目录名交叉验证；归因标“已观测”或“推断”。
+3. **核验归档。** 在 skills 根之外查找归档副本，按文件逐个比较 size 与 SHA-256。`SKILL.md` 一致不代表整包一致：references 可能在归档前已被重写。比较对象应是消失前最后一次采样，而不是最早的规划基线。
+4. **确认等价状态。** 用能力矩阵检查现存 Skill 是否已逐项覆盖原需求；覆盖成立说明用户的意图（一个 Skill、补齐缺口）已由第三方完成。
+5. **零写入接受。** 只有第 2–4 步都成立才可报告 `TARGET-GONE-ZERO-WRITE`，写清归档路径、逐文件哈希、消失归因与等价证据；否则回到第 1 节，由用户选择重建、迁移或停止。
+6. **收尾复核。** 重扫 JSONL 并确认决策后无本会话写入；对现存 Skill 跑只读 `skill-file-qa`；仍有写入者 `running` 时写“最终性未验证”，后续写入使等价证据与 QA 过期。
 
 ### 3. 断言实测与纠错
 
@@ -190,9 +207,12 @@ shutil.rmtree(sys.argv[1], onexc=onexc)
 ### 6. 报告
 
 ```text
-模式: ADOPTED（未创建目标目录） / CREATED / NARROWED-CREATE（新建目标，重合包只读） / KEEP-READ-ONLY（零写入）
+模式: ADOPTED（未创建目标目录） / CREATED / NARROWED-CREATE（新建目标，重合包只读） / KEEP-READ-ONLY（零写入） / TARGET-GONE-ZERO-WRITE（目标已消失，零写入）
 目标: <目标目录；接管或只读保留时注明未创建/未写入>
 冲突: <现有 Skill 路径、首次出现时间、重合维度>
+目标消失: <消失时刻、消失前逐文件指纹、归因会话与证据类型（已观测/推断） | 不适用>
+归档核验: <归档路径（skills 根之外）、逐文件 size/SHA-256 与消失前对照 | 不适用>
+等价状态: <现存 Skill、原需求逐项覆盖位置、只读 QA 结果 | 不适用>
 重合包: <路径、全部文件写入前/后哈希、写入者状态 | 无>
 职责边界: <重合职责 -> 归属 Skill；本 Skill 只保留的增量>
 新目标写入者: <只统计新目标路径；当前会话单列；其他会话未写目标 | 无>
@@ -258,6 +278,11 @@ shutil.rmtree(sys.argv[1], onexc=onexc)
 | 清理报 WinError 32 | 目录被进程占用 | 等待句柄释放后重试；不要宣称已清理 |
 | 报告写“已清理”但目录仍存在 | 以命令退出码代替磁盘状态 | 用 `test -e` 判定，存在即写“待处理” |
 | 删除脚本前未备份 | 把清理与删除混淆 | 先备份到 Skill 目录之外并核对 SHA-256，再按授权删除 |
+| 用户决策后目标目录消失 | 第三方归档或删除，原决定失效 | 停止执行；按 2quinquies 归因、核验归档并确认等价状态后零写入接受 |
+| 归档中 SKILL.md 哈希一致但 references 不同 | 归档前 references 已被并发重写 | 逐文件比较；比较消失前最后采样，不判为整包一致或损坏 |
+| 等待报 `timeoutSeconds` 不被接受 | 参数名错误，schema 只有 `timeoutMs`（≤60000） | 改用 `timeoutMs`；超过 60 秒则循环等待 |
+| JSONL 扫描报 int 与 str 比较错误 | `timestamp` 混用 epoch 毫秒与 ISO 字符串 | 先统一类型再排序或相减；记录类型分布 |
+| 目标消失后仍按原决定写另一目录 | 把决策当作可转移授权 | 停止；回到第 1 节由用户重新选择 |
 
 ## 完成检查清单
 
@@ -294,16 +319,22 @@ shutil.rmtree(sys.argv[1], onexc=onexc)
 - [ ] 范围外脚本以“未执行（范围外）”列入未验证项。
 - [ ] 清理失败已记录异常类型、路径与退出码，未谎称已清理。
 - [ ] 授权删除前已在 Skill 目录之外备份并核对 SHA-256。
+- [ ] 用户决策后目标消失时未写入、未重建、未改写到其他目录。
+- [ ] 目标消失已按 JSONL 归因，并区分“已观测”与“推断”。
+- [ ] 归档位于 skills 根之外，且逐文件哈希已与消失前最后采样对照。
+- [ ] 现存 Skill 已逐项覆盖原需求，报告写 `TARGET-GONE-ZERO-WRITE`。
+- [ ] `wait_chat_sessions` 只用 `sessionIds` 与 `timeoutMs`；JSONL `timestamp` 已统一类型。
 
 ## 资源
 
-- `references/preuves-session.md`：来源会话 359acfd8、3677d3d4、98d02ebd、80685b8f、464ffdea 与 64bf38af 的逐字证据、时间线、A/B 输出、双验收、三方哈希与状态划分；3677d3d4 记录缩窄交付与清理失败；80685b8f 记录多写入者归因、Edit 0 命中、计数漂移与 QA 后重扫；464ffdea 记录共享参考文件的并发追加与旧全文覆盖风险；64bf38af 记录缩窄后新建并存、重合包冻结与写后复核。
+- `references/preuves-session.md`：来源会话 359acfd8、3677d3d4、98d02ebd、80685b8f、464ffdea、64bf38af 与 fdb57827 的逐字证据、时间线、A/B 输出、双验收、三方哈希与状态划分；3677d3d4 记录缩窄交付与清理失败；80685b8f 记录多写入者归因、Edit 0 命中、计数漂移与 QA 后重扫；464ffdea 记录共享参考文件的并发追加与旧全文覆盖风险；64bf38af 记录缩窄后新建并存、重合包冻结与写后复核；fdb57827 记录决策后目标被 `mv` 归档、逐文件哈希核验、`timeoutSeconds` 拒绝与 JSONL `timestamp` 混型。
 - `skill-staged-delivery`：新 Skill 或只改 SKILL.md 的分阶段交付；用于区分“部分交付”与本 Skill 的“接管后缩窄范围”。
 - `skill-update-concurrency-safe`：采样、备份、最小编辑、保留并发内容与 QA 机制。
 - `skill-file-qa`：结构、引用、代码块、稳定性与指纹验收。
 - `skill-absolute-path-references`：本次被接管的实例及其证据，不是本流程的依赖。
 - `skill-canonical-migration`：需要 canonical 与 legacy 并存时的迁移流程。
 - `audit-session-evidence`：来源会话证据审计。
+- `diagnostiquer-wait-chat-sessions-introuvable`：`wait_chat_sessions` 报会话不存在时的观察通道诊断。
 - `replay-skill-reference-fixtures`：需要逐字重放夹具时的流程。
 - `verifier-effets-de-bord-verification-lecture-seule`：只读声明前的副作用快照、隔离与还原。
 - `inventory-installed-skills`：写入前枚举已安装 Skill、同名与跨根冲突。
