@@ -88,7 +88,7 @@ Fixture `%TEMP%\acl-ab-*`, propriétaire = compte courant, ACE appliquée par `i
 | :--- | :--- | :--- |
 | lot bloqué à 146/283 sur le même fichier, reprise identique | REPRODUIT | dump, deux tours |
 | `Errno 13` (I/O Python) et `WinError 5` (changement d'attribut) désignent le même refus | REPRODUIT | dump + fixtures A/B |
-| l'erreur `[WinError 5]` du dump vient d'un `os.chmod` | INFÉRÉ | traceback sans frame `pathlib`, ligne 33 ; `os.chmod` reproduit ce rendu exact |
+| l'erreur `[WinError 5]` du dump vient d'un `os.chmod` | VÉRIFIÉ | JSONL `8d7c4c1e…` ligne 358 : `os.chmod(p, stat.S_IWRITE)` en `<stdin>` 33, apparié au résultat 360 ; traceback sans frame `pathlib` ; rendu reproduit en fixture B |
 | un refus d'écriture peut survenir **sans** attribut `R` | REPRODUIT | fixture B |
 | `R` seul est corrigé par `chmod(S_IWRITE)` | REPRODUIT | fixture A |
 | `chmod`/`attrib -R` ne peuvent rien quand `WA` est refusé | REPRODUIT | fixture B |
@@ -101,6 +101,6 @@ Fixture `%TEMP%\acl-ab-*`, propriétaire = compte courant, ACE appliquée par `i
 
 ## Limites
 
-- Les commandes exécutées ne figurent pas dans `read_chat_session` (seuls les noms et sorties d'outils) : l'appel `chmod` exact reste une inférence, jamais une citation.
+- Les commandes exécutées ne figurent pas dans `read_chat_session` (seuls les noms et sorties d'outils) ; l'appel `chmod` a été retrouvé dans le JSONL de la session (ligne 358, `<stdin>` 33), pas dans le dump. Ne jamais citer une commande comme si elle venait du dump ; pour cette réconciliation, voir `reconcilier-commande-non-enregistree-session`.
 - Aucune fixture avec `WDAC`/`WO` refusés n'a été créée : elle serait devenue indélébile sans `takeown`, ce qui aurait reproduit le problème à nettoyer.
 - Aucune preuve d'exécution runtime du lot : seuls les compteurs d'écriture et les empreintes ont été mesurés.
