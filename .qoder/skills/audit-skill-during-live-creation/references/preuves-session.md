@@ -351,3 +351,116 @@ Bash 工具在每次调用后把 cwd 重置为工作区根；前一次 `cd` 不�
 | “Edit 成功但先前采样 mtime 更早，差点误判” | 未验证 | 本次读取的快照中没有可直接引用的工具输出；不写入已验证案例 |
 | 最终 18,838 B / 3 文件 PASS，提交 a56b906 | 已核实 | validator 输出、`git diff` 与 blob 哈希 |
 
+## 补充证据：注入正文与磁盘同版的只读核验（2026-10-28，会话 e933221f）
+
+日期：2026-10-28（Europe/Paris，UTC+1）。目标为本 Skill 自身（`audit-skill-during-live-creation`）。来源会话读取时 `runtimeState: ready`、`activeTurnId: null`、`revision: 40`、`hasMoreBefore: false`；用户要求只读核对注入正文，禁止任何写入。会话消息时间戳为 UTC（`Z`），文件 mtime 与工具输出为本地时间（`+0100`）。
+
+### 1. 磁盘采样（两次，间隔 3 秒）
+
+```text
+S1
+28231 2026-10-28 03:36:48.550150600 +0100
+42512e5c510b7b1ce6e9a6e00b23a143451ff15adeb43e34fc13c6ee6f729281 */c/Users/Administrateur/.qoder/skills/audit-skill-during-live-creation/SKILL.md
+S2
+28231 2026-10-28 03:36:48.550150600 +0100
+42512e5c510b7b1ce6e9a6e00b23a143451ff15adeb43e34fc13c6ee6f729281 */c/Users/Administrateur/.qoder/skills/audit-skill-during-live-creation/SKILL.md
+```
+
+同一文件按字符与行统计（本次复核独立测得）：
+
+```text
+bytes= 28231 chars= 16025 lines= 298
+frontmatter_chars= 1078
+body_chars_start= 14947 body_lstrip_chars= 14945
+body_lines= 293
+```
+
+frontmatter 为 4 行 YAML 加其后 1 行空行，共 5 行；16,025 − 1,078 = 14,947，再去掉首部空行得 14,945，与注入正文 14,944 相差 1 个末尾换行。
+
+### 2. 注入记录与计数
+
+```text
+jsonl_lines_with_phrase= 6
+authentic_user_isMeta= 1
+  L26 Base directory for this skill: C:\Users\Administrateur\.qoder\skills\a
+non_authentic= 5
+  L3 role=user isMeta=None Vérification indépendante, en LECTURE SE
+  L20 role=assistant isMeta=None
+  L28 role=assistant isMeta=None
+  L58 role=assistant isMeta=None
+  L60 role=assistant isMeta=None
+```
+
+- 真实注入：L26，`isMeta: true`，`2026-10-28T02:39:03.225Z`，首行 base directory 指向本 Skill，带 `ARGUMENTS:` 尾行。
+- 本次复核时同一 JSONL 的裸 `grep -c` 已从 6 增至 12；按顶层 `type == "user"` 且 `isMeta is True` 过滤后仍为 1 条。`isMeta` 位于 JSONL 条目顶层；按 `message.isMeta` 读取得到 `None`。
+- nonce `ACCEPTANCE-NONCE-20261028T023615Z-42cb` 在本次复核时命中 3 个 JSONL；来源会话当时用会话独有输出 `chars= 336`、`c_0_5=` 判别出唯一文件。
+
+### 3. 注入正文 vs 磁盘正文
+
+```text
+first_line= Base directory for this skill: C:\Users\Administrateur\.qoder\skills\audit-skill-during-live-creation
+isMeta= True ts= 2026-10-28T02:39:03.225Z
+has_args_trailer= True
+inj_chars= 14944 disk_chars= 16024
+inj_sha= 4afd351422568de7
+disk_sha= d3e0ba0a7a4fce0f
+EQUAL= False
+h1_inj= ['# 实时创建中的只读验收']
+```
+
+```text
+inj_lines= 293 disk_lines= 298
+diff_hunks_lines= 9
+--- INJ
++++ DISK
+@@ -1 +1,6 @@
++---
++name: audit-skill-during-live-creation
++description: "\u5728\u521b\u5efa\u6216\u66f4\u65b0 Skill \u65f6\u53d1\u73b0\u76ee\u6807\u76ee\u5f55\u4e2d\u9014\u51fa\u73b0\u3001\u6765\u6e90\u6216\u5e76\u53d1\u4f1a\u8bdd\u4ecd\u5728\u8fd0\u884c\uff
++---
++
+ # \u5b9e\u65f6\u521b\u5efa\u4e2d\u7684\u53ea\u8bfb\u9a8c\u6536
+```
+
+结论：唯一差异是运行时移除的 frontmatter（含其后空行）。来源会话记录的 `disk_chars= 16024` 与本次复核的 16,025 相差 1，对应末尾换行的计法差异；判定不依赖该差值，只用“单一 hunk 仅含 frontmatter”。
+
+### 4. 断言通道的两次失败
+
+```text
+== raw grep without -e ==
+grep: unknown option --
+Usage: grep [OPTION]... PATTERN [FILE]...
+Try 'grep --help' for more information.
+rc=2
+== with -e ==
+1
+rc=0
+```
+
+```text
+Traceback (most recent call last):
+  File "<string>", line 6, in <module>
+    print('prefix=',d[:20])
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 14-19: character maps to <undefined>
+```
+
+第二次失败来自 `py -3` 直接向 cp1252 控制台打印中文；改用只输出长度、行号与 `unicode_escape` 后全部通过。两处都不是文件内容问题。
+
+### 5. 分级与结论
+
+| 观察 | 分级 | 依据 |
+|---|---|---|
+| 28,231 B / `42512e5c…` 两次一致 | 已核实 | 两次 `stat` 与 `sha256sum`，间隔 3 秒 |
+| 注入 = 磁盘正文（仅差 frontmatter） | 已核实（该版本） | 单一 hunk `@@ -1 +1,6 @@`，其余逐字相同 |
+| 真实注入 1 条（L26） | 已核实 | `type=user` + `isMeta=True` 过滤；裸 grep 为 6，复核时 12 |
+| 裸 grep 增长来自摘要/回声 | 推断 | 未逐行解析 12 条命中的来源类型 |
+| `grep -e` 为必需 | 已核实 | 裸调用 rc=2、加 `-e` 后 rc=0 且计数 1 |
+| nonce 跨 JSONL | 已核实（本次） | `grep -l` 命中 3 个文件 |
+| 判定 `FRAIS` | 已核实（限该版本） | 归一化后逐字相等 |
+
+未验证：
+
+- 运行时是否总会移除末尾换行（本次只观测到 1 字符差）；
+- nonce 是否总会出现在多个 JSONL（与会话摘要和引用有关）；
+- 该注入是否伴随任何工作流执行（本次只核正文，不判执行）。
+

@@ -1,6 +1,6 @@
 ---
 name: audit-skill-during-live-creation
-description: "在创建或更新 Skill 时发现目标目录中途出现、来源或并发会话仍在运行，立即停止 create 并转为只读验收：用 read_chat_session 记录 runtimeState、activeTurnId、revision 与 hasMoreBefore；wait_chat_sessions 可能永不返回 cold，只有 timeout(running)、turn_completed(ready)、needs_attention(waiting-user)，因此用 ready+activeTurnId=null 或 waiting-user+pendingInteractionCount≥1 加全包连续三次指纹判定 QUIESCENT/PAUSED/RUNNING；从项目 JSONL 的 Write/Edit 按精确 file_path 归因全部写入者，空扫描不等于无写入者；采样只证明安静，不证明包完整；把 validator 的 FAIL local reference、PASS fingerprint、夹具 FAILS=0 与文档计数分级为 FINAL/PROVISIONAL/INVALID；静默后重读全部文件、重跑 skill-file-qa，先把计划缺陷对最新字节重定位（CURRENT/ALREADY_FIXED/GONE/CHANGED），再用最新 Files(N) 做最小 Edit，绝不覆盖并发写入方。用于目标目录规划后出现、两次采样一致但 references 仍为空、包中途从 2 文件增至 3 文件、计划补丁基于旧字节、JSONL 扫描 0 命中、waiting-user 暂停、cold 缺失、目标哈希仍在变、Edit 返回 changed since last read、采样 mtime 早于上次采样等场景；不替代一般并发写入（skill-update-concurrency-safe）、职责重合接管决策（adopt-concurrent-duplicate-skill）或来源证据提取（audit-session-evidence）。关键词：实时创建、写入者归因、wait_chat_sessions、QUIESCENT、PAUSED、全包指纹、补丁重定位、Files(N)、changed since last read。"
+description: "创建或更新 Skill 时目标目录中途出现，或来源/并发会话仍在运行：停止 create，转只读验收。用 read_chat_session 记录 runtimeState、activeTurnId、revision、hasMoreBefore；wait_chat_sessions 可能不返回 cold，只有 timeout/turn_completed/needs_attention，故以 ready+activeTurnId=null 或 waiting-user+pendingInteractionCount≥1 加全包连续三次指纹判定 QUIESCENT/PAUSED/RUNNING。从项目 JSONL 的 Write/Edit 按精确 file_path 归因全部写入者，空扫描不等于无写入者；采样只证明安静，不证明包完整；报告 Skill 已加载前须证明注入正文=磁盘：剥 frontmatter 归一化、按 type=user+isMeta 计注入、grep -e、ASCII 断言。把 validator 的 FAIL/PASS 与 FAILS=0 分级为 FINAL/PROVISIONAL/INVALID；静默后重读全部文件、重跑 skill-file-qa，先对最新字节重定位（CURRENT/ALREADY_FIXED/GONE/CHANGED），再用 Files(N) 最小 Edit，不覆盖并发写入方。用于目标目录规划后出现、两次采样一致但 references 为空、计划补丁基于旧字节、JSONL 扫描 0 命中、waiting-user 暂停、cold 缺失、Edit 返回 changed since last read、停止写入者会话（stop_chat_session）、注入正文与磁盘不等、grep 以 - 开头报 unknown option 等场景；不替代注入版本定界（verify-injected-skill-body-freshness）、并发写入（skill-update-concurrency-safe）、接管决策（adopt-concurrent-duplicate-skill）或证据提取（audit-session-evidence）。关键词：实时创建、写入者归因、wait_chat_sessions、QUIESCENT、注入同版、isMeta、grep -e。"
 ---
 
 # 实时创建中的只读验收
@@ -102,6 +102,16 @@ py -3 -B "$HOME/.qoder/skills/verify-injected-skill-body-freshness/scripts/scan_
 - 多写入者时逐个列出，并分别记录最后一次成功写入时间；最后变为 `ready` 的会话不等于唯一写入者。
 - 只要任一文件仍有 `CONFIRMED`/`ATTEMPTED` 写入者处于 RUNNING，或扫描未能证明覆盖，就保持零写入。
 
+### 0.5 停止写入者会话（仅限用户明确授权）
+
+`stop_chat_session` 会中断另一会话正在进行的回合，是共享状态操作，不是你处理等待超时的本地手段。默认不调用；即使用户说“接管”“别再等了”，也只列出选项与代价，等用户点名 `sessionId` 并明确表示停止后再执行。
+
+- 授权必须同时包含目标 `sessionId` 与“停止”的意思；笼统的“你来处理”不算授权。
+- 停止前记录 `runtimeState`、`activeTurnId`、`revision`、最后一次 `CONFIRMED` 写入时间，以及全包 size/mtime/SHA-256。
+- 停止不回滚已写文件：半成品仍在磁盘上。停止后旧观测仍标 PROVISIONAL，必须完整重读、连续采样、重跑 QA 后才能改判。
+- 写入者以 `error` 结束同理：`error` 只说明某个回合失败，既不代表包不完整，也不代表最后一次写入成功。以磁盘字节为准。
+- 用户拒绝停止时回到 0.3 继续等待；不得改用新建同名目录、改写到近似名目录或强行 `Edit` 绕过。
+
 ## 第 1 步 — 冻结写入
 
 - 立即停止 create：不建目录、不写任何文件。
@@ -165,7 +175,47 @@ py -3 "C:/Users/<user>/.qoder/skills/skill-file-qa/scripts/validate_skill.py" "$
 - 目标哈希或 mtime 在两次复检之间变化：立即停写，读取最新全文，与最近备份 diff；确认并发改动已保留后，重新从第 3 步分级。
 - 保留写入者的新增段落、参考文件与计数；不因“计划中没有”而删除。
 - 补丁涉及 references 时，按同一短语同步。
+- 案例或正文提到被审计包的文件时，省略其目录前缀；以 references/ 开头的反引号路径会被 validator 当成本 Skill 的本地引用（只在本 Skill 与 workspace 下查找），判 `local reference not found`。
 - 补丁后重跑第 4 步；没有新的稳定 PASS 不宣称修复。
+
+## 第 6 步 — 确认注入正文与磁盘同版（只读）
+
+报告里写“Skill 已加载”“已读到最新正文”之前，先在零写入前提下证明本次注入正文等于当前磁盘正文。它只证明正文同版，不证明该 Skill 的工作流执行过。
+
+### 6.1 定位注入记录
+
+- 取本会话项目 JSONL 中顶层 `type == "user"` 且 `isMeta is True` 的条目，其正文首行为 `Base directory for this skill: <目录>`。
+- `isMeta` 在条目顶层，不在 `message` 内；按 `message.isMeta` 读取恒为空，会把唯一真实注入漏掉。
+- 裸 `grep -c 'Base directory for this skill:'` 自指：你的 prompt、assistant 正文、工具输出与后续摘要都会命中。本机实测同一 JSONL 由 6 行增至 12 行；按上述过滤后为 1 条。
+- 不以 mtime 定位 JSONL，也不以 nonce 唯一定位：同一 nonce 可能出现在多个 JSONL（本机实测 3 个）。用只在本会话产生过的输出（例如 `chars= 336`、`c_0_5=`）判别。
+
+### 6.2 归一化后再比较
+
+运行时会移除 YAML frontmatter 与其后的空行，并可能去掉末尾换行，所以原始字符数、行数必然不等（本机实测 2026-10-28 版本：注入 14,944 字符 / 293 行；磁盘 16,025 字符 / 298 行；frontmatter 1,078 字符 / 5 行）。比较前先取磁盘正文：
+
+```bash
+py -3 -B -c "import sys;t=open(sys.argv[1],encoding='utf-8').read();print(len(t.split('---',2)[2].lstrip('\r\n').rstrip('\n')))" "$f"
+```
+
+- 归一化后逐字相等 → 注入 = 磁盘，判 `FRAIS`。
+- diff 只允许 1 个 hunk 且该 hunk 只含 frontmatter（`@@ -1 +1,6 @@` 一类）；出现第二个 hunk 或正文差异即 `PÉRIMÉ`，按 6.4 定界。
+- 不因“长度不等”直接判旧，也不因“标记计数相同”直接判新：标记相同只说明两边都有该段。
+
+### 6.3 Windows 断言通道
+
+- 以 `-` 开头的模式（如 `- [ ] 未在无明确授权（含目标`）必须用 `grep -F -c -e '<pattern>'`；否则 grep 以 `unknown option` 退出 2，不能记成“0 次”。
+- 断言输出只走 ASCII：行号用 `cut -d: -f1`，diff 用 `py -3` 输出 `unicode_escape`。cp1252 控制台会报 `UnicodeEncodeError` 或把中文变成乱码，那是输出侧损坏，不是文件内容缺失。
+- mtime 为本地 `+0100`，nonce 与 JSONL 消息为 UTC `Z`；换算后再陈述先后，不要直接按时间相减。
+
+### 6.4 判定与边界
+
+| 判定 | 条件 | 报告允许的写法 |
+|---|---|---|
+| `FRAIS` | 归一化后逐字相等，且只有 1 条真实注入 | 本次注入正文 = 该磁盘版本 |
+| `PÉRIMÉ` | 出现第二处正文差异 | 注入 = 哪个旧版本；附版本分界短语 |
+| `INDÉTERMINÉ` | 记录被截断、无法定位唯一注入、JSONL 不可读 | 未验证，不写“已加载最新” |
+
+`FRAIS` 只证明注入正文等于磁盘正文；它不证明 Skill 的工作流已执行，也不证明之后没有写入。完整哨兵、版本定界与静默后复验转 `verify-injected-skill-body-freshness`。
 
 ## 报告模板
 
@@ -180,6 +230,7 @@ py -3 "C:/Users/<user>/.qoder/skills/skill-file-qa/scripts/validate_skill.py" "$
 分级: <每项观察 -> FINAL / PROVISIONAL / INVALID>
 旧结论: <FAIL/PASS、FAILS=0 分别对应哪个版本>
 最终重跑: <skill-file-qa 结果、夹具结果、稳定指纹>
+注入核验: FRAIS | PÉRIMÉ | INDÉTERMINÉ；注入记录 <jsonl:line> <UTC>；磁盘 <size>/<sha256 前缀>；归一化 <chars>/<lines>
 写入: <无 | 最小 Edit 列表与前后哈希>
 未验证: <未触发分支、仍不确定的内容>
 ```
@@ -203,8 +254,16 @@ py -3 "C:/Users/<user>/.qoder/skills/skill-file-qa/scripts/validate_skill.py" "$
 | `Edit` 返回 changed since last read | 首次读取后版本已被并发改写 | 立即停写，读完最新全文并与最近备份 diff |
 | 夹具 `FAILS=0`，参考文件哈希却变了 | 夹具未断言运行期间文件不变 | 静默后重放；不引用这次 `FAILS=0` |
 | 静默后 validator 仍 FAIL | 可能是真实缺陷，不是中间态 | 完整读取后判断；获授权再最小修 |
+| 新增案例后 validator 报缺 reference，而文件确实在被审计包内 | 案例里给被审计包的文件加了 references 目录前缀；validator 只在本 Skill 与 workspace 下解析 | 省略前缀，写成「目标包的参考文件 xxx.md」，重跑 QA |
 | 会话快照被截断落盘 | 返回超过 token 上限 | 读 `.qoder/tmp/.../tool-results/` 的实际文件 |
 | 用户要求“顺手修一下” | 活写入者仍在写 | 拒绝写入；说明静默后重跑，需授权再接管 |
+| 写入者长期 RUNNING，用户催促接管 | 停止是共享状态操作，不是本地超时处理 | 不自行 `stop_chat_session`；给出选项与代价，取得含 `sessionId` 的明确授权后再停 |
+| 写入者以 `error` 结束 | 某个回合失败，不等于包不完整 | 仍按磁盘字节采样、重读并重跑 QA；不据会话状态改判 |
+| 裸 `grep -c` 统计注入，行数持续增长 | prompt、assistant 正文、工具输出与摘要都含该短语 | 按顶层 `type=user` + `isMeta=true` 过滤；`isMeta` 不在 `message` 内 |
+| 注入字符数/行数少于磁盘，但标记计数相同 | 运行时移除 frontmatter 与其后空行（可能含末尾换行） | 归一化后比较；单一 frontmatter hunk 判 `FRAIS` |
+| `grep: unknown option --` | 模式以 `-` 开头 | 加 `-e`；rc=2 不是“0 次命中” |
+| nonce 在多个 JSONL 中命中 | nonce 被引用、转述或摘要复制 | 用会话独有输出定位，不用 mtime 或 nonce |
+| 控制台报 `UnicodeEncodeError` 或中文变乱码 | cp1252 断言通道 | 断言输出改 ASCII（行号、`unicode_escape`） |
 
 ## 完成检查清单
 
@@ -222,6 +281,13 @@ py -3 "C:/Users/<user>/.qoder/skills/skill-file-qa/scripts/validate_skill.py" "$
 - [ ] 每次 `Edit` 之间已复检指纹；采样都在工具返回后并按时间排序；遇到 `changed since last read` 已停写并 diff。
 - [ ] 若做了补丁：已备份、最小 Edit、保留并发内容、补丁后重跑。
 - [ ] 报告未把 PROVISIONAL 写成已通过，未把文件存在写成 Skill 已加载。
+- [ ] 注入记录按顶层 `type=user` + `isMeta=true` 计数，未用裸 `grep -c`，`isMeta` 未从 `message` 读取。
+- [ ] 比较前已剥离 frontmatter 与其后空行；只有单一 frontmatter hunk 时才判 `FRAIS`。
+- [ ] 以 `-` 开头的 grep 模式已加 `-e`；`unknown option`（rc=2）未被记成 0 次。
+- [ ] 已用会话独有输出定位 JSONL，未凭 mtime 或 nonce（可多文件命中）。
+- [ ] 注入核验的断言输出为纯 ASCII；`FRAIS` 未被写成“工作流已执行”。
+- [ ] 新增或改写案例后，`local references` 计数未因被审计包路径而增加；示例路径未带 references 目录前缀。
+- [ ] 未在无明确授权（含目标 `sessionId`）时调用 `stop_chat_session`；停止或 `error` 后已重新判活、重读并重跑。
 
 ## 已验证案例（2026-10-26，会话 6f896eb6）
 
@@ -263,6 +329,33 @@ py -3 "C:/Users/<user>/.qoder/skills/skill-file-qa/scripts/validate_skill.py" "$
 6. 另一次引用检索因 Bash 调用重置 cwd，`*/*.jsonl` 对 4 个候选都命中 0；改用绝对路径后同一候选命中 11–14。空扫描不能当「无写入者」。
 
 完整引文见 `references/preuves-session.md`。
+
+## 已验证案例（2026-10-28，会话 ac4143f3）
+
+目标 `generer-page-publique-trilangue` 由会话 `ed6f213a` 在 `ac4143f3` 审计期间创建。
+
+1. 目标最初不存在；本地时间 01:53:35 `SKILL.md` 落盘（15,868 B，`sha256=8809acf6…`），`references/` 缺失，来源会话的只读 QA 为 9 PASS / 1 FAIL（`local reference not found`）。该 FAIL 标 PROVISIONAL，未修补。
+2. `scan_skill_writers.py` 对目标 `SKILL.md` 只命中 1 个写入者：`ed6f213a`，JSONL 第 149 行，`Write`，`2026-10-28T00:53:34.636Z`；无其他会话命中。写入者当时 `runtimeState=running`、`activeTurnId=d4079a95…`，其用户消息为「确认方案，开始写入这三个文件」（00:51:52.726Z）。
+3. 用户选择「选择 A，等对方完成后做只读验收」，未授权停止；会话给出的选项 C 写明停止需用户授权 `stop_chat_session`，且会中断进行中的写入。
+4. 写入结束后目标包的参考文件 `cas-riemann-2026-10-28.md`（7,044 B，01:57:50）落盘。复核时独立运行 validator：`Files (3)`、10 PASS / 0 FAIL、`RESULT PASS`，`SKILL.md` 指纹仍为 `8809acf6…`；中途 FAIL 确为中间态。
+5. 该写入者后来在一个无关回合（「查看生成的 SKILL.md 文件」，00:59:11Z）失败，会话变为 `runtimeState=error`、`activeTurnId=null`，而包仍为上述 PASS 状态：`error` 不等于包不完整。
+6. 本 Skill 的案例初稿把上述文件写成带 references 目录前缀的反引号路径，validator 在 27,125 B 版本报 8 PASS / 1 FAIL（同一条 `local reference not found`，rc=1）：该前缀只在本 Skill 目录与 workspace 下解析，不会去被审计包查找。改写为「目标包的参考文件」并省略目录前缀后，同一命令在 27,138 B 版本为 9 PASS / 0 FAIL、rc=0。
+
+时间戳：本地 01:53:35 对应 UTC 00:53:35（CET，UTC+1）。活性与包内容的最终判定以磁盘指纹和 validator 为准。
+
+## 已验证案例（2026-10-28，会话 e933221f）
+
+独立会话只读核对本 Skill 的注入正文是否等于磁盘；未执行本 Skill 的审计流程，全程零写入。
+
+1. 磁盘两次采样一致：28,231 B、298 行、mtime 03:36:48 +0100、sha `42512e5c…`；注入正文 293 行 / 14,944 字符，磁盘 16,025 字符，frontmatter 1,078 字符 / 5 行。
+2. 两者 diff 只有 1 个 hunk `@@ -1 +1,6 @@`，新增行全是 frontmatter；原始长度差因此不构成旧版本证据，正确判定为 `FRAIS`。
+3. 注入计数：裸 `grep -c` 当时命中 6 行，本次复核时同一 JSONL 已增至 12 行；按顶层 `type=user` + `isMeta=true` 过滤后为 1 条，L26、`2026-10-28T02:39:03.225Z`，首行 base directory 指向本 Skill。`isMeta` 在条目顶层；从 `message` 读取恒为空。
+4. 该 nonce 在本次复核时命中 3 个 JSONL；最终用会话独有输出 `chars= 336`、`c_0_5=` 定位。
+5. `grep -F -c '- [ ] 未在无明确授权（含目标'` 以 `unknown option` 退出 2；加 `-e` 后返回 1。若把 0 命中当结论，会误报清单项缺失。
+6. 断言输出只走 ASCII（行号 `cut -d: -f1`、diff `unicode_escape`）；`py -3` 直接打印中文会触发 cp1252 的 `UnicodeEncodeError`。
+7. 注入标记计数 a–f 各 1、g 为 0（磁盘变体写作“写成**带** references 目录前缀”），说明相关段落已进入本次注入。
+
+完整输出见 `references/preuves-session.md`。以上数字只对应 2026-10-28 的该版本，不表示当前状态。
 
 ## 资源
 
