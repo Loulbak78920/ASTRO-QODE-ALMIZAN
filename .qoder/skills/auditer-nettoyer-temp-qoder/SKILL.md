@@ -1,6 +1,6 @@
 ---
 name: auditer-nettoyer-temp-qoder
-description: "盘点并安全清理 Qoder 临时目录：清点 `~/.qoder/tmp` 与项目 `<workspace>/.qoder/tmp` 的目录、文件与嵌套 Git 克隆，按 `~/.qoder/projects` 下的会话 JSONL 单遍扫描并排除当前会话，用右边界匹配与引用新鲜度（条目 ≥6h 且引用会话 ≥3h 未写入）筛出候选，只删除经用户确认的显式路径，删除前 `chmod -R u+w` 与 `stat -c %Y` 复查，删除后检查 sentinel、`__pycache__` 与嵌套仓库；不可复现快照先复制到 `.qoder/snapshots` 并校验 SHA-256。用于「清理临时目录」「删除临时克隆」「检查其他临时目录残留」「清理证据文件和日志」「清理项目 .qoder/tmp」「快照备份」「大规模归属检索」「sentinel 重建」「pycache 残留」等请求；不适用于删除项目源码、Skill 安装目录、应用托管的 tool-results 缓存或其他会话仍在使用的克隆。"
+description: "盘点并安全清理 Qoder 临时目录：清点 `~/.qoder/tmp` 与项目 `<workspace>/.qoder/tmp` 的目录、文件与嵌套 Git 克隆，按 `~/.qoder/projects` 下的会话 JSONL 单遍扫描并排除当前会话，用右边界匹配与引用新鲜度（条目 ≥6h 且最后提及 ≥3h，mtime 仅作回退）筛出候选，只删除经用户确认的显式路径，删除前 `chmod -R u+w` 与 `stat -c %Y` 复查，删除后检查 sentinel、`__pycache__` 与嵌套仓库；不可复现快照先复制到 `.qoder/snapshots` 并校验 SHA-256。用于「清理临时目录」「删除临时克隆」「检查其他临时目录残留」「清理证据文件和日志」「清理项目 .qoder/tmp」「快照备份」「大规模归属检索」「sentinel 重建」「pycache 残留」等请求；不适用于删除项目源码、Skill 安装目录、应用托管的 tool-results 缓存或其他会话仍在使用的克隆。"
 ---
 
 # 盘点并安全清理 Qoder 临时目录
@@ -44,10 +44,10 @@ description: "盘点并安全清理 Qoder 临时目录：清点 `~/.qoder/tmp` �
 8. 删除后必须复查 sentinel 与 `__pycache__`；未复查不得宣称「无残留」。
 9. 报告区分「已删除并复查」「已确认保留」「未知/未触碰」；不要把「路径已消失」说成「所有会话不再引用」。
 10. 大规模归属必须用单遍读取 JSONL 的扫描；禁止对每个候选名单独 `grep` 全量 JSONL。名称匹配至少加右边界 `(?![A-Za-z0-9._-])`，否则前缀相同的长名会被短名吞掉、引用数虚高。右边界不约束左侧，短名仍可能在更长 token 的尾部命中；候选名应保持可区分，并在报告中注明这一限制。
-11. 引用新鲜度只是代理：JSONL mtime 表示该会话文件最近被写入，不等于会话已结束，也不等于条目已无人使用。不得据此宣称「其他会话不再引用」；仍不确定时查 `list_chat_sessions` 或保留。
+11. 引用新鲜度以「最后提及」为准：按行时间戳取每个候选的最后提及，缺可用 `timestamp` 时回退该会话 JSONL 的 mtime 并标 `last_mention_src=mtime`。最后提及仍不等于会话已结束或条目已无人使用；不得据此宣称「其他会话不再引用」。会话未注册（`wait_chat_sessions` 报不存在）时只说明会话状态 UNKNOWN，条目仍按最后提及 age 归入 ACTIVE-REF 或 STALE-REF，不要当成 cold。
 12. 删除脚本禁止使用顶层 `continue`。`bash -n` 对顶层 `continue` 返回 0，但运行时会报 `continue: only meaningful in a 'for', 'while', or 'until' loop` 且不会跳过后续删除命令；必须改写成逐项 `if/else`，并在执行前检查生成结构或在小夹具上验证 `SKIP` 分支。`bash -n` 只证明语法，不证明控制流。
 13. 项目快照不可复现时，先复制到 `<workspace>/.qoder/snapshots` 并用 SHA-256 证明副本一致、JSON 可解析，才可删除 `.qoder/tmp` 中的副本；`.qoder/snapshots` 默认不删。
-14. 候选清单是生成时刻的快照；用户确认与执行间隔较长时，重新运行归属扫描或把 `newest_ref_age_h` 接近阈值的条目改判为 ACTIVE-REF。删除脚本的 `stat -c %Y` 只复查条目本身，不复查引用会话。
+14. 候选清单是生成时刻的快照；用户确认与执行间隔较长时，重新运行归属扫描或把 `last_mention_age_h` 接近阈值的条目改判为 ACTIVE-REF。删除脚本的 `stat -c %Y` 只复查条目本身，不复查引用会话。
 
 ## 工作流
 
@@ -86,8 +86,7 @@ py -3 -B "$SKILL_DIR/scripts/inventorier_tmp_qoder.py" --root "$PROJECT_TMP" --m
 - 退出码 `0` 表示 `RESULT OK` 或 `RESULT PARTIAL`；`2` 表示 `RESULT FAIL`（根目录不存在、不是目录、不可读，或参数错误）。
 - `RESULT PARTIAL` 且 `truncated=yes` 时，`TOTALS` 只覆盖已扫描的条目，体积可能被严重低估（2026-10-27 首跑用 `--entry-limit 200` 得到 3.2M，完整值是 84.8M）。提高 `--entry-limit` 重跑后再用这些数字做基线，不要拿截断结果当完整清单。
 - 项目 `.qoder/tmp` 通常很小，但同样要枚举；其中的 `<编码项目名>/` 是应用缓存，默认保留。两个根都要分别记录顶层条目、size、mtime 与标记。
-- 输出含 `TOTALS`、`MARKERS`、每个顶层条目的 size/mtime/age/recent/empty 与标记计数，以及 `NESTED_GIT`、`SENTINEL_DIRS`、`PYCACHE` 明细；`--json` 输出 ASCII JSON，便于落盘比对。
-- `--max-depth` 只限制标记扫描深度，size 始终递归统计。`.git` 可能是目录（普通克隆）也可能是文件（worktree/子模块），脚本都记入 `nested_git`；不要把 `find -type d -name .git` 的 0 当作没有嵌套仓库。
+- 输出含 `TOTALS`、`MARKERS`、每个顶层条目的 size/mtime/age/recent/empty 与标记计数，以及 `NESTED_GIT`、`SENTINEL_DIRS`、`PYCACHE` 明细；`--json` 输出 ASCII JSON，便于落盘比对。`--max-depth` 只限制标记扫描深度（size 始终递归统计），`.git` 目录或文件都记入 `nested_git`。
 - 脚本只读，不判定归属、不删除；`UNKNOWN`、共享证据与活跃会话仍按 Step 2、Step 3 处理。目录可能在扫描期间变化，计数只对本次运行有效。
 - 文本模式在 cp1252 控制台下把无法编码的文件名输出为 `\uXXXX` 转义，JSON 模式始终为 ASCII；需要可读原名时用 `ls` 复核。
 
@@ -151,21 +150,33 @@ pats = {n: re.compile(re.escape(n) + r"(?![A-Za-z0-9._\-])") for n in names}
 now = datetime.datetime.now().astimezone()
 act = {}
 hits = {n: set() for n in names}
+last = {}
 scanned = 0
 for path in glob.glob(os.path.join(PROJECTS, "*", "*.jsonl")):
     sid = os.path.basename(path)[:-6]
     act[sid] = datetime.datetime.fromtimestamp(os.path.getmtime(path)).astimezone()
     if sid == SELF:
         continue
+    scanned += 1
     try:
-        text = io.open(path, "r", encoding="utf-8", errors="replace").read()
+        with io.open(path, "r", encoding="utf-8", errors="replace") as fh:
+            for line in fh:
+                hit = [n for n, pat in pats.items() if pat.search(line)]
+                if not hit:
+                    continue
+                when, src = act[sid], "mtime"
+                try:
+                    raw = json.loads(line)["timestamp"]
+                    when = datetime.datetime.fromisoformat(raw.replace("Z", "+00:00")).astimezone() if isinstance(raw, str) else datetime.datetime.fromtimestamp(raw / 1000).astimezone()
+                    src = "ts"
+                except (ValueError, KeyError, AttributeError, TypeError, OSError):
+                    pass
+                for n in hit:
+                    hits[n].add(sid)
+                    if n not in last or when > last[n][0]:
+                        last[n] = (when, sid, src)
     except OSError as e:
         print("READ_ERR", sid, e, file=sys.stderr)
-        continue
-    scanned += 1
-    for n, pat in pats.items():
-        if pat.search(text):
-            hits[n].add(sid)
 
 def dsize(p):
     try:
@@ -191,7 +202,7 @@ for label, root, n in cands:
         print("STAT_ERR", label, n, e, file=sys.stderr)
         continue
     refs = sorted(hits[n])
-    newest = max((act[s] for s in refs if s in act), default=None)
+    lastm = last.get(n)
     out.append({
         "root": label,
         "name": n,
@@ -201,7 +212,9 @@ for label, root, n in cands:
         "age_h": round((now - datetime.datetime.fromtimestamp(st.st_mtime).astimezone()).total_seconds() / 3600, 2),
         "ref_count": len(refs),
         "refs": refs,
-        "newest_ref_age_h": round((now - newest).total_seconds() / 3600, 2) if newest else None,
+        "last_mention_age_h": round((now - lastm[0]).total_seconds() / 3600, 2) if lastm else None,
+        "last_mention_sid": lastm[1] if lastm else None,
+        "last_mention_src": lastm[2] if lastm else None,
     })
 
 out_path = os.path.join(os.environ.get("TEMP") or os.environ.get("TMP") or ".", "tmp-qoder-attribution.json")
@@ -214,7 +227,8 @@ PY
 - 该片段只读 JSONL 与目录，只在 `%TEMP%` 下写 `tmp-qoder-attribution.json`；不删除任何条目。未替换占位符时以退出码 2 结束。
 - `SELF` 必须是上一步探针命中的 sessionId；`PROJECT_TMP` 必须是实际工作区。两个占位符未替换时，前者会把自身计入引用，后者会扫描错误的根。
 - 匹配使用右边界 `(?![A-Za-z0-9._-])`，修复前缀膨胀；但**左侧不设边界**，短名仍可能在更长 token 的尾部命中。候选名应保持可区分；不要把它说成完全精确匹配。不要用 `"|".join(names)` 的单条 alternation：正则按左到右尝试 alternatives，短前缀会先命中，带时间戳的长兄弟被吞掉，引用数虚高。逐名 `search` 并加右边界。
-- `act[sid]` 是引用会话 JSONL 的 mtime，只作活跃度代理。`newest_ref_age_h` 为负数表示该会话在扫描开始后仍写入，应按活跃处理。
+- `last_mention_age_h` 取自命中行的时间戳（`last_mention_src=ts`）；该行没有可用 `timestamp` 时回退会话 JSONL 的 mtime（`last_mention_src=mtime`）；mtime 只会让条目显得更新，是上界，不能据此放宽 3h 阈值。为负通常表示会话在扫描开始后仍在写入，按活跃处理。必须同时报 `last_mention_sid`：审计报告本身列出候选名也会重置最后提及，反复清点会把条目重新判成 ACTIVE-REF。案例或报告中的 `last_mention_age_h` 与 `last_mention_sid` 必须能由 JSONL 命中行复核；改写旧数字前回到原始工具输出或命中行重算，不沿用上下文摘要或上一份报告。
+- 会话未注册（`wait_chat_sessions` 报「ChatSession 不存在」）只说明会话状态 UNKNOWN；条目仍按 `last_mention_age_h` 归类（本次两条 0.52h/2.14h 属 ACTIVE-REF），不要当成 cold。要确认注册情况用 `list_chat_sessions` 的 `limit`/`cursor` 分页。
 - `ref_count=0` 在大语料中可能很少（2026-10-27 的 227 个候选中为 0 个），但绝大多数条目至少被一个其他会话提到。因此「有引用就保留」在大会话量下会导致无法清理，必须叠加新鲜度维度。引用只证明「被提到」，不证明会话仍在使用，也不证明会话已结束。
 - 需要区分二阶提及时，读取每个命中会话的首条记录时间；删除之后才开始的会话只转述名称，不计入 SHARED。该判断仍不证明会话状态。
 - 对疑似克隆，用 `git -C <path>/repo status -sb` 看分支与上游，用 `ls -la` 看 mtime。干净、跟踪 `origin/main` 且最近更新的克隆按「其他会话正在使用」处理。
@@ -234,8 +248,8 @@ PY
 | 桶 | 判据 | 默认动作 |
 |---|---|---|
 | RECENT | 条目 `age_h < 6` | 保留（近 6h 内修改） |
-| ACTIVE-REF | `newest_ref_age_h < 3`（含负值） | 保留（仍有近期引用） |
-| STALE-REF | `age_h >= 6` 且 `newest_ref_age_h >= 3`，且非 APP-MANAGED | 可进入候选；仍需用户确认精确路径 |
+| ACTIVE-REF | `last_mention_age_h < 3`（含负值） | 保留（仍有近期提及） |
+| STALE-REF | `age_h >= 6` 且 `last_mention_age_h >= 3`，且非 APP-MANAGED | 可进入候选；仍需用户确认精确路径 |
 
 6h/3h 是本案使用的启发式阈值，不是通用契约。用户要求更保守时提高阈值；接近阈值的条目按 ACTIVE-REF 处理。
 
@@ -245,15 +259,13 @@ PY
 
 从 `tmp-qoder-attribution.json` 读回候选，按归属与新鲜度分桶，输出表格：
 
-| 根 | 路径 | 类型/size | mtime / age_h | 引用数 | newest_ref_age_h | 分类 | 建议动作 |
+| 根 | 路径 | 类型/size | mtime / age_h | 引用数 | 最后提及 age_h / sid | 分类 | 建议动作 |
 |---|---|---|---|---|---|---|---|
 
 请用户确认**精确清单**，不要把「顺便清掉其他残留」打包进同一句。共享证据、UNKNOWN 与接近阈值的条目必须单独列出并单独确认。
 
 - 机器可读 JSON 不是用户确认；确认必须是用户对新列出的路径逐项或整体明确答复。
 - 若用户只说「清理全部」，仍然先列出清单并等待确认；把会删除的每一项显式写出。
-- 从扫描到执行间隔较长（本案约 4 小时）时，重跑 Step 2 或把 `newest_ref_age_h` 接近 3h 的条目改判为 ACTIVE-REF。删除脚本只复查条目自身的 mtime，不复查引用会话。
-- 不可复现的项目快照（例如只存在于 `.qoder/tmp` 的 JSON）不能直接删：先复制到 `<workspace>/.qoder/snapshots`，用 `sha256sum` 与 JSON 解析证明副本一致，再删除 tmp 副本；`.qoder/snapshots` 默认不删。
 - 待确认清单里同时写出「将保留」的类别与数量（APP-MANAGED、RECENT、ACTIVE-REF、OTHER-SESSION、UNKNOWN），避免用户误以为未列出的条目也会被删除。
 
 ### Step 4 删除确认项
@@ -357,24 +369,18 @@ py -3 -B -c "import glob,json,sys; fs=glob.glob(sys.argv[1]); assert fs; [json.l
 
 `sha256sum` 必须与删除前记录的副本哈希一致，JSON 必须可解析；任一项失败说明备份不可用，不得声称快照已安全归档。`.qoder/snapshots` 中的文件默认保留，不进入后续清理。
 
-4. 导入产生的缓存：
+4. 导入缓存与源仓库：
 
 ```bash
 SKILL_DIR="$HOME/.qoder/skills/REPLACE_WITH_SKILL_DIR_NAME"
 find "$SKILL_DIR" \( -type d -name __pycache__ -o -type f -name '*.pyc' \) 2>/dev/null
-git -C "$SKILL_DIR" status --porcelain
-```
-
-把 `SKILL_DIR` 换成实际 Skill 目录。只删除本次导入生成的缓存，然后复核 `git status --porcelain` 为空。后续导入可用 `py -3 -B` 或 `PYTHONDONTWRITEBYTECODE=1` 预防；来源会话未验证这两个参数，只验证了删除结果。
-
-5. 源仓库未受影响：
-
-```bash
 git -C "$SKILL_DIR" status -sb
 git -C "$SKILL_DIR" log -1 --oneline
 ```
 
-6. 最终清点：重新运行 Step 1 的顶层清单（两个根），与删除前快照对比，确认只有确认项消失、没有未确认的新增条目被牵连：
+把 `SKILL_DIR` 换成实际 Skill 目录。只删除本次导入生成的缓存，然后复核 `git status -sb` 首行为 `## main` 且无未提交项。后续导入可用 `py -3 -B` 或 `PYTHONDONTWRITEBYTECODE=1` 预防；来源会话只验证了删除结果，未验证这两个参数。
+
+5. 最终清点：重新运行 Step 1 的顶层清单（两个根），与删除前快照对比，确认只有确认项消失、没有未确认的新增条目被牵连：
 
 ```bash
 USER_TMP="$HOME/.qoder/tmp"
@@ -402,7 +408,7 @@ py -3 -B "$SKILL_DIR/scripts/inventorier_tmp_qoder.py" --root "$PROJECT_TMP" --m
 
 用表格汇总：
 
-| 根 | 项 | 类型/size | age_h | 引用数 | newest_ref_age_h | 分类 | 动作 | 复查结果 |
+| 根 | 项 | 类型/size | age_h | 引用数 | 最后提及 age_h / sid | 分类 | 动作 | 复查结果 |
 |---|---|---|---|---|---|---|---|---|
 
 报告必须写明：
@@ -433,13 +439,15 @@ py -3 -B "$SKILL_DIR/scripts/inventorier_tmp_qoder.py" --root "$PROJECT_TMP" --m
 | 删除后仍能 `ls` 到同名路径 | 只删了子目录或被重建 | 检查父目录、sentinel 与 mtime，不要只看一次 `rm` 退出码 |
 | 短名条目引用数虚高（例如 `name-1` 命中 `name-10`） | 无右边界，前缀互吞 | 加 `(?![A-Za-z0-9._-])`；仍不约束左侧，报告注明 |
 | 用 `"|".join(names)` 的 alternation 匹配 | 正则按左到右尝试，短前缀先命中长兄弟 | 逐名 `search` 并加右边界 |
-| `ref_count=0` 的条目为 0 个，导致无法清理 | 「有引用就保留」在数百个候选下等价于全部保留 | 叠加新鲜度维度（条目 ≥6h 且引用会话 ≥3h 未写入） |
+| `ref_count=0` 的条目为 0 个，导致无法清理 | 「有引用就保留」在数百个候选下等价于全部保留 | 叠加新鲜度维度（条目 ≥6h 且最后提及 ≥3h） |
 | 删除脚本打印 `continue: only meaningful in a 'for', 'while', or 'until' loop` 但仍继续执行 | 顶层 `continue`；`bash -n` 返回 0 | 改成逐项 `if/else`；在夹具上验证 `SKIP` 分支 |
-| `newest_ref_age_h` 为负数 | 引用会话在扫描开始后仍写入 | 按活跃处理（ACTIVE-REF），不进入候选 |
+| `last_mention_age_h` 为负数 | 通常是该会话在扫描开始后仍写入 | 按活跃处理（ACTIVE-REF），不进入候选 |
+| `wait_chat_sessions` 报「ChatSession 不存在」 | 该会话未注册，状态不可查 | 用 `list_chat_sessions` 的 `cursor` 分页确认；仍查不到只把会话状态记 UNKNOWN，条目仍按最后提及 age 归类，不要当成 cold |
+| 清点一次后报告列出的候选都变成 ACTIVE-REF；改写案例时 age/sid 与原始输出不符 | 审计报告本身列出候选名，重置了最后提及；上下文摘要或上一份报告提供二手 age/sid | 报告必须打印 `last_mention_sid`，区分「真实使用」与「报告转述」；改写案例数字前从 JSONL 命中行重算 age 与 sid，不沿用摘要或旧报告 |
+| `du -sh` 与 `size_bytes` 不一致（922.1K vs 819.1K，1.2M vs 952K） | 前者是磁盘分配大小，后者是表观字节数 | 基线统一用一个口径，报告中注明差异来源 |
 | 删掉 `.qoder/tmp` 中的快照后无法复现 | 快照是唯一副本 | 先复制到 `.qoder/snapshots`，校验 SHA-256 与 JSON，再删 tmp 副本 |
 | 把 `<workspace>/.qoder/tmp` 当作用户级 `~/.qoder/tmp` 的别名 | 两个根路径不同，删除目标不同 | Step 0 显式设定 `USER_TMP`/`PROJECT_TMP`，删除脚本按 `root` 分派 |
 | `RESULT PARTIAL` 时体积远小于 `du -sh` | `--entry-limit` 截断，TOTALS 只覆盖已扫描条目 | 提高 `--entry-limit`（本例 200 → 5000）重跑，再取基线 |
-| 确认到执行间隔数小时 | 候选与引用新鲜度都在漂移 | 重跑 Step 2，或把接近 3h 阈值的条目改判 ACTIVE-REF |
 | 误删 `.qoder/snapshots` 中的归档 | 把它当成 tmp 垃圾 | 项目侧只处理 `.qoder/tmp`；`.qoder/snapshots` 默认保留 |
 
 ## 已验证案例
@@ -448,26 +456,21 @@ py -3 -B "$SKILL_DIR/scripts/inventorier_tmp_qoder.py" --root "$PROJECT_TMP" --m
 
 来源会话 `324c8787-9642-4d4e-a16c-2cf4834fb20c`，完整引文与指纹见 `references/cas-nettoyage-temp-qoder-2026-10-26.md`。
 
-1. 16:16:00Z 删除克隆 `pr-lock-lf.4v1Pgv`，输出 `TMP_REMOVED`；到 16:20:10Z 同一路径出现 4.0K 的 `system-commandline-sentinel-files`，内含 `dotnet-suggest-registration-git-credential-manager, Version=2.6.1.0...`。
-2. 16:20:24Z 第二次删除该目录，输出 `RM_EXIT=0` 与 `REMOVED`；随即扫描未发现其他 sentinel。
-3. 16:24:57Z 按 basename 检索 JSONL：`live-audit-lock-lf` 被 5 个会话引用；16:44Z 的补充复核显示 `publish-hsas.C2cx6c` 被 5 个会话提到，且是干净克隆并跟踪 `origin/main`，未触碰。
-4. 16:24:37Z 在 `github-pr-create-merge-sans-gh` 的 scripts 目录发现 `__pycache__`，`git status` 显示 `?? scripts/__pycache__/`；16:25:13Z 删除后状态恢复为空。
-5. 16:33:46Z 删除 7 个经用户确认的 lock-lf 证据与日志，全部输出 `GONE`，`*lock-lf*` 残留为 `NONE`，源仓库仍为 `## main`。
-6. 16:42:29Z 又删除一个后出现的克隆 `pr-lock-lf-update.1793032871`，输出 `REMOVED` 与 `NO_PR_OR_SENTINEL_RESIDUE`。
-7. 边界：归属检索覆盖了 7 个待删项中的 6 个，`qa-lf-20261026.log` 未纳入那次 `grep`；删除时未逐个核验引用会话的实时写入状态；GCM 重建未被主动复现。
-8. 16:56Z 只读盘点脚本在真实 `~/.qoder/tmp` 上返回 `RESULT OK`：102 个顶层条目、1869 个条目、54.3M、16 个 `nested_git`（14 个目录 + 2 个文件）；sentinel、`__pycache__` 与 `.pyc` 均为 0，与 `find` 交叉计数一致。同一脚本在夹具上覆盖空目录、`.git` 文件、sentinel、`.pyc` 与非 ASCII 文件名，并以退出码 2 覆盖根目录缺失、文件当根目录与非法参数。
+1. 16:16:00Z 删除克隆 `pr-lock-lf.4v1Pgv`；16:20:10Z 同一路径出现 4.0K 的 `system-commandline-sentinel-files`，内含 `git-credential-manager` 的 .NET 组件；16:20:24Z 只删该目录后复查无其他 sentinel。
+2. 16:24:57Z 按 basename 检索 JSONL：`live-audit-lock-lf` 被 5 个会话引用；`publish-hsas.C2cx6c` 被 5 个会话提到，且是干净克隆并跟踪 `origin/main`，未触碰。
+3. 16:24:37Z 在 `github-pr-create-merge-sans-gh` 的 scripts 目录发现 `__pycache__`，`git status` 为 `?? scripts/__pycache__/`；16:25:13Z 删除后恢复为空。
+4. 16:33:46Z 删除 7 个确认的 lock-lf 证据与日志，全部 `GONE`，`*lock-lf*` 残留 `NONE`，源仓库仍 `## main`；16:42:29Z 后出现的克隆 `pr-lock-lf-update.1793032871` 也删除，输出 `NO_PR_OR_SENTINEL_RESIDUE`。
+5. 16:56Z 只读盘点脚本在真实 `~/.qoder/tmp` 返回 `RESULT OK`：102 顶层 / 1869 条目 / 54.3M / `nested_git=16`，sentinel 与缓存均为 0；夹具另覆盖 `.git` 文件、非 ASCII 文件名与退出码 2。边界：`qa-lf-20261026.log` 未纳入那次检索；未逐个核验引用会话实时状态；GCM 重建未主动复现。
 
-### 2026-10-27 大规模归属与项目快照
+### 2026-10-27 大规模归属、最后提及与项目快照
 
-来源会话 `e4b7c222-3dad-4ee8-8e92-2670c97e43b4`，完整引文与指纹见 `references/cas-nettoyage-temp-qoder-2026-10-27.md`。
+来源会话 `e4b7c222-3dad-4ee8-8e92-2670c97e43b4` 与 `4c86bebd-4ce4-460b-9038-884f8f91c737`，完整引文与指纹见 `references/cas-nettoyage-temp-qoder-2026-10-27.md`。
 
-1. 项目 `.qoder/tmp` 中两份快照（42,483 B `9b8ebe95…a9de1`、40,845 B `f67676a1…a20e`）先复制到 `.qoder/snapshots`，`sha256sum` 证明副本一致、JSON 可解析后才删 tmp 副本与 `.last-inventory-snap` 指针。
-2. 基线：用户级 2,554 条目 / 84.8M / 204 顶层；项目级 176 条目 / 943.0K / 23 顶层；`nested_git=11`、sentinel 1、`pyc` 1。首跑 `--entry-limit 200` 得 `PARTIAL` 且只报 3.2M，说明截断会严重低估体积。
-3. 单遍扫描 303 个 JSONL（排除当前会话）、227 个候选：`NO_REF=0`、`OLD_REF=170`（6,527,111 B）、`ACTIVE_REF=55`（6,024,723 B）、候选 159 个（5,638,421 B）。若只按「有引用就保留」，159 个候选会全部被误判为共享。
-4. 删除脚本第一版在顶层用 `continue`：`bash -n` 返回 0，但运行时报 `continue: only meaningful in a 'for', 'while', or 'until' loop` 且不跳过后续条目；改写为逐项 `if/else` 后才执行。
-5. 159 个显式路径（user 149 + project 10，45 目录 / 114 文件）全部 `GONE`，无 `SKIP`/`STILL`；脚本运行 09:41:26Z–09:41:55Z。
-6. 复查：总量 84.8M → 80.5M（应用缓存同期 77.6M → 79.7M，另一会话仍在写入）；`nested_git` 11 → 2（剩余两个在应用托管缓存内）；sentinel 0；项目 tmp 剩 13 项；执行期间新建的 `55f63550-extract/` 未触碰；3 个无关 `__pycache__` 未删除。
-7. 边界：只加右边界；删除时未重新归属引用（扫描到执行间隔约 4 小时）；未逐个查 `runtimeState`；GCM 重建未主动复现；302 个会话文件对应 303 次扫描的差异来自「排除自身」的计数口径。
+1. 基线（`e4b7c222`）：用户级 2,554 条目 / 84.8M / 204 顶层；项目级 176 条目 / 943.0K / 23 顶层；`nested_git=11`、sentinel 1、`pyc` 1。首跑 `--entry-limit 200` 得 `PARTIAL` 且只报 3.2M，说明截断会严重低估体积。
+2. 单遍扫描 303 个 JSONL（排除自身）、227 个候选：`NO_REF=0`、`OLD_REF=170`、`ACTIVE_REF=55`、候选 159 个；只按「有引用就保留」会让 159 个全部误判为共享。删除脚本第一版在顶层用 `continue`：`bash -n` 返回 0，运行时报 `continue: only meaningful in a 'for', 'while', or 'until' loop` 且不跳过后续条目；改写为逐项 `if/else` 后，159 个显式路径（user 149 + project 10）全部 `GONE`，无 `SKIP`/`STILL`，运行 09:41:26Z–09:41:55Z。
+3. 复查（`e4b7c222`）：总量 84.8M → 80.5M（应用缓存同期 77.6M → 79.7M，另一会话仍在写入）；`nested_git` 11 → 2（剩余在应用托管缓存内）；sentinel 0；项目 tmp 剩 13 项；执行期间新建的 `55f63550-extract/` 未触碰。
+4. 12:33–12:38Z（`4c86bebd`）：文件 mtime 代理把 13 行候选全算成 `-0.0`/`-0.01`；改按行 `timestamp` 取最后提及后得到 2.14h（sid `3c861dde`）与 0.52h（sid `fdb57827`）。这两个会话未注册，`wait_chat_sessions` 报「ChatSession 不存在」，会话状态记 UNKNOWN，条目仍按 2.14h/0.52h 判 ACTIVE-REF。用户确认后 6 个路径 `GONE`（epoch 已记录）、7 项保留；项目 `.qoder/tmp` 922.1K/1.2M → 819.1K/952K，顶层 13 → 7；新增的 `acceptance-helpers-20261027`、`porte_skill.sh`、`qa-edit-skill-after.txt` 未触碰。
+5. 报告重置：12:38:15Z 的报告列出这些名称；12:57:57Z 独立复跑（`SCANNED 334 CANDIDATES 28`）时，6 个幸存旧条目里 5 个回到 0.33h、`contract_audit` 为 0.11h，sid 均为 `4c86bebd`；项目缓存 -0.01h（sid `d4a03af8`，另一会话仍在写入），所以报告必须带 `last_mention_sid`。边界：只加右边界；未逐个查 `runtimeState`；GCM 重建未主动复现。
 
 ## 验收片段
 
@@ -480,18 +483,16 @@ SKILL_DIR="$HOME/.qoder/skills/auditer-nettoyer-temp-qoder"
 [ -d "$USER_TMP" ] && echo "USER_TMP_OK" || echo "USER_TMP_MISSING"
 [ -d "$PROJECT_TMP" ] && echo "PROJECT_TMP_OK" || echo "PROJECT_TMP_MISSING"
 echo "SENTINELS=$(find "$USER_TMP" "$PROJECT_TMP" -maxdepth 4 -type d -name system-commandline-sentinel-files 2>/dev/null | wc -l)"
-echo "NESTED_GIT_DIR=$(find "$USER_TMP" "$PROJECT_TMP" -maxdepth 5 -type d -name .git 2>/dev/null | wc -l)"
-echo "NESTED_GIT_FILE=$(find "$USER_TMP" "$PROJECT_TMP" -maxdepth 5 -type f -name .git 2>/dev/null | wc -l)"
 py -3 -B "$SKILL_DIR/scripts/inventorier_tmp_qoder.py" --root "$USER_TMP" --max-depth 5 --recent-minutes 60 --entry-limit 5000 | sed -n '1,10p'
 py -3 -B "$SKILL_DIR/scripts/inventorier_tmp_qoder.py" --root "$PROJECT_TMP" --max-depth 5 --recent-minutes 60 --entry-limit 5000 | sed -n '1,10p'
 ```
 
-预期两个 `_OK`；`SENTINELS` 可能非零（其他克隆也可能有），必须解释而不是直接删除；`NESTED_GIT_DIR` 只数 `.git` 目录，脚本的 `MARKERS nested_git` 同时包含 `.git` 文件，两者口径不同；这些值随夹具创建与清理变化，只作清点基线，不是待删数量。脚本应打印 `RESULT OK` 或 `RESULT PARTIAL` 并以退出码 0 结束；出现 `PARTIAL` 时先读 `ERRORS`，并提高 `--entry-limit` 重跑。
+预期两个 `_OK`；`SENTINELS` 可能非零（其他克隆也可能有），必须解释而不是直接删除；脚本的 `MARKERS nested_git` 同时包含 `.git` 目录与文件，不要与只数目录的 `find` 结果直接比较；这些值随夹具创建与清理变化，只作清点基线，不是待删数量。脚本应打印 `RESULT OK` 或 `RESULT PARTIAL` 并以退出码 0 结束；出现 `PARTIAL` 时先读 `ERRORS`，并提高 `--entry-limit` 重跑。
 
 ## 资源
 
 - `references/cas-nettoyage-temp-qoder-2026-10-26.md`：来源会话时间线、逐字输出、指纹与分级，以及脚本增量的夹具与真实运行记录。
-- `references/cas-nettoyage-temp-qoder-2026-10-27.md`：项目快照归档、单遍归属扫描（303 会话 / 227 候选 / 159 删除）、顶层 `continue` 缺陷、删除前后对比与分级边界。
+- `references/cas-nettoyage-temp-qoder-2026-10-27.md`：项目快照归档、单遍归属扫描（303 会话 / 227 候选 / 159 删除）、顶层 `continue` 缺陷、最后提及与未注册会话（第二来源 `4c86bebd`）、删除前后对比与分级边界。
 - `scripts/inventorier_tmp_qoder.py`：只读盘点脚本（`--root`、`--max-depth`、`--recent-minutes`、`--entry-limit`、`--json`；退出码 0/2），输出顶层 size/mtime/recent、嵌套 `.git`（目录与文件）、sentinel 与 `__pycache__`/`.pyc` 计数。
 - `skill-package-integrity-audit`：只读审计 Skill 包内缓存与归档。
 - `audit-session-evidence`：会话证据链与来源核实方法。

@@ -489,3 +489,115 @@ grep -v '^GONE' "$TEMP/tmp-qoder-delete-159.log"
 ```
 
 脚本在末次 sentinel 扫描后被删除；日志与候选 JSON 保留，作为逐项 `GONE` 与字节数的证据。
+
+## 7. 最后提及与未注册会话（第二来源 `4c86bebd`）
+
+### 来源读取记录
+
+| 项 | 值 |
+|---|---|
+| 来源会话 | `4c86bebd-4ce4-460b-9038-884f8f91c737`（标题「更新清理副作用 Skill」） |
+| 读取参数 | `read_chat_session`，`turnLimit=20`、`includeToolOutputs=true`、`maxOutputCharsPerItem=8000` |
+| runtimeState | `ready` |
+| activeTurnId | `null` |
+| queuedTurnCount | `0` |
+| pendingInteractionCount | `0` |
+| revision | `67` |
+| hasMoreBefore | `false` |
+| 消息数 | 14（`messages` 数组） |
+| 返回规模 | 185,830 B / 653 行，超过单条输出上限后落盘 |
+
+落盘快照（读取会话 `c6fcec56` 的 tool-results，可能被后续清理）：
+
+`C:/Users/Administrateur/.qoder/tmp/C--Users-Administrateur-Desktop-IMAM8MAHDI/c6fcec56-a27c-49fb-9db7-1207f56a0d34/tool-results/builtin_read_chat_session_42c39ce6c150.txt`
+
+| 产物 | size | mtime（+01:00） | sha256 |
+|---|---|---|---|
+| `read_chat_session` 落盘快照 | 185,830 B | 2026-10-27T13:47:05.740418800+01:00 | `42c39ce6c15083dd0be9cffc315ccd9de58e801059d1da97e8fdd00d7a45f51e` |
+
+### 问题：文件 mtime 把旧条目算成活跃
+
+`4c86bebd` 清理前的归属输出（`SCANNED 325 CANDIDATES 21`）里，项目根 13 行候选的最后一列是 12 个 `-0.0` 加 1 个 `-0.01`：
+
+```text
+| project | adopt-qa-baseline.log | 1146 | 24.16 | 15 | -0.0
+| project | audit-contracts-snapshot-1124 | 103672 | 26.15 | 20 | -0.0
+| project | audit-contracts-test | 42207 | 26.01 | 19 | -0.0
+| project | audit-contracts-verify | 60569 | 25.79 | 25 | -0.0
+| project | contract_audit | 394965 | 26.04 | 56 | -0.0
+| project | correction_s6_20261026 | 125606 | 37.39 | 18 | -0.0
+| project | fingerprints-lock-lf-endings-skill-repo.txt | 178 | 24.08 | 32 | -0.0
+| project | fingerprints-skill-file-qa.txt | 278 | 21.7 | 15 | -0.0
+| project | fingerprints-verify-skill-runtime-binding.txt | 173 | 21.48 | 42 | -0.0
+| project | site_audit | 70779 | 11.75 | 6 | -0.0
+| project | skill-package-integrity-audit-qa-20261026.log | 1175 | 23.57 | 8 | -0.0
+| project | skill-staged-delivery-backup-20261026 | 18903 | 23.85 | 9 | -0.0
+| project | C--Users-Administrateur-Desktop-IMAM8MAHDI | 124612 | 23.95 | 321 | -0.01
+```
+
+这些条目本身 11.8–37.4 h 未修改，但引用它们的会话 JSONL 仍在持续写入，`mtime` 代理因此给出「刚刚被引用」。改用命中行的 `timestamp` 后：
+
+```text
+| project | adopt-qa-baseline.log | last_mention_age_h=2.14 sid=3c861dde
+| project | audit-contracts-snapshot-1124 | last_mention_age_h=2.1 sid=3c861dde
+| project | audit-contracts-test | last_mention_age_h=2.14 sid=3c861dde
+| project | audit-contracts-verify | last_mention_age_h=2.14 sid=3c861dde
+| project | contract_audit | last_mention_age_h=0.52 sid=fdb57827
+| project | correction_s6_20261026 | last_mention_age_h=2.14 sid=3c861dde
+| project | fingerprints-lock-lf-endings-skill-repo.txt | last_mention_age_h=2.14 sid=3c861dde
+| project | fingerprints-skill-file-qa.txt | last_mention_age_h=2.14 sid=3c861dde
+| project | fingerprints-verify-skill-runtime-binding.txt | last_mention_age_h=0.52 sid=fdb57827
+| project | site_audit | last_mention_age_h=2.14 sid=3c861dde
+| project | skill-package-integrity-audit-qa-20261026.log | last_mention_age_h=2.14 sid=3c861dde
+| project | skill-staged-delivery-backup-20261026 | last_mention_age_h=2.14 sid=3c861dde
+```
+
+`3c861dde` 与 `fdb57827` 都不在已注册会话列表里，`wait_chat_sessions` 两次返回：
+
+```text
+等待的 ChatSession 不存在：3c861dde-5275-40e4-95f8-2f430a4c8ebb
+等待的 ChatSession 不存在：fdb57827-1c2b-4ceb-a8a8-3b805c00447e
+```
+
+因此不能把「查不到」当成 `cold`；本次只把会话状态记为 UNKNOWN，条目仍按最后提及归类——0.52 h 与 2.14 h 都低于 3 h，属 ACTIVE-REF 而非冷条目。
+
+### 删除与保留
+
+6 个路径在用户确认后删除，删除前记录 `stat -c %Y`，删除后逐项 `GONE`：
+
+```text
+GONE adopt-qa-baseline.log epoch=1793017494
+GONE audit-contracts-test epoch=1793010836
+GONE audit-contracts-verify epoch=1793011614
+GONE fingerprints-lock-lf-endings-skill-repo.txt epoch=1793017780
+GONE fingerprints-skill-file-qa.txt epoch=1793026363
+GONE skill-package-integrity-audit-qa-20261026.log epoch=1793019629
+```
+
+保留 7 个：`contract_audit` 与 `fingerprints-verify-skill-runtime-binding.txt`（最后提及 0.52 h）、`site_audit`（JSON 证据）、`audit-contracts-snapshot-1124`（Skill 快照，含预存 `__pycache__`）、`correction_s6_20261026`（模块 `.bak`）、`skill-staged-delivery-backup-20261026`（`SKILL.md` 备份）、项目缓存目录。
+
+删除后项目 `.qoder/tmp` 从 922.1 K / 1.2 M（表观/磁盘）降到 819.1 K / 952 K；条目总数 165 → 86，顶层 13 → 7；用户级 18.5 M / 8 项 → 18.7 M / 12 项（其他会话并发写入）；sentinel 0；嵌套仓库 1（`astro-qode-alimizan-ci`，保留）；`audit-contracts-snapshot-1124` 内的 `__pycache__`/`.pyc` 仍在（随快照保留）。执行期间新增的 `acceptance-helpers-20261027`、`porte_skill.sh`、`qa-edit-skill-after.txt` 未触碰。
+
+### 报告本身会重置最后提及
+
+`4c86bebd` 在 12:38:15Z 的最终报告列出了这些候选名。读取会话随后独立复跑同一扫描（13:57:57 +01:00 = 12:57:57Z，`SCANNED 334 CANDIDATES 28`），项目根 6 个幸存旧条目多数变成 `0.33`（`contract_audit` 为 `0.11`），`last_mention_sid` 全部是 `4c86bebd`——也就是报告本身；项目缓存为 `-0.01`（sid `d4a03af8`，另一个仍在写入的会话）。真实使用与报告转述在计数上不可区分，因此报告必须打印 `last_mention_sid`，并在重复清点时说明「上一份报告会推迟下一次清理」。二手摘要（上一轮报告）曾把项目缓存 sid 记为 `6dcf818a`；原始复跑中该项目缓存行为 `d4a03af8`（`6dcf818a` 出现在其他用户级条目），因此案例数字只从原始输出抄录。
+
+复跑同时验证了回退分支：28 个候选中 27 个 `last_mention_src=ts`，`desc_len.py` 为 `mtime`（该命中行没有可解析的 `timestamp`）。
+
+### 分级
+
+| 结论 | 依据 | 级别 |
+|---|---|---|
+| 文件 mtime 会把持续写入的会话误判为近期引用 | 13 行全部为 `-0.0`/`-0.01`，改用行时间戳后为 0.52–2.14 h | 已核实 |
+| 行时间戳以 ISO 形态为主，epoch 毫秒分支仅代码覆盖 | 单名探针 `ts=2007` / `mtime=5`；全量复跑 `ts=27` / `mtime=1`；命中行未观察到 epoch 毫秒 | ISO 已核实，epoch-ms 未实测 |
+| 未注册会话不能视为 `cold` | 两次「ChatSession 不存在」；`list_chat_sessions` 分页中未出现 | 已核实 |
+| 报告会重置最后提及 | 12:38:15Z 报告后，12:57:57Z 复跑多数变为 0.33 h（`contract_audit` 0.11 h）/ sid `4c86bebd` | 已核实 |
+| `du -sh` 与 `size_bytes` 口径不同 | 922.1 K vs 1.2 M，819.1 K vs 952 K | 已核实 |
+
+### 边界
+
+- 「最后提及」仍不是「仍在使用」：被报告转述、被其他会话批量列出都会刷新。
+- 匹配只加右边界，短名仍可能在更长 token 的尾部命中。
+- 未对未注册会话调用 `read_chat_session`；其 `runtimeState` 不可得，只按 UNKNOWN 处理。
+- GCM 重建未在本段复现；sentinel 计数 0 只代表采样时刻。
+- 哈希只绑定采样点；JSONL 与 tool-results 会随会话推进变化。
