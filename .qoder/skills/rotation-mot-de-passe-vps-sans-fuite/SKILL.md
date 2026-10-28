@@ -100,7 +100,7 @@ Supprimer les `.pyc`/`__pycache__` créés par la compilation, toute fixture, to
 | Clé ed25519 | toujours acceptée |
 | Chaîne de déploiement | charge le nouveau secret, `SUDO_OK`, rc 0 |
 | Sortie complète | ne contient jamais le secret |
-| Audit local (`scripts/auditer_secrets_locaux.py`) | `RESULT OK`, rc 0 |
+| Audit local (`scripts/auditer_secrets_locaux.py`) | `RESULT OK`, rc 0, **et `SCAN … fichiers=N>0`**, `FUITE total=0` ; `N=0` = périmètre vide, jamais un succès |
 
 ## 4. Pièges
 
@@ -121,12 +121,17 @@ Supprimer les `.pyc`/`__pycache__` créés par la compilation, toute fixture, to
 py -3 -B scripts/auditer_secrets_locaux.py --secrets <chemin du json> --racine <racine du projet>
 ```
 
-Sortie attendue (ASCII, sans secret) : `RESULT OK`, rc 0. Un `FUITE <fichier>:<ligne>` signale le secret hors du fichier de secrets ; un `ANTIPATTERN ... sudo -S` rappelle les commandes à migrer vers `sudo -n`. L'audit est **local et en lecture seule** : il ne remplace pas les contrôles distants de §2.5.
+Lire trois lignes séparément : `SCAN … fichiers=N` (fichiers réellement analysés), `FUITE total=…` (occurrences exactes de `mot_de_passe_ssh`), `ANTIPATTERN total=…` (rappel `sudo -S`/`bash -s`, **jamais** compté dans le rc). `RESULT OK` ne veut dire que : « parmi les N fichiers lus, aucune occurrence exacte du secret et pas de `<secrets>.tmp` à côté du JSON ». `N=0` est un périmètre vide (mauvaise racine ou projet sans fichier éligible), pas un succès.
+
+Couverture réelle : seuls les suffixes de `EXTENSIONS` (plus les noms `.env*`) sont lus ; les dossiers `.git`, `__pycache__`, `node_modules`, `.venv`, `venv`, `.qoder`, `.mypy_cache` sont ignorés ; les fichiers > 2 Mo sont ignorés ; seul le **fichier de secrets lui-même** est exclu. Ne sont donc pas détectés : un secret dans un `.log`/`.csv`/`.xml`/sans extension, dans un fichier > 2 Mo, sous un dossier ignoré, encodé hors UTF-8, transformé (URL, base64, JSON échappé), ou porté par une autre clé que `mot_de_passe_ssh` ; les autres noms de temporaires, les ACL et les règles `gitignore` ne sont pas contrôlés. Détail, fixtures et premier run réel : `references/audit-local-couverture-2026-10-28.md`.
+
+L'audit est **local et en lecture seule** : il ne remplace pas les contrôles distants de §2.5.
 
 ## 6. Ressources
 
 - `scripts/auditer_secrets_locaux.py` — audit local en lecture seule (forme du JSON, `.tmp`, fuite du secret, anti-modèles `sudo -S`/`bash -s`). Aucune connexion réseau, aucun secret affiché.
 - `references/cas-fuite-shell-stdin-2026-10-28.md` — chronologie et sorties verbatim de l'incident qui a motivé ce Skill, y compris les deux faiblesses de code à corriger lors d'une réutilisation.
+- `references/audit-local-couverture-2026-10-28.md` — portée exacte de l'audit local (extensions, dossiers ignorés, taille, seul `mot_de_passe_ssh`, seul `<secrets>.tmp`), fixtures du 2026-10-28 et premier run réel (698 fichiers, 0 fuite, 46 anti-modèles).
 - Implémentation de référence déjà exécutée sur ce VPS : `ASTRO-Q°ODE_SYSTEME/deploiement_vps/rotation_mot_de_passe_ovh.py` (plan par défaut, `--verifier`, `--appliquer`). La réutiliser telle quelle plutôt que d'en écrire une seconde ; si elle est modifiée, la revalider avant exécution.
 
 ## 7. Articulation avec les Skills voisins

@@ -126,3 +126,65 @@ Ces deux points sont des constats de lecture, **pas** des incidents observés da
 | Le fichier de secrets actuel est cohérent avec la rotation | REPRODUCED (réexamen local), avec réserve de `mtime` |
 
 Aucune preuve visuelle ni aucun test de connexion n'a été refait ici : ne pas le sous-entendre.
+
+## 8. Correctifs appliqués au script de référence (2026-10-28, hors production)
+
+Les constats de §6 décrivent la version `0aa8b05a25d79878…` ; la version issue de ces trois
+correctifs portait SHA-256 `a9d133d7db58b07afbafd4e17c7c4fbb156ce9628436c2b8eb829c052b4b8d37`,
+10 463 octets, et ne présentait plus ces faiblesses.
+
+1. `_accepter_mot_de_passe` (exception large) est remplacée par `_sonde_auth` : seule
+   `paramiko.AuthenticationException` rend `False` (refus) ; transport, socket, handshake
+   et toute autre exception rendent `None` (INCONCLUSIF).
+2. Ancien mot de passe encore accepté : échec bloquant rc 2, secrets locaux non modifiés ;
+   un `INCONCLUSIF` sur l'ancien est lui aussi un échec (rc 2), jamais une révocation.
+3. Filet de secours obligatoire : le préflight exige `_accepter_cle` à `True`, c'est-à-dire
+   connexion par clé seule **et** `sudo -n true` rc 0 ; sinon rc 1 sans aucune écriture.
+   `_accepter_cle` ne capture plus que `AuthenticationException`, le reste est INCONCLUSIF.
+
+Vérification : 35 assertions hors production, 35 PASS, 0 FAIL, E/S réseau remplacées —
+table de décision de `rotation()` (clé absente/inconclusive, nominal, nouveau refusé puis
+restauration par la session ouverte, nouveau inconclusif, ancien encore accepté, ancien
+inconclusif, `chpasswd` rc≠0, clé post-rotation), tri-état réel des deux sondes et
+`verifier()`. Aucune connexion au VPS, aucune rotation exécutée, fichier de secrets réel
+non lu. À ce stade, `AutoAddPolicy` était encore en place ; voir §9.
+
+## 9. Politique de clé d'hôte (2026-10-28, corrigée et exercée)
+
+`AutoAddPolicy` acceptait n'importe quelle clé présentée : un interposé réseau pouvait
+recevoir le mot de passe transmis à `chpasswd`. Le fichier porte désormais
+SHA-256 `5d27b340481a1dc9e6b10014be1aeb4795dd98a50659a9d0cadab437592fe46c`, 11 939 octets.
+
+Modifications :
+
+1. `_ouvrir()` crée le client avec `load_system_host_keys()` (sous Windows :
+   `~/.ssh/known_hosts`) et `RejectPolicy()` à la place de `AutoAddPolicy`.
+2. `_verifier_cle_hote()` relit la clé réellement négociée
+   (`get_transport().get_remote_server_key()`), calcule l'empreinte OpenSSH
+   (`SHA256:` + base64 sans `=` du SHA-256 des octets de la clé) et exige qu'elle
+   corresponde à `EMPREINTES_HOTE` pour son type. Une clé inconnue, d'un type non listé
+   ou d'empreinte divergente lève `CleHoteInattendue` après fermeture du canal.
+3. `_client` et `_accepter_cle` passent par ce contrôle ; `CleHoteInattendue` rend
+   `False` (REFUSE) dans `_accepter_cle`, donc l'échec bloque la rotation au préflight.
+4. `main()` attrape `paramiko.SSHException` et rend rc 1 avec `RESULT FAIL : <message>`,
+   sans trace Python.
+
+Empreintes épinglées (hôte `51.222.159.232`, lues dans `known_hosts` et confirmées par
+`ssh-keyscan` le 2026-10-28, identiques des deux côtés) :
+
+| Type | Empreinte |
+|---|---|
+| `ssh-ed25519` | `SHA256:UA6qiQRyKtkzxcH8yg8Ga1TPfQq5ZnF2bpmRZknSD0w` |
+| `ecdsa-sha2-nistp256` | `SHA256:ETIJFp39VUDqnO0R16apxH/9YkMNCHyprIWatV5uvpw` |
+| `ssh-rsa` | `SHA256:XHRSl0rYKQ/CRMwel09oXzKay7PuZmDltvIfdku8eEk` |
+
+Vérification hors ligne : 24 assertions PASS (chargement `known_hosts`, `RejectPolicy`,
+clé épinglée acceptée, clé inconnue rejetée et canal fermé, type non listé rejeté,
+`_client` accepté/rejeté, `_accepter_cle` à `True`/`False`/`False`/`None`, table de
+décision de `rotation()`), puis 8 assertions de régression PASS (tri-état des sondes,
+`verifier()` rc 1/1/0). Aucune rotation exécutée, fichier de secrets réel non lu.
+
+Vérification en lecture seule sur l'hôte réel : `_accepter_cle` rend `True`
+(`CLE_HOTE_ET_SUDO OK`) ; en remplaçant l'empreinte épinglée par une valeur arbitraire,
+la même sonde rend `False` (`PIN_NEGATIF REFUSE`), ce qui prouve que l'épinglage est
+actif et non contourné par `known_hosts`.
