@@ -18,14 +18,14 @@ Ne pas l'utiliser pour du Markdown non fiable (le HTML produit n'est pas assaini
 
 - `py -3` : l'alias `python` de ce poste est un stub Microsoft Store et échoue.
 - Google Chrome installé ; le script le découvre via les chemins connus et la base de registre `App Paths`.
-- `pypdf` pour l'extraction de texte.
+- `pypdf` pour l'extraction de texte ; seule dépendance Python externe, déclarée dans `scripts/requirements.txt` (`pypdf>=6.0`).
 
 ```bash
 py -3 -c "import pypdf, sys; print('pypdf', pypdf.__version__, 'py', sys.version.split()[0])"
 test -f "/c/Program Files/Google/Chrome/Application/chrome.exe" && echo chrome=ok
 ```
 
-Installer `pypdf` si absent : `py -3 -m pip install pypdf`.
+Installer `pypdf` si absent : `py -3 -m pip install -r "$HOME/.qoder/skills/exporter-rapport-markdown-pdf-windows/scripts/requirements.txt"`.
 
 Définir une fois le dossier du Skill, puis exécuter les commandes depuis le dossier du rapport :
 
@@ -153,5 +153,6 @@ Clés d'échec : `ERROR entree_absente=`, `ERROR html_absent=`, `ERROR chrome_in
 
 - `scripts/rendre_md.py` : Markdown → HTML autonome, comptage et assertions.
 - `scripts/exporter_pdf.py` : Chrome headless, export et vérification PDF.
+- `scripts/requirements.txt` : dépendance Python externe (`pypdf>=6.0`).
 - `references/preuves-session-2026-10-27.md` : valeurs mesurées dans la session source et points non vérifiés.
 - Skills liés : `skill-file-qa` (layout et validation), `windows-python-utf8-skill-scripts` (sortie UTF-8 Windows), `validation-navigateur-par-repli` (validation HTML sans capture), `verifier-livrables-csv-html-windows-fr` (contrôles cp1252 et livrables HTML).
