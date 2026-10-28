@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# SPDX-FileCopyrightText: 2026 IMAM8MAHDI / Astro-Code Ecosystem
+# SPDX-License-Identifier: GPL-3.0-only OR AGPL-3.0-only
 """
 ===============================================================================
        SCRIPT OFFICIEL DE DÉPLOIEMENT SÉCURISÉ EVM — AL-MIZAN & ASTRO-Q°ODE
@@ -129,19 +131,27 @@ RESEAUX_CONFIG = {
 
 def chercher_artefact_contrat() -> tuple[list, str]:
     """Localise le bytecode et l'ABI du contrat pré-compilé."""
+    nom_artefact = "AmalMizanSynchronMznContract.json"
+    ici = Path(__file__).resolve().parent
+    systeme = ici.parent
+    projet = systeme.parent
+    depot_public = projet.parent / "GITHUB_DEPOT_PUBLIC_IMAM8MAHDI"
     chemins_possibles = [
-        Path(__file__).resolve().parent / "contracts" / "AmalMizanSynchronMznContract.json",
-        Path(__file__).resolve().parent / "contracts" / "build" / "AmalMizanSynchronMznContract.json",
-        Path(__file__).resolve().parent.parent / "contracts" / "AmalMizanSynchronMznContract.json",
-        Path(__file__).resolve().parent.parent / "contracts" / "build" / "AmalMizanSynchronMznContract.json",
+        ici / "contracts" / nom_artefact,
+        ici / "contracts" / "build" / nom_artefact,
+        systeme / "contracts" / nom_artefact,
+        systeme / "contracts" / "build" / nom_artefact,
+        depot_public / "contracts" / nom_artefact,
+        depot_public / "contracts" / "build" / nom_artefact,
     ]
     for c in chemins_possibles:
-        if c.exists():
+        if c.is_file():
             with open(c, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 return data["abi"], data["bytecode"]
 
-    print("[ERREUR] Artefact compilé AmalMizanSynchronMznContract.json introuvable.")
+    cherches = "\n  ".join(str(c) for c in chemins_possibles)
+    print(f"[ERREUR] Artefact compilé {nom_artefact} introuvable. Chemins testés :\n  {cherches}")
     sys.exit(1)
 
 

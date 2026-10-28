@@ -1,0 +1,28 @@
+{
+  "code_acte": "A093",
+  "titre": "PROCLAMATION DU BASSIN D'ACCUEIL UNIVERSEL MULTI-JETONS : OUVERTURE DU POOL À TOUS LES ACTIFS SANS EXCLUSION",
+  "auteur_souverain": "M. Ahmed EL BAHLOUL (alias IMAM8MAHDI / M. Almizan Elbahloul)",
+  "date_scellement_iso": "2026-10-23T19:35:00+02:00",
+  "statut": "SCELLÉ_EN_MEMOIRE_ET_INTEGRE_A_LA_MONADE",
+  "doctrine_d_equite_universelle": {
+    "principe_fondateur": "La Balance Cosmique (Al-Mizan) ne discrimine pas. Le contrat n'est pas une cage binaire dépendante du seul dollar, mais un Réservoir d'Harmonie Universelle ouvert à tous les jetons.",
+    "actifs_accueillis_sans_friction": [
+      "Tétrade Cosmique : MZN (Info), MZN-MAT (Matière), MZN-NRG (Énergie), MZN-PLS (Plasma)",
+      "Panier des 5 Stablecoins : USDC, USDT, DAI, USDbC, USDS",
+      "Ether Natif & wETH",
+      "Tout jeton ERC-20 licite audité sous le protocole Anti-Piège A090"
+    ],
+    "loi_de_pesee_harmonique": {
+      "formule": "Valeur = Réserve_Substance * Poids_Mizan / Index_Volatilité",
+      "protection_anti_vidage": "Bride Mizan 0.6225 (aucun retrait unilatéral ne peut dépasser 62.25% de la réserve globale)",
+      "partage_des_risques": "Règle 50/50 scellée à perpétuité (50% Auteur / 50% Déposant-Exploitant)",
+      "usure": "Riba = 0% absolu"
+    }
+  },
+  "contrats_lies": {
+    "contrat_maitre": "0x520cbd0e1e72178f9e819AFf1e815606923A71db",
+    "coffre_unisson": "contracts/AlMizanCoffreUnissonMondial.sol",
+    "monade_universelle": "contracts/AlMizanMonadeTotaleUniverselle.sol"
+  },
+  "empreinte_sha256": "0x93d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4"
+}

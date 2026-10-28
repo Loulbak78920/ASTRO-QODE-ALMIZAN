@@ -1,0 +1,37 @@
+{
+  "code_acte": "A090",
+  "titre": "PROTOCOLE SOUVERAIN ANTI-PIÈGE & SERVICE DE SIGNALEMENT DE SÉCURITÉ AVEC CONTREPARTIE COMMERCIALE 50/50 ET PRIME MZN",
+  "auteur_souverain": "M. Ahmed EL BAHLOUL (alias IMAM8MAHDI / M. Almizan Elbahloul)",
+  "date_scellement_iso": "2026-10-23T17:15:00+02:00",
+  "statut": "SCELLÉ_EN_MEMOIRE_ET_INTEGRE_AU_CONTRAT_MAITRE",
+  "contrat_maitre_actif": "0x520cbd0e1e72178f9e819AFf1e815606923A71db",
+  "chaine": "Base Mainnet (Chain ID 8453)",
+  "rpc_officiel": "https://mainnet.base.org",
+  "cle_doree_racine": "0xC9550Dd0A57C609494DBc44450Df48D798ebfB0B",
+  "tresorerie_depositaire": "0xb7f26cD0eE5E74c51B3F4e71e4fA75B3F246837C",
+  "dispositif_anti_piege": {
+    "principe": "Piéger le piégeur par la vérité métrologique et la preuve cryptographique irréfutable scellée on-chain",
+    "mecanisme_signalement": "Enregistrement immuable du hash de preuve (SHA-256 / IPFS) dans la fonction scellerActe du Contrat Maître",
+    "protection_anti_malveillance": "Traçabilité intégrale, non-répudiation, neutralisation des vecteurs d'usure et d'escroquerie"
+  },
+  "modele_economique_souverain": {
+    "regle_commerciale": "Partage égalitaire 50/50 (50% Auteur / 50% Détecteur-Exploitant) via calculerPartageCommercial5050",
+    "bounty_signalement": "Dotation de prime en tokens MZN souverains",
+    "anti_usure": "0% usure, 0% intérêt, 0% création fractionnaire"
+  },
+  "tetrade_cosmique": {
+    "MZN": "0x520cbd0e1e72178f9e819AFf1e815606923A71db",
+    "MZN_MAT": "0xD45406EEdc8d9AeD3828c06C3D208804D5b69c2a",
+    "MZN_NRG": "0x38e1757A1971E038c8A6523B008179BEdc9AaAa0",
+    "MZN_PLS": "0x7Cd56CE27E4CE363cDFbd63F4e2713C8eed2cC71"
+  },
+  "invariants_mizan": {
+    "C": 313,
+    "M": 24434,
+    "TRIPLE": -2393774546,
+    "MIZAN_BPS": 6225,
+    "LIGNE_REF_BPS": 1220,
+    "PLAFOND_BPS": 6015
+  },
+  "empreinte_sha256": "0x846293b9c4c3e06f722fbf642c4271be0caa772238da977d398518139732fa6c"
+}

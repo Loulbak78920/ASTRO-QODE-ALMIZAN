@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# SPDX-FileCopyrightText: 2026 IMAM8MAHDI / Astro-Code Ecosystem
+# SPDX-License-Identifier: GPL-3.0-only OR AGPL-3.0-only
 """
 ===============================================================================
         COMMANDE UNIQUE DE VALIDATION & SCELLEMENT DANS LE CONTRAT ACTIF (BASE)
@@ -25,6 +27,8 @@ import json
 import os
 import sys
 import time
+
+from resolution_abi_mizan import charger_abi
 
 # Fix encodage
 if hasattr(sys.stdout, "reconfigure"):
@@ -115,9 +119,7 @@ def main() -> None:
     print(f"      • Entités Liées     : 4 Tokens Tétrade + 5 Stablecoins USD + Oracle Substance")
 
     # Chargement ABI
-    chemin_abi = r"C:\Users\Administrateur\Desktop\Al-Mizan\chaine\contracts\AmalMizanSynchronMznContract.json"
-    with open(chemin_abi, "r", encoding="utf-8") as f:
-        abi = json.load(f)["abi"]
+    abi = charger_abi()
 
     contrat = w3.eth.contract(address=CONTRAT_MAITRE, abi=abi)
 
