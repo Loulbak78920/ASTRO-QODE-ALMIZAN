@@ -273,3 +273,23 @@ def changed(before: dict[str, str], after: dict[str, str]) -> list[str]:
 佐证：`core.autocrlf=true`；`git ls-files --eol` 两个文件均为 `i/lf w/crlf`；`git status` 与 `git diff` 无内容差异；reflog 显示 `checkout: moving from skill/verify-skill-runtime-binding to main` 与 `merge … Fast-forward`。LF 归一化哈希与编辑前基线完全一致，判为行尾切换而非并发写入；代理未回退、未覆盖，直接编辑。编辑后 SKILL.md 为 30,659 B（CRLF）/ 30,336 B（LF，`786d2e23…`）。reflog 只是补充佐证：`git checkout -- <path>` 恢复单个文件不移动 HEAD，可能没有记录，不能以 reflog 缺失否定 EOL-only。
 
 边界：该等式只对整文件统一转换成立；部分行转换或混合行尾不满足，不能自动判为 EOL-only。非 Git 目录只能用两次采样判定，结论标为“EOL-only（推断）”。同内容重写与行尾切换无法区分，但处理相同（不覆盖）。校验器仍按原始字节判定变化；EOL 判别是分诊，不是放宽指纹门。
+
+## 文档命令可执行性（已验证）
+
+来源：会话 `0ceb9242-b20d-4ccd-bde3-7b70f87f4c3e`（2026-10-27，revision 27；时间均为 UTC+01:00），目标为 `verifier-page-generee-multilingue`。该回合的创建已完成；会话本身在读取时仍在运行。
+
+| 时间 | 事件 | 证据 |
+|---|---|---|
+| 23:10:51 | 初稿上运行 `validate_skill.py`：`RESULT PASS`，8,617 B，`Code blocks: python=0 js=1 skipped=3` | 初稿 §5 仍是 `py -3 -B scripts/verifier_page_multilingue.py`，无 `SKILL_DIR`、无 cwd 说明 |
+| 23:11:11 | 人工把命令改成 `"SKILL_DIR/scripts/..."`，但写的是“从项目根运行” | cwd 仍错误：`web_cloud/` 不在项目根 |
+| 23:11:41 | 再改为“从包含 `web_cloud/` 的目录（`ASTRO-Q°ODE_SYSTEME`）运行” | `verifier-page-generee-multilingue` 的当前写法 |
+| 23:12:11 | 按标注 cwd 实跑替换后的命令 | `RESULT: PASS`，rc=0 |
+| 23:12:18 | 文档修改后重跑 validator | `RESULT PASS`，8,780 B，`skipped=3` |
+
+要点：
+
+- 静态校验器只解析 `python`/`js` 块；`bash`、`yaml`、`text` 计入 `skipped`，既不做语法检查也不执行。`RESULT PASS` 与 `skipped=3` 并存时，文档命令仍可能是错的。
+- 本次缺陷（脚本在 Skill 目录、页面在 `ASTRO-Q°ODE_SYSTEME/web_cloud/`）是人工阅读发现的；源会话没有实跑错误 cwd 分支，不能声称“先失败后修正”的运行证据。
+- 本次补测的对照：同一脚本在 `ASTRO-Q°ODE_SYSTEME` 得到 `RESULT: PASS`、rc=0；在项目根用同一相对路径得到 `FAIL fichier absent`、rc=1。
+- 规则：每个 `bash`/`sh` 块按块前 cwd 原样执行，只替换已声明的占位符；退出码直接捕获（或用 `PIPESTATUS`），记录 cwd、替换值、预期/实测退出码。破坏性或需交互的命令标为示意并说明原因。
+- 未验证：没有为“占位符未说明即判 FAIL”构造自动夹具；该判断是人工复核。静态检查不覆盖文档命令，这一点是已验证的。
