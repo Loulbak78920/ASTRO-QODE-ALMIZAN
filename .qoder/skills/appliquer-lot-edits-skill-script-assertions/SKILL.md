@@ -147,7 +147,7 @@ grep -c '^@@' "$WORK/diff.txt"
 grep -c '^[-+][^-+]' "$WORK/diff.txt"
 ```
 
-Avec `-U0`, chaque hunk correspond à une plage de `CHANGED_RANGES` : le nombre de hunks doit égaler `CHANGED`. `diff -u` sans `-U0` fusionne les changements séparés par moins de six lignes inchangées et produit donc moins de hunks : l'utiliser seulement pour lire le contexte, jamais pour compter. Chaque hunk doit correspondre à un edit inventorié ; un hunk de plus, ou un hunk qui touche une zone hors inventaire, arrête la procédure : relire le fichier, corriger la spec, régénérer. Les lignes `-`/`+` se comptent par `grep -c '^[-+][^-+]'`, qui exclut les en-têtes du diff.
+Avec `-U0`, chaque hunk correspond à une plage de `CHANGED_RANGES` : le nombre de hunks doit égaler `CHANGED`. `diff -u` sans `-U0` fusionne les changements séparés par au plus 6 lignes inchangées et produit donc moins de hunks : l'utiliser seulement pour lire le contexte, jamais pour compter. Chaque hunk doit correspondre à un edit inventorié ; un hunk de plus, ou un hunk qui touche une zone hors inventaire, arrête la procédure : relire le fichier, corriger la spec, régénérer. Les lignes `-`/`+` se comptent par `grep -c '^[-+][^-+]'`, qui exclut les en-têtes du diff.
 
 ### 7. Budgets et forme
 
