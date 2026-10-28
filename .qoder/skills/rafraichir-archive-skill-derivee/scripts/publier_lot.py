@@ -35,6 +35,18 @@ def out(repo, *args):
     return git(repo, *args).stdout.strip()
 
 
+def default_repo():
+    """Main worktree of the repository holding this script, for zero-argument replay."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    p = subprocess.run(["git", "-C", here, "worktree", "list", "--porcelain"], capture_output=True, text=True)
+    if p.returncode != 0:
+        raise SystemExit("cannot derive the repository from %s; pass --repo" % here)
+    for line in p.stdout.splitlines():
+        if line.startswith("worktree "):
+            return line[len("worktree "):].strip()
+    raise SystemExit("no worktree listed for %s; pass --repo" % here)
+
+
 def in_scope(rel):
     return rel == "SKILL.md" or rel.startswith("references/") or rel.startswith("scripts/")
 
@@ -74,20 +86,20 @@ def registered_worktrees(repo):
 
 def main():
     ap = argparse.ArgumentParser(description="Publish drifted Skill packages from one linked worktree.")
-    ap.add_argument("--repo", required=True, help="archive Git clone")
-    ap.add_argument("--src", required=True, help="local skills root")
+    ap.add_argument("--repo", default=None, help="archive Git clone (default: main worktree of this script's repository)")
+    ap.add_argument("--src", default=None, help="local skills root (default: <repo>/<prefix>)")
     ap.add_argument("--worktree", required=True, help="linked worktree already created from origin/main")
-    ap.add_argument("--branch", required=True, help="delivery branch checked out in the worktree")
+    ap.add_argument("--branch", default=None, help="delivery branch checked out in the worktree (default: its current branch)")
     ap.add_argument("--packages", required=True, help="comma-separated package names")
     ap.add_argument("--prefix", default=".qoder/skills/", help="archive directory prefix")
     ap.add_argument("--message", default="docs(skill): actualiser l'archive {pkg}", help="commit message template")
     ap.add_argument("--no-push", action="store_true", help="commit locally, skip push and post-push guard")
     args = ap.parse_args()
 
-    repo = os.path.abspath(args.repo)
-    src = os.path.abspath(args.src)
+    repo = os.path.abspath(args.repo) if args.repo else default_repo()
     wt = os.path.abspath(args.worktree)
     prefix = args.prefix if args.prefix.endswith("/") else args.prefix + "/"
+    src = os.path.abspath(args.src) if args.src else os.path.join(repo, prefix.strip("/"))
     packages = [p.strip() for p in args.packages.split(",") if p.strip()]
     if not packages:
         raise SystemExit("no package given")
@@ -100,8 +112,10 @@ def main():
         raise SystemExit("worktree not registered under repo: %s" % wt)
 
     try:
-        if out(wt, "rev-parse", "--abbrev-ref", "HEAD") != args.branch:
-            raise Stop("branch mismatch: %s" % out(wt, "rev-parse", "--abbrev-ref", "HEAD"))
+        current = out(wt, "rev-parse", "--abbrev-ref", "HEAD")
+        branch = args.branch or current
+        if current != branch:
+            raise Stop("branch mismatch: %s" % current)
         if out(wt, "status", "--porcelain=v1"):
             raise Stop("worktree dirty before start")
         git(wt, "fetch", "origin", "--prune", "-q")
@@ -121,6 +135,8 @@ def main():
             dest_real = os.path.realpath(dest_root)
             if not dest_real.startswith(wt_real + os.sep):
                 raise Stop("destination escapes worktree: %s" % dest_root)
+            if dest_real == os.path.realpath(src_root):
+                raise Stop("source and destination are the same directory: %s" % src_root)
 
             pre = hash_all(src_root)
             if os.path.isdir(dest_root):

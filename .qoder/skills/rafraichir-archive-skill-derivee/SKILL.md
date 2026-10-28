@@ -193,6 +193,21 @@ git -C "$REPO" ls-tree -d --name-only origin/main -- .qoder/skills/ | wc -l
 
 La ref `main` doit égaler `origin/main`. Si `main` est extraite dans un worktree étranger, ne pas y toucher : signaler le retard. `branch -d` ne supprime que la branche de ce lot, et seulement si elle est contenue dans `origin/main`.
 
+### 10. Rejeu depuis le dépôt seul
+
+Les trois scripts se suffisent d'un clone d'archive : sans `--repo`, ils prennent le worktree principal du dépôt qui contient le script ; sans `--src`, `<repo>/.qoder/skills` ; sans `--branch`, la branche courante du worktree de livraison ; `--rest auto` déduit `owner/repo` de l'URL `origin`.
+
+```bash
+git clone <url> archive && cd archive
+S=".qoder/skills/rafraichir-archive-skill-derivee/scripts"
+py -3 "$S/scope_drift.py"
+py -3 "$S/verifier_trois_voies.py" --package <pkg> --rest auto
+git worktree add -b merge/skill-<pkg> ../wt origin/main
+py -3 "$S/publier_lot.py" --worktree ../wt --packages <pkg> --no-push
+```
+
+Un clone propre rend `SCOPE_DRIFT_PACKAGES 0` et `TRIO ... MISMATCH 0` ; un fichier modifié localement apparaît en `DIFF`, puis en `MISMATCH` au trio. `publier_lot.py` refuse par `STOP` quand la source et la destination sont le même dossier, donc `--worktree <clone>` ne détruit rien. Hors dépôt (dossier utilisateur seul, sans `.git`), les valeurs par défaut échouent sur `cannot derive the repository ...; pass --repo` : c'est le mode local de l'étape 0, avec `--repo` et `--src` explicites.
+
 ## Pièges vérifiés
 
 | Symptôme | Cause | Correctif |
@@ -221,6 +236,7 @@ La ref `main` doit égaler `origin/main`. Si `main` est extraite dans un worktre
 - [ ] `verifier_archive_skill.py --from remote` `RESULT PASS` par paquet.
 - [ ] Preuve à trois voies : `TRIO_TOTAL = MATCH`, `MISMATCH 0`, REST vérifié ou explicitement non vérifié.
 - [ ] Ré-inventaire : `SCOPE_DRIFT_PACKAGES 0` sur l'ensemble.
+- [ ] Rejeu depuis un clone seul : sans `--repo` ni `--src`, inventaire et trio rendent `SCOPE_DRIFT_PACKAGES 0` et `TRIO ... MISMATCH 0`.
 - [ ] `main` (la ref) = `origin/main`, worktree lié et branche supprimés, aucune branche d'une autre session touchée.
 - [ ] Rapport : commits, fichiers, preuves, paquets apparus hors lot, réserves de visibilité REST.
 
@@ -241,10 +257,10 @@ Réserve : sources CRLF normalisées | visibilité REST | autres clones
 
 ## Ressources
 
-- `scripts/scope_drift.py` : inventaire lecture seule des paquets en dérive, OID de blob avec normalisation CRLF→LF, sortie texte ou JSON, codes 0/1/2.
-- `scripts/publier_lot.py` : copie du périmètre dans un worktree lié, un commit par paquet, gardes `HEAD`/`HEAD^`/ancêtre, push ff-only, arrêt `STOP` sans réécriture.
-- `scripts/verifier_trois_voies.py` : preuve REST == ref == source par `hash-object --path` du fichier source ; REST facultatif, jamais de valeur de jeton affichée.
-- `references/cas-lot-2026-10-28.md` : cas observé (9→7 paquets, commits, 26/26, deux pièges majeurs), limites et rejeu de la fixture.
+- `scripts/scope_drift.py` : inventaire lecture seule des paquets en dérive, OID de blob avec normalisation CRLF→LF, sortie texte ou JSON, codes 0/1/2. Sans argument, il compare le worktree du clone à `origin/main`.
+- `scripts/publier_lot.py` : copie du périmètre dans un worktree lié, un commit par paquet, gardes `HEAD`/`HEAD^`/ancêtre, push ff-only, arrêt `STOP` sans réécriture ; refuse une source égale à la destination.
+- `scripts/verifier_trois_voies.py` : preuve REST == ref == source par `hash-object --path` du fichier source ; REST facultatif (`--rest auto` depuis `origin`), jamais de valeur de jeton affichée.
+- `references/cas-lot-2026-10-28.md` : cas observé (9→7 paquets, commits, 26/26, deux pièges majeurs), rejeu depuis un clone seul, limites et rejeu de la fixture.
 - `publier-skill-qoder-vers-depot-git` : mécanique d'une publication unitaire, worktree occupé, visibilité REST.
 - `skill-file-qa` : validation statique ; `verify-injected-skill-body-freshness` : attribution des écritures.
 - `skill-package-integrity-audit` : détection STALE en lecture seule, sans republication.

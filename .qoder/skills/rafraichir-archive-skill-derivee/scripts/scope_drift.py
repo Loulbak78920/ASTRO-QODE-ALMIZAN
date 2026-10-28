@@ -30,6 +30,18 @@ def git(repo, *args):
     return p.stdout
 
 
+def default_repo():
+    """Main worktree of the repository holding this script, for zero-argument replay."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    p = subprocess.run(["git", "-C", here, "worktree", "list", "--porcelain"], capture_output=True, text=True)
+    if p.returncode != 0:
+        die("cannot derive the repository from %s; pass --repo" % here)
+    for line in p.stdout.splitlines():
+        if line.startswith("worktree "):
+            return line[len("worktree "):].strip()
+    die("no worktree listed for %s; pass --repo" % here)
+
+
 def blob_oid(path):
     with open(path, "rb") as fh:
         data = fh.read()
@@ -78,16 +90,16 @@ def archive_index(repo, ref, prefix):
 
 def main():
     ap = argparse.ArgumentParser(description="Read-only drift inventory between a Skill source root and an archive ref.")
-    ap.add_argument("--repo", required=True, help="archive Git clone")
-    ap.add_argument("--src", required=True, help="local skills root (contains <pkg>/SKILL.md)")
+    ap.add_argument("--repo", default=None, help="archive Git clone (default: main worktree of this script's repository)")
+    ap.add_argument("--src", default=None, help="local skills root (default: <repo>/<prefix>)")
     ap.add_argument("--prefix", default=".qoder/skills/", help="archive directory prefix (default: .qoder/skills/)")
     ap.add_argument("--ref", default="origin/main", help="archive ref (default: origin/main)")
     ap.add_argument("--json", action="store_true", help="emit one JSON object")
     args = ap.parse_args()
 
-    repo = os.path.abspath(args.repo)
-    src = os.path.abspath(args.src)
+    repo = os.path.abspath(args.repo) if args.repo else default_repo()
     prefix = args.prefix if args.prefix.endswith("/") else args.prefix + "/"
+    src = os.path.abspath(args.src) if args.src else os.path.join(repo, prefix.strip("/"))
     if not os.path.isdir(src):
         die("source root not found: %s" % src)
 

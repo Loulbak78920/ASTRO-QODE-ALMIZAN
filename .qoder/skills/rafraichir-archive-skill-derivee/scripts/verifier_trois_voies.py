@@ -39,6 +39,34 @@ def git(repo, *args):
     return p.stdout.decode("utf-8", "replace").strip()
 
 
+def default_repo():
+    """Main worktree of the repository holding this script, for zero-argument replay."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    p = subprocess.run(["git", "-C", here, "worktree", "list", "--porcelain"], capture_output=True, text=True)
+    if p.returncode != 0:
+        die("cannot derive the repository from %s; pass --repo" % here)
+    for line in p.stdout.splitlines():
+        if line.startswith("worktree "):
+            return line[len("worktree "):].strip()
+    die("no worktree listed for %s; pass --repo" % here)
+
+
+def origin_owner_repo(repo):
+    p = subprocess.run(["git", "-C", repo, "remote", "get-url", "origin"], capture_output=True, text=True)
+    url = (p.stdout or "").strip()
+    if p.returncode != 0 or not url:
+        return None
+    for pre in ("https://github.com/", "http://github.com/", "git@github.com:", "ssh://git@github.com/"):
+        if url.startswith(pre):
+            rest = url[len(pre):]
+            if rest.endswith(".git"):
+                rest = rest[:-4]
+            parts = rest.split("/")
+            if len(parts) == 2 and all(parts):
+                return "/".join(parts)
+    return None
+
+
 def ref_files(repo, ref, prefix):
     raw = subprocess.run(
         ["git", "-C", repo, "ls-tree", "-r", "-z", ref, "--", prefix], capture_output=True
@@ -114,19 +142,19 @@ def rest_hashes(owner_repo, prefix, pkgs, refname, tok):
 
 def main():
     ap = argparse.ArgumentParser(description="Prove archive ref == source == REST in one pass.")
-    ap.add_argument("--repo", required=True, help="archive Git clone")
-    ap.add_argument("--src", required=True, help="local skills root")
+    ap.add_argument("--repo", default=None, help="archive Git clone (default: main worktree of this script's repository)")
+    ap.add_argument("--src", default=None, help="local skills root (default: <repo>/<prefix>)")
     ap.add_argument("--prefix", default=".qoder/skills/")
     ap.add_argument("--ref", default="origin/main")
     ap.add_argument("--package", action="append", default=[], help="restrict to one package (repeatable)")
-    ap.add_argument("--rest", default=None, help="owner/repo for the optional REST proof")
+    ap.add_argument("--rest", default=None, help="owner/repo for the optional REST proof; 'auto' derives it from origin")
     ap.add_argument("--rest-ref", default="main", help="branch name for the REST contents API")
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args()
 
-    repo = os.path.abspath(args.repo)
-    src = os.path.abspath(args.src)
+    repo = os.path.abspath(args.repo) if args.repo else default_repo()
     prefix = args.prefix if args.prefix.endswith("/") else args.prefix + "/"
+    src = os.path.abspath(args.src) if args.src else os.path.join(repo, prefix.strip("/"))
     ref_oid = git(repo, "rev-parse", args.ref)
     archived = ref_files(repo, args.ref, prefix)
     pkgs = sorted(archived) if not args.package else [p for p in args.package]
@@ -134,11 +162,19 @@ def main():
     if missing_pkg:
         die("package not in %s: %s" % (args.ref, ", ".join(missing_pkg)))
 
+    rest_arg = args.rest
+    rest_target_error = None
+    if rest_arg == "auto":
+        rest_arg = origin_owner_repo(repo)
+        if rest_arg is None:
+            rest_target_error = "cannot derive owner/repo from origin"
+            rest_arg = None
+
     rest = None
-    rest_error = None
-    if args.rest:
+    rest_error = rest_target_error
+    if rest_arg:
         try:
-            rest = rest_hashes(args.rest, prefix, pkgs, args.rest_ref, token(repo))
+            rest = rest_hashes(rest_arg, prefix, pkgs, args.rest_ref, token(repo))
         except Unavailable as exc:
             rest_error = str(exc)
 
@@ -173,14 +209,18 @@ def main():
         print("  MISMATCH %s ref=%s src=%s %s" % (path, ref_blob[:8], src_oid[:8], extra))
     print("REF %s %s" % (args.ref, ref_oid))
     print("TRIO_TOTAL %d  MATCH %d  MISMATCH %d" % (total, matched, total - matched))
-    if args.rest:
+    if rest_arg:
+        print("REST_TARGET %s" % rest_arg)
         if rest is None:
             print("REST_SKIPPED %s" % rest_error)
         else:
             print("REST_TOTAL %d  MATCH %d" % (total, matched))
+    elif rest_error:
+        print("REST_SKIPPED %s" % rest_error)
     if args.json:
         print(json.dumps({"ref": args.ref, "ref_oid": ref_oid, "total": total, "matched": matched,
-                          "mismatch": total - matched, "rest_error": rest_error, "files": rows},
+                          "mismatch": total - matched, "rest_target": rest_arg, "rest_error": rest_error,
+                          "files": rows},
                          ensure_ascii=True, indent=2))
     return 0 if not bad else 1
 
