@@ -1,6 +1,6 @@
 ---
 name: diagnostiquer-wait-chat-sessions-introuvable
-description: "当 wait_chat_sessions 对 read_chat_session 仍可读取的会话返回 is_error「等待的 ChatSession 不存在：<id>」时，把该错误判为观察通道故障而不是会话已结束：用 read_chat_session 记录 runtimeState、activeTurnId、queuedTurnCount、pendingInteractionCount、revision 与 hasMoreBefore，先排除「目标就是当前会话」的自排除解释，再用连续 4 次、间隔 6 秒的全文件 size/mtime/SHA-256 指纹门禁判断采样窗口内是否仍有写入；只有 cold 且 activeTurnId=null 与指纹一致同时成立才采纳现有字节或做最小 Edit，写入者仍活动时零写入并报告 STOP；不把稳定当结束、不跨状态或跨 turnLimit 比较 revision 与 hasMoreBefore、不把循环末尾命令的退出码当门禁结果。用于 wait 返回不存在、等待立即失败、read 可读而 wait 不可观察、cold 不出现、并发写入者门禁、STOP 判定等场景；不替代目标出现后的活性分级（audit-skill-during-live-creation）、来源更新采纳（adopt-source-session-update）或通用采样（skill-update-concurrency-safe）。"
+description: "当 wait_chat_sessions 对 read_chat_session 仍可读取的会话返回 is_error「等待的 ChatSession 不存在：<id>」时，把该错误判为观察通道故障而不是会话已结束：用 read_chat_session 记录 runtimeState、activeTurnId、queuedTurnCount、pendingInteractionCount、revision 与 hasMoreBefore，先排除「目标就是当前会话」的自排除解释，再用连续 4 次、间隔 6 秒的全文件 size/mtime/SHA-256 指纹门禁判断采样窗口内是否仍有写入；只有 cold 且 activeTurnId=null 与指纹一致同时成立才采纳现有字节或做最小 Edit，写入者仍活动时零写入并报告 STOP；不把稳定当结束、不跨状态或跨 turnLimit 比较 revision 与 hasMoreBefore、不把循环末尾命令的退出码当门禁结果。通道失效或快照只剩人工回合时，证据只从被引用的项目 JSONL 取：仅在 <sessionId>.jsonl 中按精确 token 计数（0=ABSENT），N>0 按顶层 type 分组，只有 type=user 且 origin.kind=human、humanInput 非空、timestamp 非空、无 tool_result 的记录是事实载体；file-history-snapshot 顶层 timestamp 与 sessionId 为 null，snapshot.timestamp 只重复同一时刻，不计入；引用写路径、行号与 SHA-256。用于 wait 返回不存在、等待立即失败、read 可读而 wait 不可观察、cold 不出现、冷快照只有一条消息、grep 计数 5 实为 1 条、token 仅在讨论会话中大量命中、并发写入者门禁、STOP 判定等场景；不替代目标出现后的活性分级（audit-skill-during-live-creation）、来源更新采纳（adopt-source-session-update）、全册证据裁决（adopter-skill-concurrent-apres-quiescence）或通用采样（skill-update-concurrency-safe）。"
 ---
 
 # 诊断 wait_chat_sessions 的「不存在」错误
@@ -70,6 +70,26 @@ echo "GATE_RC=$?"
 
 输出为纯 ASCII，可直接放进报告；`-B` 避免缓存。采样期间出现 `*.tmp.*`、锁文件或备份文件时，该轮作废并重采。mtime 纳入指纹，因此内容不变但被重写也会报 `CHANGED`。
 
+### 4bis. 替代证据：项目 JSONL（只读）
+
+`wait` 报「不存在」而 `read_chat_session` 仍返回 `cold` 时，快照可能只有人工回合：实测 `ce25942a` 为 `cold`、`revision 0`、`hasMoreBefore=false`、仅 1 条消息，而它的 JSONL 有 211 行、86 条 assistant、35 次 `tool_use`。**快照没有工具证据，不等于会话没有证据。**
+
+1. 日志本体是项目目录下的 `<sessionId>.jsonl`，完整路径：
+
+```text
+C:\Users\<user>\.qoder\projects\<project-slug>\<sessionId>.jsonl
+```
+
+同名 `<sessionId>/` 文件夹（`state.json`、`compression-v2`）不是日志；`items` 是加密值，不要解码或引用。
+
+2. 读取前冻结字节数、行数、mtime、SHA-256；读取后再算一次，任一变化就重新计数。
+3. 只在**被引用**的 JSONL 里对精确 token 计数（`raw.count(token)` 或 `grep -F -c`）；`0` 判 `ABSENT`。
+4. `N > 0` 时逐行取顶层 `type` 分组后再报数；总数不是证据。
+5. 事实载体是 `type=user`、`message.role=user`、`origin.kind=human`、`humanInput.text` 非空、`timestamp` 非空、无 `tool_result` 的记录。`file-history-snapshot` 不是载体：顶层 `timestamp` 与 `sessionId` 均为 `null`，`snapshot.timestamp` 只是重复被快照消息的时刻。
+6. 用讨论该文档的会话作反例：`00:55:43` 在 `ce25942a` 中命中 46 次、在 `e22fe088` 中 0 次；`00:55:48` 分别为 45 与 5。计错文件会虚高。
+7. 引用写成 JSONL 路径 + 命中行号 + 字节数 + SHA-256，并给出载体记录的真实 `timestamp`；不要写「会话说」。
+8. 本 Skill 只取证；改写包时转 `auditer-skill-cree-par-session-source`（单条证据修正）或 `adopter-skill-concurrent-apres-quiescence`（全册裁决）。
+
 ### 5. 回到会话状态作最终判定
 
 | 快照状态 | 判定 | 写入 |
@@ -98,6 +118,10 @@ echo "GATE_RC=$?"
 | `turnLimit` 2 到 1 后 `hasMoreBefore` false 到 true | 窗口大小改变 | 固定 `turnLimit` 再比较 |
 | `cold` 后目标仍在变 | `cold` 只覆盖该会话 | 按其他写入者未知处理；继续采样 |
 | 把 wait 错误当成「会话已删除」 | 未对照 read | 删除该结论；未验证的假设不入报告 |
+| grep 计数 5，载体只有 1 条 | 4 条 `file-history-snapshot` 的 `snapshot.timestamp` 重复同一时刻 | 按顶层 `type` 分组；不要把 5 当事实条数 |
+| 快照只有 1 条消息，JSONL 却有工具调用 | 快照只含人工回合，工具结果不在 `messages` | 用 JSONL 取证；不要判 `ABSENT` |
+| 同一 token 在别的会话命中几十次 | 计到了讨论该文档的会话 | 只算被引用 JSONL，并给出两边对照数 |
+| 命中行 `timestamp: null` | `file-history-snapshot` 无顶层时间 | 读它指向的人工记录的真实 `timestamp` |
 
 ## 报告模板
 
@@ -119,6 +143,10 @@ WRITES: none | <files + sha256>
 - [ ] 写入前同时满足 `cold`、`activeTurnId: null`、连续 4 次一致。
 - [ ] 报告区分 `CHANNEL_DOWN` 与 `ENDED_CONFIRMED`，未把前者写成后者。
 - [ ] 未验证的假设（如 wait 的注册或工作区范围）标为未验证。
+- [ ] 通道失效后已定位 `<sessionId>.jsonl` 本体，并与同名伴生文件夹区分。
+- [ ] 计数前后记录字节、行数、mtime、SHA-256；只统计被引用文件。
+- [ ] `N > 0` 已按顶层 `type` 分组，`file-history-snapshot` 未计入事实载体。
+- [ ] 证据以 JSONL 路径 + 行号 + SHA-256 引用，未引用活会话。
 - [ ] 写入后已重跑 `skill-file-qa` 并记录实际哈希。
 
 ## Provenance
@@ -128,3 +156,10 @@ WRITES: none | <files + sha256>
 - 替代门禁：23:15:21.680Z 到 23:15:41.511Z，4 次采样、间隔 6 秒，指纹一致；rc=1 来自末尾 `[ "$i" -lt 4 ]` 为假。
 - 23:15:46.878Z 读取为 `cold`、`activeTurnId=null`、`revision 0`、`hasMoreBefore=true`；随后才做 2 次最小 Edit，副本验收为 9 pass、0 fail、0 warn（`QA_RC=0`）。
 - 逐字原文、命令与分类见 `references/cas-wait-introuvable-2026-10-27.md`。
+
+### 通道失效后的 JSONL 取证（2026-10-28）
+
+- 来源会话 `6135cdd8` 核实时，`wait_chat_sessions(ce25942a, timeoutMs 0)` 返回 `is_error`「等待的 ChatSession 不存在：ce25942a-4f7e-4720-909e-d0b81976ebe5」；`read_chat_session(ce25942a, turnLimit 2)` 为 `cold`、`revision 0`、`hasMoreBefore=false`、1 条消息，其 JSONL 有 211 行。
+- 被引用的 `e22fe088` JSONL：1,493,251 B、408 行、SHA-256 `856799b5…269d`；`00:55:43` 0 次，`00:55:48` 5 次 = 第 117 行 `type=user`（`2026-10-28T00:55:48.734Z`，`origin.kind=human`，`humanInput.text=确认按上述 3 文件方案执行`）+ 第 140/175/280/293 行 `file-history-snapshot`（顶层 `timestamp=null`，`snapshot.timestamp` 重复同一时刻）。
+- 对照：`ce25942a` JSONL 789,233 B、211 行；`00:55:43` 46 次、`00:55:48` 45 次。
+- 命令、输出与未验证项见 `references/cas-jsonl-2026-10-28.md`。
