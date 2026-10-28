@@ -187,6 +187,8 @@ L3b 哨兵 : latest "<phrase>"（磁盘 L<n>）-> <present|missing>
 | 来源报告说“注入是某时间之前” | 可能差一个写入：注入恰好包含该时间版本 | 查该版本新增行是否在注入正文；用分界短语纠正 |
 | 注入正文被截断 | 记录截断或注入截断 | 转 `verify-skill-runtime-binding` 的 L3b 尾行检查；判 UNVERIFIED |
 | 哨兵只在 description | frontmatter 不进入注入正文 | 改选正文短语，不判旧正文 |
+| `grep: unknown option --`，rc=2 | 模式以 `-` 开头（如 `- [ ]`） | 用 `grep -F -c -e '<pattern>'`；rc=2 不是 0 次 |
+| BINDING nonce 命中多个 JSONL | nonce 被引用、转述或摘要复制 | 用会话独有输出（如 `chars= 336`）判别；不用 mtime |
 | 脚本退出 2 | 参数、路径或 scan-dir 错误 | 用绝对路径；先看 `--help` 与 stderr |
 
 ## 已验证案例（2026-10-26）
