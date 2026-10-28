@@ -9,7 +9,7 @@ description: "Faire tourner un secret porté par Environment= ou EnvironmentFile
 
 Faire tourner un secret qu'un service systemd reçoit par `Environment=` ou `EnvironmentFile=` (clé Bearer, jeton d'API), prouver que l'ancien est refusé et le nouveau accepté, et laisser cohérents l'unité installée, le fichier d'environnement, le fichier de secrets local et les modèles copiables — sans jamais afficher la valeur.
 
-Hors portée : mot de passe SSH/sudo (`rotation-mot-de-passe-vps-sans-fuite`), secret HMAC de webhooks (même mécanique, preuve différente), déploiement de pages (`deployer-site-sans-dol-vps`), logs nginx (`verifier-journaux-nginx-vps`). Une rotation d'un secret ne couvre pas les autres : ne pas annoncer « rotations terminées ».
+Hors portée : mot de passe SSH/sudo (`rotation-mot-de-passe-vps-sans-fuite`), secret HMAC de webhooks (`rotation-secret-systemd-vps-mizan`, même mécanique, preuve différente), déploiement de pages (`deployer-site-sans-dol-vps`), logs nginx (`verifier-journaux-nginx-vps`). Une rotation d'un secret ne couvre pas les autres : ne pas annoncer « rotations terminées ».
 
 ## 1. Invariants
 
