@@ -1,6 +1,6 @@
 ---
 name: adopt-concurrent-duplicate-skill
-description: "创建 Skill 时发现另一会话已生成职责重合的 Skill：先停写、做能力矩阵，把「接管 / 缩窄后新建 / 停止 / 只读保留 / 明确分工」交由用户决定。只读保留：记录写入者与稳定指纹，运行 skill-file-qa 与默认只读门禁，先做副作用快照并排除会写盘的 --avec-* 分支。缩窄后新建：冻结重合包哈希、写清委派边界、复查目标仍不存在、只归因新目标写入者，写后重算哈希并分别记录 SKILL.md 与 references 哈希。接管：以磁盘为基线最小合并并发改动，用目录外 A/B 夹具实测断言，重跑 QA 并记录三方哈希。决策后目标被归档或删除：暂停原决定，按 JSONL 归因、核对 skills 根之外归档的逐文件哈希、确认等价覆盖后零写入接受。用于规划时目标突然出现、create 命中重合、目标不存在但相邻 Skill 部分重合、编辑期间 file changed 或 Edit 0 occurrences、ready 后又被写入、PASS 后仍需证明未覆盖、脚本范围外仍计入 Files (N)、清理报 WinError 5/32、目标消失、wait_chat_sessions 拒绝 timeoutSeconds、JSONL timestamp 混型。中文触发：重复 Skill、并发创建、创建者会话、多写入者、写入者归因、漂移计数、接管但缩窄交付、围栏块断言、RESULT PASS 复核、零写入接受。关键词：duplicate skill, concurrent creation, takeover, narrowed create, multiple writers, writer attribution, zero-match edit, out-of-scope script, cleanup pending, archived target, target gone, zero-write acceptance."
+description: "创建 Skill 时发现另一会话已生成职责重合的 Skill：先停写、做能力矩阵，把「接管 / 缩窄后新建 / 停止 / 只读保留 / 明确分工」交由用户决定。只读保留：记录写入者与稳定指纹，运行 skill-file-qa 与默认只读门禁，先做副作用快照并排除会写盘的 --avec-* 分支。缩窄后新建：冻结重合包哈希、写清委派边界、复查目标仍不存在、只归因新目标写入者，写后重算哈希并分别记录 SKILL.md 与 references 哈希。接管：以磁盘为基线最小合并并发改动，用目录外 A/B 夹具实测断言，重跑 QA 并记录三方哈希；矩阵近全重合且增量单薄时同样接管，不建目录。写入者 running 时 QA 只作 PROVISIONAL，不据此编辑；JSONL 归因只认 tool_use 的 Write/Edit 与 file_path，不用路径 grep，timestamp 可能为 null；验收先复放被接管包案例，再用泄露秘密的假扫描器与错误 attendu_rc 证明复放器非空转。目标被归档或删除：暂停原决定，按 JSONL 归因、核对 skills 根之外归档的哈希、确认等价覆盖后零写入接受。用于规划时目标突然出现、create 命中重合、目标不存在但相邻 Skill 部分或近全重合、编辑期间 file changed 或 Edit 0 occurrences、ready 后又被写入、运行中 QA FAIL 随后消失、PASS 后仍需证明未覆盖、脚本范围外仍计入 Files (N)、清理报 WinError 5/32、目标消失、wait 拒绝 timeoutSeconds、JSONL timestamp 混型或为 null。中文触发：重复 Skill、并发创建、多写入者、写入者归因、近全重合接管、临时 QA 作废、围栏块断言、接管但缩窄交付、零写入接受。关键词：duplicate skill, concurrent creation, takeover, near-total overlap, narrowed create, writer attribution, provisional QA, zero-match edit, archived target, target gone, zero-write acceptance, replay anti-vacuity."
 ---
 
 # 接管并发出现的重复 Skill
@@ -19,7 +19,8 @@ description: "创建 Skill 时发现另一会话已生成职责重合的 Skill�
 - 被接管文档包含未经验证的校验器断言，例如围栏块是否豁免、退出码、文件数、引用计数。
 - 接管编辑期间文件反复变化，或 QA 结果之后文件又被改写。
 - 接管后用户把交付缩为“只写文档和参考文件，不加脚本”，而目标目录已有并发脚本。
-- 目标目录不存在，但发现不同名、职责部分重合的 Skill，且其写入者仍活跃。
+- 目标目录不存在，但发现不同名、职责近全重合的 Skill（矩阵多数维度相同、增量单薄），其写入者仍活跃；此时默认接管，不新建目录。
+- 目标目录不存在，但发现不同名、职责仅部分重合、增量可独立描述的 Skill，需要按 2quater 缩窄后新建。
 - 用户选择“缩窄后新建并存”，需要保留真实增量而不是复制重合 Skill。
 - 夹具删除报 WinError 5（只读 Git 对象）或 WinError 32（目录被占用），需要如实报告待清理。
 - 用户已选择接管或缩窄后新建，等待期间目标目录被第三方归档或删除。
@@ -30,13 +31,13 @@ description: "创建 Skill 时发现另一会话已生成职责重合的 Skill�
 ## 不可协商约束
 
 1. **先停写，再决策。** 发现职责重合时停止创建；不得静默创建第二个 Skill、擅自改名或删除现有 Skill。用户必须在“接管并完善 / 缩窄后新建并存 / 停止创建 / 只读保留 / 明确分工后并存 / 接管但缩窄交付”中作出选择。
-2. **create 不覆盖。** 目标存在即转 update；用户选择接管时，原目标目录不得创建，最终报告写“接管”而不是“创建”。
+2. **create 不覆盖。** 目标存在即转 update；用户选择接管时，原目标目录不得创建，最终报告写“接管”而不是“创建”。目标不存在也不等于必须 create：矩阵近全重合时仍走接管。
 3. **接管以磁盘为基线。** 完整读取现有 SKILL.md、references、脚本与资源；保留仍有效规则；删除、归档、重命名现有 Skill 都需要针对具体路径的明确授权。
 4. **双采样后再编辑。** 记录目录内全部文件的 size、mtime、SHA-256；连续三次哈希一致才写入；已知有并发写入时提高阈值或停止。
 5. **最小合并。** 优先使用最小 Edit；遇到“file changed since your last read”立即停止，重读当前文件，重新定位后再改；并发新增的标题、计数表述、参考文件与规则必须保留。
 6. **断言必须实测。** 文档中关于校验器、退出码、文件数、围栏块、引用计数的断言，必须在 Skill 目录之外用单一变量 A/B 夹具验证；未实测的断言不得写成事实。
 7. **错误断言全量纠正。** 同一错误可能出现在约束、事实节、诊断表、证据状态表和完成清单；按唯一短语搜索并同步修正，保留原断言与实测反证，不删除证据。
-8. **验证不复用旧 PASS。** 文件每次变化后重跑 `skill-file-qa`；只有稳定指纹上的 `RESULT PASS`、实际计数、文件清单与回读结果才能作为完成依据。
+8. **验证不复用旧 PASS，也不据临时 FAIL 编辑。** 文件每次变化后重跑 `skill-file-qa`；只有稳定指纹上的 `RESULT PASS`、实际计数、文件清单与回读结果才能作为完成依据。写入者仍 `running` 时得到的 FAIL 只是临时观测（`PROVISIONAL`），不写入需修清单，也不据此改文件。
 9. **三方哈希可追溯。** 至少记录接管前基线、并发改写时版本、最终接管版本；脚本哈希单独记录，未授权不得变化。
 10. **只读保留不写盘。** 用户选择保持现状时，不得创建、编辑、删除或重命名目标目录中的任何文件；只允许默认只读命令与 Skill 目录之外的副作用快照。报告写 KEEP-READ-ONLY，并逐项列出未执行的写盘分支。
 11. **缩窄范围不删除并发产物。** 用户把交付缩为文档与参考文件时，保留并发脚本并标为范围外；删除、移动或重命名必须针对具体路径单独授权，并在 Skill 目录之外备份、核对 SHA-256 后才执行。
@@ -53,7 +54,7 @@ description: "创建 Skill 时发现另一会话已生成职责重合的 Skill�
 
 ### 0. 预检与重复检测
 
-1. 确认用户指定的目标目录状态；不存在才进入 create。
+1. 确认用户指定的目标目录状态；不存在才进入 create 分支，但第 2–3 步后仍须按第 1 节判断是否近全重合，重合则接管。
 2. 按名称、description、触发词、目标、步骤、脚本、references、退出码搜索用户级与项目级 Skill。
 3. 在准备写入前再次扫描，因为规划期间可能出现并发创建。
 4. 一旦发现同名或职责重合，冻结写入，记录目录首次出现时间与文件 mtime。
@@ -69,10 +70,16 @@ description: "创建 Skill 时发现另一会话已生成职责重合的 Skill�
 | references 与证据 |  |  | 可复用 / 需补充 |
 | 维护与发布路径 |  |  | 同一 / 不同 |
 
+判定顺序固定：
+
+1. 先看重合程度。矩阵多数维度为“相同”、且唯一增量不能独立触发（例如只是一个复放脚本）时，建议**接管并完善现有**，目标目录保持不存在；不得因为“目标不存在”就默认 create。
+2. 只有增量本身可独立描述、可独立触发，且重合职责能写成委派、不复制对方步骤与触发词时，才建议**缩窄后新建并存**。
+3. 判为近全重合时，报告模式写 `ADOPTED`，并把接管列为推荐项；用户仍可选择停止或只读保留。
+
 把矩阵与建议交给用户，至少提供以下选项：
 
 - **接管并完善现有**：不创建新目录；以现有 Skill 为唯一归属。
-- **缩窄后新建并存**：目标不存在时保留 create，但只写真实增量，按 2quater 冻结重合包、写清委派边界，并确保触发词不重叠。
+- **缩窄后新建并存**：仅当第 2 条成立时保留 create；只写真实增量，按 2quater 冻结重合包、写清委派边界，并确保触发词不重叠。
 - **停止创建**：只记录冲突与证据。
 - **只读保留**：用户选择保持现状；不写任何目标文件，只做独立复核并报告。
 - **接管但缩窄交付**：以现有 Skill 为归属，但本轮只交付文档与参考文件；保留磁盘上的并发脚本并标为范围外。
@@ -85,7 +92,7 @@ description: "创建 Skill 时发现另一会话已生成职责重合的 Skill�
 1. 列出并完整读取现有 Skill 的全部文件。
 2. 按 2a 建立写入者表并逐个等待；全部 ready 前不编辑。
 3. 对 SKILL.md、references、脚本分别记录 size、mtime、SHA-256。
-4. 运行现有 `skill-file-qa`，记录真实 PASS、FAIL、WARN、文件清单与指纹。
+4. 运行现有 `skill-file-qa`，记录真实 PASS、FAIL、WARN、文件清单与指纹。仍有写入者 `running` 时，结果标 `PROVISIONAL`：只记录指纹与输出，不写入“需修正”清单、不据此编辑；等其 ready 后重取基线重跑。
 5. 运行现有脚本的真实正例与至少一个负例，记录退出码；不要只相信文档。
 6. 建立“仍有效 / 需修正 / 未验证”清单。
 
@@ -93,7 +100,7 @@ description: "创建 Skill 时发现另一会话已生成职责重合的 Skill�
 
 接管、只读保留、缩窄交付与缩窄后新建共用本节。目标是区分“读过这个 Skill 的会话”和“成功写过它的会话”；缩窄后新建只统计新目标路径，重合包写入者单列（见 2quater 第 4 步）。
 
-1. **扫描写入记录。** 在 `~/.qoder/projects/*/*.jsonl` 中查找目标 Skill 的 `Write`/`Edit` tool_use，并与同一 `tool_use_id` 的 tool_result 配对；失败的 Edit 也会留下 tool_use，只有成功结果才算写入。当前会话单列，不并入他人写入者。
+1. **扫描写入记录。** 逐行解析 `~/.qoder/projects/*/*.jsonl` 的 JSON，只取 `type=tool_use`、`name` 属于 `{Write, Edit}` 且 `input.file_path` 命中目标路径的记录，再与同一 `tool_use_id` 的 tool_result 配对；失败的 Edit 也会留下 tool_use，只有成功结果才算写入。禁止用 `grep <路径>` 或“每个 JSONL 的命中条数”当写入证据：路径字符串同样出现在 `Read`、`Bash` 与工具输出里。按会话 ID 剔除当前会话并单列，不并入他人写入者。
 2. **建立写入者表。** 每个写入者记录 sessionId、成功写入次数、首末写入时间、最后写入的文件；与目标文件 mtime 对照。JSONL 时间是 UTC，Windows mtime 是本机偏移（本机为 +01:00），比较前先换算。
 3. **列出潜在写入者。** 读取 `list_chat_sessions`，把 `running`/`opening` 的会话列为潜在写入者；该状态不是写入记录，不能据此判断有或无写入，也不能替代 JSONL 配对。每次编辑前重扫 JSONL，确认潜在写入者是否转化为成功写入。
 4. **逐个冷却。** 对每个写入者调用 `wait_chat_sessions`，记录 runtimeState、revision 与结果（turn_completed / timeout）；全部 ready 或 waiting-user 后再连续三次采样。
@@ -101,7 +108,7 @@ description: "创建 Skill 时发现另一会话已生成职责重合的 Skill�
 6. **验收后重扫。** 最终 QA 后再次扫描写入记录并采样；QA 之后出现成功写入时，旧 PASS 作废，等新写入者 ready 后重跑。
 7. **报告写全量。** 报告列出全部写入者、潜在写入者、扫描时刻与未等待的只读会话，不只写“创建者会话”。
 8. **等待工具契约。** 用 `wait_chat_sessions` 等待，参数只有 `sessionIds`（1–8 个，不含当前会话）与 `timeoutMs`（0–60000）；单次最多 60 秒，需要更久就循环。`timeout` 只返回当时状态，`turn_completed` 也不代表接受工作。报“等待的 ChatSession 不存在”时按 `diagnostiquer-wait-chat-sessions-introuvable` 处理，不当作会话已结束。
-9. **JSONL 时间混型。** 读取 `timestamp` 前先统一：整数按 epoch 毫秒（UTC）转换，字符串按 ISO-8601 解析。同一批 JSONL 中两种类型共存是常态，直接排序或相减会抛 `TypeError: '<=' not supported between instances of 'int' and 'str'`；报告记录类型分布，而不是假设单一格式。
+9. **JSONL 时间混型与空值。** 读取 `timestamp` 前先统一：整数按 epoch 毫秒（UTC）转换，字符串按 ISO-8601 解析。同一批 JSONL 中两种类型共存是常态，直接排序或相减会抛 `TypeError: '<=' not supported between instances of 'int' and 'str'`；报告记录类型分布，而不是假设单一格式。`timestamp` 还可能是 `null`：先判空并计入“无时间”桶，直接 `.replace` 会抛 `AttributeError: 'NoneType' object has no attribute 'replace'`。
 
 ### 2bis. 只读保留分支（KEEP-READ-ONLY）
 
@@ -110,7 +117,7 @@ description: "创建 Skill 时发现另一会话已生成职责重合的 Skill�
 1. **记录来源。** 写出创建者会话 ID、目标首次出现时间、创建期间的文件 mtime 范围；区分“本会话创建”与“另一会话创建”。
 2. **等待稳定。** 按 2a 列出全部写入者并逐个等待；对目录内全部文件记录 size、mtime、SHA-256，要求连续三次一致。任一写入者仍 running 时记录其 revision，并在报告中标“可能继续写入”；`ready` 只代表该回合结束，不代表不会再写。未稳定时不得给出最终结论。
 3. **完整读取。** 读取 SKILL.md、references 与 scripts；列出文档中的可观测值，包括计数、哈希、行数、退出码与描述长度。
-4. **静态验收。** 用 `py -3` 运行 `skill-file-qa`，记录实际 PASS/FAIL/WARN、`Files (N)`、description 长度、正文行数与引用检查；不复用创建者的旧结果。
+4. **静态验收。** 用 `py -3` 运行 `skill-file-qa`，记录实际 PASS/FAIL/WARN、`Files (N)`、description 长度、正文行数与引用检查；不复用创建者的旧结果。写入者仍 `running` 时同样标 `PROVISIONAL`，不据此判定文档漂移。
 5. **默认只读门禁。** 只在目标 Skill 的默认或只读模式下运行其自带门禁；先按 `verifier-effets-de-bord-verification-lecture-seule` 对可能被写入的索引、日志与封条做前后快照。明确不运行会写盘的分支，例如目标脚本的 `run`、`--persist`、`--avec-*`（本机实例：`--avec-tests`、`--avec-regression`、`--avec-run`）；若默认模式本身写盘，先隔离或停止。解释器与编码按 `skill-update-concurrency-safe` 处理：Store 存根可能以 49 退出，非 ASCII 输出需 UTF-8。
 6. **核对文档。** 把第 3 步列出的观测值与实际输出逐项对照；不一致时标为“文档漂移”，本分支不静默修正。
 7. **报告。** 写 `模式: KEEP-READ-ONLY`、创建者与写入者会话、稳定指纹、双验收结果、未执行分支与重跑条件；任一写入者之后再次写入、只读会话转为写入或出现新写入者时，必须重跑静态验收和门禁。
@@ -172,7 +179,9 @@ description: "创建 Skill 时发现另一会话已生成职责重合的 Skill�
 
 1. 用 `py -3` 运行 `skill-file-qa`，要求稳定指纹上的 `RESULT PASS`，并记录实际 PASS、FAIL、WARN、`Files (N)`、description 单行长度、正文行数、本地与跨 Skill 引用。
 2. **验收后重扫。** QA 后按 2a 重扫写入记录并采样；出现新的成功写入时，作废旧 PASS，等新写入者 ready 后重跑。
-3. 运行被接管 Skill 自带的真实正例与负例，退出码必须符合脚本契约；范围外脚本不执行，报告写“未执行（范围外）”。
+3. **复放被接管包的案例。** 先用该包自己的方法与脚本复放其 reference 中记录的案例，记录脚本 SHA-256、用例数、逐例 rc 与关键行；范围外脚本不执行，报告写“未执行（范围外）”。
+   - **反空转负控。** 复放全绿后必须证明复放器会失败：至少两个负控——把秘密打印到 stdout 的假扫描器（须报 `SECRET_DANS_LA_SORTIE`、rc≠0），以及一个故意写错的 `attendu_rc`（须 FAIL、rc≠0）。两项都失败说明负控有效，全绿才可作数。
+   - **夹具隔离。** 夹具建在被接管包与本 Skill 目录之外；记录清理前后 `existe=false`。
 4. **验收片段。** 只断言不变量（如退出码、`BASE_OK`）或日期化观测；漂移计数不写入片段，也不得作为 PASS 条件。
 5. 重读两个以上关键文件，核对修正是否落地、并发内容是否仍在。
 6. 确认无 `__pycache__`、无临时夹具、无多余文档；清理本次创建的临时目录。
@@ -230,6 +239,9 @@ shutil.rmtree(sys.argv[1], onexc=onexc)
 断言纠错: <原断言> / <A/B 实测> / <修正位置>
 并发保留: <保留的标题、计数、参考文件或规则>
 只读验收: <skill-file-qa 结果；默认只读门禁 n/n；副作用快照结果 | 不适用>
+临时 QA: <写入者 running 时的 `PROVISIONAL` 结果与指纹、写入者结束后的最终结果 | 不适用>
+复放: <被接管包 reference 的用例数、逐例 rc、脚本 SHA-256 | 不适用>
+反空转: <负控 N1 泄露秘密的假扫描器与 N2 错误 attendu_rc 的输出与 rc | 不适用>
 校验: RESULT PASS | N pass / N fail / N warn | Files (N)
 验收后重扫: <QA 后是否出现新写入；PASS 是否仍有效>
 验收片段: <不变量 / 日期化观测；漂移计数未写成契约>
@@ -245,7 +257,8 @@ shutil.rmtree(sys.argv[1], onexc=onexc)
 | 症状 | 原因 | 动作 |
 |---|---|---|
 | 规划时目标不存在，写入前出现 | 另一会话并发创建 | 停止 create，读取现有内容，进入能力矩阵与用户决策 |
-| 目标不存在但不同名 Skill 职责部分重合 | 近重复触发源 | 用能力矩阵锁定真实增量，按 2quater 新建并写委派边界 |
+| 目标不存在但不同名 Skill 职责近全重合 | 把“目标不存在”当成必须 create | 矩阵多数维度相同、增量单薄时接管现有 Skill，目标目录保持不存在；报告写 `ADOPTED` |
+| 目标不存在但不同名 Skill 职责部分重合，增量可独立触发 | 近重复触发源 | 用能力矩阵锁定真实增量，按 2quater 新建并写委派边界 |
 | 写入前复查目标已存在 | 并发创建 | 停止 create，回到能力矩阵或按 2/2ter 接管 |
 | 缩窄后新建时只扫描全部会话 | 把重合包或临时文件写入者算作新目标写入者 | 只统计新目标路径；当前会话单列 |
 | 新目标 QA PASS 但 references 无哈希 | 校验器指纹只覆盖 SKILL.md | 分别记录 SKILL.md 与 references 哈希 |
@@ -283,6 +296,10 @@ shutil.rmtree(sys.argv[1], onexc=onexc)
 | 等待报 `timeoutSeconds` 不被接受 | 参数名错误，schema 只有 `timeoutMs`（≤60000） | 改用 `timeoutMs`；超过 60 秒则循环等待 |
 | JSONL 扫描报 int 与 str 比较错误 | `timestamp` 混用 epoch 毫秒与 ISO 字符串 | 先统一类型再排序或相减；记录类型分布 |
 | 目标消失后仍按原决定写另一目录 | 把决策当作可转移授权 | 停止；回到第 1 节由用户重新选择 |
+| 写入者 running 时 QA 报 FAIL，稍后同一文件 PASS | 把临时观测当成稳定结论 | FAIL 标 `PROVISIONAL`，只记录指纹与输出；等 ready 后重取基线重跑，不据此编辑 |
+| 路径 grep 把多个 JSONL 误判为写入者 | 未解析 `tool_use` 的 name 与 file_path | 只认 `type=tool_use`、`name ∈ {Write, Edit}` 且 `input.file_path` 命中目标；当前会话单列 |
+| JSONL 扫描报 `'NoneType' object has no attribute 'replace'` | `timestamp` 为 `null` | 先判空并计入“无时间”桶，再统一类型 |
+| 复放全绿但复放器从未失败过 | 缺少反空转负控 | 至少两个负控：泄露秘密的假扫描器须报 `SECRET_DANS_LA_SORTIE`、错误 `attendu_rc` 须 FAIL；两项都失败才作数 |
 
 ## 完成检查清单
 
@@ -291,6 +308,7 @@ shutil.rmtree(sys.argv[1], onexc=onexc)
 - [ ] 选择只读保留时，目标目录零写入，报告写 KEEP-READ-ONLY。
 - [ ] 已记录创建者与写入者会话、首次出现时间与稳定指纹。
 - [ ] 接管模式下原目标目录未被创建，报告写“接管”。
+- [ ] 目标不存在但矩阵近全重合时已按接管处理，未创建目标目录。
 - [ ] 已完整读取现有 SKILL.md、references 与脚本。
 - [ ] 已记录接管前、并发改写、最终三方哈希；脚本哈希单独记录。
 - [ ] 已按 JSONL 的 Write/Edit 与 tool_result 配对，列出全部成功写入者；当前会话单列。
@@ -299,6 +317,9 @@ shutil.rmtree(sys.argv[1], onexc=onexc)
 - [ ] 未把 ready 当终态；只读会话转为写入或出现新写入者时已重新等待。
 - [ ] Edit 返回 0 occurrences 时已查写入记录、重读并按并发处理。
 - [ ] QA 后已重扫写入者并重采样；PASS 未被后续写入作废。
+- [ ] 写入者 running 时的 QA 结果已标 `PROVISIONAL`，未用于编辑或“需修正”清单。
+- [ ] 写入者扫描已解析 `tool_use` 的 name 与 `input.file_path`，未用路径 grep；`timestamp` 为 null 的条目已单列。
+- [ ] 已复放被接管包 reference 的案例，并用泄露秘密的假扫描器与错误 `attendu_rc` 两个负控证明复放器非空转。
 - [ ] 验收片段只含不变量或日期化观测，无漂移计数。
 - [ ] 至少一条未验证断言已用 Skill 目录外的 A/B 夹具实测。
 - [ ] 错误断言已在所有出现位置同步纠正，原断言与实测均保留。
@@ -327,7 +348,7 @@ shutil.rmtree(sys.argv[1], onexc=onexc)
 
 ## 资源
 
-- `references/preuves-session.md`：来源会话 359acfd8、3677d3d4、98d02ebd、80685b8f、464ffdea、64bf38af 与 fdb57827 的逐字证据、时间线、A/B 输出、双验收、三方哈希与状态划分；3677d3d4 记录缩窄交付与清理失败；80685b8f 记录多写入者归因、Edit 0 命中、计数漂移与 QA 后重扫；464ffdea 记录共享参考文件的并发追加与旧全文覆盖风险；64bf38af 记录缩窄后新建并存、重合包冻结与写后复核；fdb57827 记录决策后目标被 `mv` 归档、逐文件哈希核验、`timeoutSeconds` 拒绝与 JSONL `timestamp` 混型。
+- `references/preuves-session.md`：来源会话 359acfd8、3677d3d4、98d02ebd、80685b8f、464ffdea、64bf38af 与 fdb57827 的逐字证据、时间线、A/B 输出、双验收、三方哈希与状态划分；3677d3d4 记录缩窄交付与清理失败；80685b8f 记录多写入者归因、Edit 0 命中、计数漂移与 QA 后重扫；464ffdea 记录共享参考文件的并发追加与旧全文覆盖风险；64bf38af 记录缩窄后新建并存、重合包冻结与写后复核；fdb57827 记录决策后目标被 `mv` 归档、逐文件哈希核验、`timeoutSeconds` 拒绝与 JSONL `timestamp` 混型；19d310e7 记录目标不存在但矩阵近全重合而接管、running 时 QA 的 1136→1007 反转、路径 grep 的 8 个误报、`timestamp=null` 崩溃，以及 A–G 复放加两个反空转负控。
 - `skill-staged-delivery`：新 Skill 或只改 SKILL.md 的分阶段交付；用于区分“部分交付”与本 Skill 的“接管后缩窄范围”。
 - `skill-update-concurrency-safe`：采样、备份、最小编辑、保留并发内容与 QA 机制。
 - `skill-file-qa`：结构、引用、代码块、稳定性与指纹验收。

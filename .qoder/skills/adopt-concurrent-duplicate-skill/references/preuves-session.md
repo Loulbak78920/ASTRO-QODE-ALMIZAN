@@ -719,3 +719,152 @@ TypeError: '<=' not supported between instances of 'int' and 'str'
 - 零写入接受必须同时具备：归档在 skills 根之外且哈希可核验、现存 Skill 等价覆盖、决策后本会话零写入；缺一项就回到第 1 节重新决策。
 - `wait_chat_sessions` 只用 `sessionIds` 与 `timeoutMs`（≤60000）循环；JSONL `timestamp` 先统一 int/ISO 类型再排序或相减。
 - 报告写 `TARGET-GONE-ZERO-WRITE`，并注明最终性窗口；后续写入使等价证据与只读 QA 过期。
+
+## 案例七 — 来源会话 19d310e7（2026-10-28，目标不存在但近全重合）
+
+来源会话：`19d310e7-79a1-4868-b7dc-8f6d4ea24448`，标题「创建可复用审计 Skill」。读取快照时 `runtimeState=cold`、`activeTurnId=null`、`revision=0`、`hasMoreBefore=false`，共 2 条消息（1 用户 + 1 助手），助手正文在 8,002 字符处截断。快照落盘路径：
+
+`C:\Users\Administrateur\.qoder\tmp\C--Users-Administrateur-Desktop-IMAM8MAHDI\d5d7a6c9-1181-41bb-83ae-3baab82e8553\tool-results\builtin_read_chat_session_5ace3a36da5a.txt`，109,099 字节，mtime 2026-10-28 03:37（本机 +01:00）。
+
+自动推荐 JSON 的 skillName 是 `borner-couverture-script-audit`（create），该目录自始至终不存在。核实期间，会话 `29ea3ecc-faee-4bf4-8307-a13ee965b3e6` 创建了不同名的 `mesurer-couverture-script-audit`；能力矩阵 10 个维度全部重合，唯一增量是一个复放脚本。用户选择「接管并完善现有包（推荐）」，`borner-…` 目录从未创建，报告模式为 `ADOPTED`。
+
+### 时间线（UTC；工具输出另注本机 +01:00）
+
+| 时间 | 事件 | 依据 |
+|---|---|---|
+| 02:22:49.192Z | 用户要求 create `borner-couverture-script-audit` | 快照用户消息 `timestamp` |
+| 02:23:55.298Z | `29ea3ecc` Write `mesurer…/SKILL.md` | JSONL `tool_use` 与文件 mtime 03:23:55 +01:00 |
+| 02:24:25.358Z | `29ea3ecc` Write `mesurer…/references/cas-2026-10-28-scan-secrets.md` | JSONL `tool_use` |
+| 02:24:35.636Z | `29ea3ecc` 首次 Edit 同一 reference | JSONL `tool_use` |
+| 02:23:55–02:26:59Z | `29ea3ecc` 对 `mesurer…` 共 10 次成功写入 | 2026-10-28 复扫的 `tool_use` 行 |
+| 03:23:5x +01:00 | 本会话只读 QA：`RESULT FAIL`，description 1136 字符 | 校验器输出 |
+| 02:27:17–02:28:09Z | grep 式扫描：先 `AttributeError` 崩溃，随后 8 条 `NEW 19d310e7…jsonl` | 失败原文与误报行 |
+| 02:28:39–02:29:44Z | 本会话写入 `scripts/rejouer_matrice.py`、`SKILL.md`、reference | JSONL `tool_use`（7 行） |
+| 03:25:13 +01:00 | 写入者结束后稳定：SKILL.md 10,217 B `5f7177ba…` | 三连采样 |
+| 03:29:37 +01:00 | 最终 QA 指纹：10,783 B `095aca4b…` | 校验器输出 |
+
+写入者状态在快照正文中记为 `revision 70`（仍 running），等待后为 `ready, revision 80`。
+
+### 能力矩阵（10/10）
+
+| 维度 | 并发 `mesurer-…` | 建议的 `borner-…` | 判定 |
+|---|---|---|---|
+| 触发（`RESULT OK`、`fichiers=0`、覆盖边界） | 有 | 有 | 相同 |
+| 按文件+行清点过滤常量 | §2 表格 | 有 | 重合 |
+| 夹具在安装目录外、路径不含被忽略目录名 | §3 双根 + 案例 G + §8 | 有 | 重合 |
+| 正对照 + 不可见泄露 + 编码 + 残留 | A–G 七例 | 有 | 重合 |
+| `fichiers=0` 判为配置失败 | invariant 2 + §4 + §6 | 有 | 重合 |
+| 输出永不含秘密（`grep -F` 可执行断言） | invariant 5 + §3 | 有 | 重合 |
+| 计数绑定脚本 SHA-256 | §5/§6/§8/§9 | 有 | 重合 |
+| 截断降级 20/46 | §4 + §8 | 有 | 重合 |
+| 写回消费方退出标准 | §6 第一条 | 有 | 重合 |
+| 可复用重放脚本 | 无 | 建议 `scripts/rejouer_matrice.py` | 唯一增量（薄） |
+
+只有一行不同、且该行不能独立触发时，结论是接管而不是 2quater 缩窄后新建：「目标不存在」不等于「必须 create」。
+
+### 临时 QA 与最终 QA
+
+| 观测时刻 | SKILL.md 指纹 | QA 结果 |
+|---|---|---|
+| 写入者 running（rev 70） | 10,352 B，mtime 03:23:55 +01:00，SHA-256 `8782332a5534c8003fcb2a1d7cc5964083a821d1bcaedcc1c27c6d18a9ccb4c1` | `RESULT FAIL`，`FAIL description: 1136 chars exceeds 1024`，Summary 8 pass / 1 fail / 0 warn，`Files (2)`，正文 128 行，rc 0 |
+| 写入者 ready（rev 80）并三连稳定 | 10,217 B，mtime 03:25:13 +01:00，SHA-256 `5f7177baad8eea18790aa55a3e389151a63f4f770089c53e956a3f902fd2f98d` | `RESULT PASS`：9 pass / 0 fail / 0 warn，description 1007 字符 |
+| 本会话补脚本与文档后 | 10,783 B，mtime 03:29:37 +01:00，SHA-256 `095aca4b85544fecd8b4569769fc57a24c03497a6101598b8249aa535031de1e` | `RESULT PASS`：9 / 0 / 0，`Files (3)`，正文 131 行，description 1007 字符 |
+
+同一文件的 FAIL 与 PASS 只差「写入者是否仍在写」。若按临时 FAIL 去压缩 description，会与仍在写作的作者互相覆盖；正确做法是标 `PROVISIONAL`、只记录指纹与输出，等 ready 后重取基线重跑。
+
+### 写入者归因的两种失败
+
+1. **路径 grep 误报。** 用路径字符串统计“哪些 JSONL 提到它”时，脚本先在第 13 行崩溃：
+
+```text
+Traceback (most recent call last):
+  File "<string>", line 13, in <module>
+    else: t=datetime.datetime.fromisoformat(ts.replace('Z','+00:00')).replace(tzinfo=None)
+                                            ^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'replace'
+```
+
+`timestamp` 可能是 `null`，先判空再统一类型。放宽后，扫描把本会话自己的 8 条读取记录当成写入者：
+
+| 误报行 | 时间 |
+|---|---|
+| `NEW 19d310e7-79a1-4868-b7dc-8f6d4ea24448.jsonl` | 02:27:17.556Z |
+| 同上 | 02:27:32.412Z |
+| 同上 | 02:27:32.522Z |
+| 同上 | 02:27:35.261Z |
+| 同上 | 02:27:35.398Z |
+| 同上 | 02:27:43.727Z |
+| 同上 | 02:27:47.158Z |
+| 同上 | 02:28:09.781Z |
+
+这 8 条全是只读命令与读取，不是 `Write`/`Edit`。
+
+2. **解析 `tool_use` 才是写入证据。** 只取 `type=tool_use`、`name ∈ {Write, Edit}` 且 `input.file_path` 命中目标，再与 `tool_result` 配对。2026-10-28 复扫结果：
+
+| 会话 | 命中 | 说明 |
+|---|---|---|
+| `29ea3ecc…` | 10 | 全部指向 `mesurer…`；首条 `02:23:55.298Z Write …\SKILL.md` |
+| `19d310e7…`（本会话） | 7 | 1 次脚本 Write、2 次脚本 Edit、3 次 SKILL.md Edit（同一毫秒 02:29:36.872Z）、1 次 reference Edit |
+| 目标 `borner-couverture-script-audit` | 0 | 无人写入，目录始终不存在 |
+
+复扫时 `tool_use` 行中 `timestamp=null` 为 0 条，因此上面的 `AttributeError` 只能按“未复现的潜在输入”处理，不能算复现。
+
+### 复放与反空转
+
+被接管包自己的 reference 记录 A–G 七例。用它的方法复放，复放器 `scripts/rejouer_matrice.py` 最终 8,204 B、SHA-256 `43c9d2a077fb90a567c19a8f840b34fd8d76a993038e37fa7194ec3d21e84bd4`；夹具建在 `%TEMP%` 与 `~/.qoder/tmp`，不在被接管包目录内。
+
+| 用例 | 期望 rc | 复放结果 |
+|---|---|---|
+| A 正对照 | 1 | `PASS cas=A-controle-positif rc=1` |
+| B 不可见泄露 | 0 | `PASS cas=B-fuites-cachees rc=0` |
+| C 见证用例 | 1 | `PASS cas=C-temoin rc=1` |
+| D 残留 | 1 | `PASS cas=D-residu rc=1` |
+| E UTF-16 | 0 | `PASS cas=E-utf16 rc=0` |
+| F 输出上限 | 1 | `PASS cas=F-plafond-affichage rc=1` |
+| G 根目录在 `~/.qoder/tmp` 下 | 1 | `PASS cas=G-racine-sous-qoder rc=1`（单独一轮：`MATRICE cas=1 echecs=0`，`RC_G=0`） |
+
+A–F 一轮：`MATRICE cas=6 echecs=0`，`RC_AF=0`；每次复放结束打印 `NETTOYE … existe=False`。
+
+全绿不算证明，必须让复放器失败。两个负控：
+
+| 负控 | 构造 | 观测 |
+|---|---|---|
+| N1 | 假扫描器把秘密打印到 stdout（脚本 SHA-256 `2f1047b49f868c3025c22eaf35028aa19c40c39a7a269058316ac2233cb66cb7`） | `RC_N1=1`；`FAIL cas=N1-scan-qui-imprime-le-secret rc=1`；`SECRET_DANS_LA_SORTIE`；`sortie non affichee: le secret y figure`；`MATRICE cas=1 echecs=1`；`NETTOYE … existe=False` |
+| N2 | 故意写 `attendu_rc=0`，而 A 实测 rc=1 | 首次 `RC_N2=0`：脚本打印了 FAIL 却没向调用方传播失败；修正后 `RC_N2=1`，`FAIL cas=N2-rc-attendu-faux rc=1`，`rc=1 attendu=0` |
+
+N2 的第一次运行本身说明：负控必须同时断言复放器自身的退出码，只打印 `FAIL` 不算失败。
+
+### 最终指纹
+
+| 文件 | size | SHA-256 |
+|---|---|---|
+| `SKILL.md` | 10,783 B | `095aca4b85544fecd8b4569769fc57a24c03497a6101598b8249aa535031de1e` |
+| `references/cas-2026-10-28-scan-secrets.md` | 9,455 B | `21fef52475d39adec104522fc56074c545f215df0454a1c952fd1e949f427607` |
+| `scripts/rejouer_matrice.py` | 8,204 B | `43c9d2a077fb90a567c19a8f840b34fd8d76a993038e37fa7194ec3d21e84bd4` |
+
+最终 QA：`RESULT PASS`，9 pass / 0 fail / 0 warn，`Files (3)`，正文 131 行，description 1007 字符；校验器指纹只覆盖 `SKILL.md`，references 与脚本的哈希单独记录。
+
+### 状态划分
+
+| 项目 | 状态 | 依据 |
+|---|---|---|
+| 目标 `borner-…` 不存在且始终未创建 | 已观测 | 目录枚举与最终报告 |
+| 并发 Skill 由 `29ea3ecc` 创建 | 已观测 | JSONL `tool_use`（10 条）与 mtime |
+| 用户选择接管现有包 | 已观测 | AskUserQuestion 原文「接管并完善现有包（推荐）」 |
+| 写入者 running 时 QA FAIL | 已观测 | 校验器输出与 `8782332a…` 指纹 |
+| 写入者结束后同一文件 PASS | 已观测 | `5f7177ba…` 与 9/0/0 |
+| 路径 grep 的 8 条误报 | 已观测 | 8 行 `NEW 19d310e7…` |
+| `timestamp=null` 取到崩溃 | 已观测（错误原文） | `AttributeError` 回溯 |
+| 当日语料中 `timestamp=null` | 未复现 | 复扫计数 0 |
+| A–G 复放全绿 | 已观测 | 逐例 `PASS cas=…` 与 `MATRICE` 行 |
+| 两个负控有效 | 已观测 | `RC_N1=1`、修正后 `RC_N2=1` |
+| 复放判定来自独立权威工具 | 未验证 | 复放器比对记录中的 rc 与关键行，不是外部 oracle |
+
+### 重新使用规则
+
+- 目标不存在时先看矩阵：多数维度相同、增量不能独立触发，就接管，不建目录；报告区分 `ADOPTED` 与 `CREATED`。
+- 写入者 `running` 时的 QA 只作 `PROVISIONAL`：记录指纹与输出，不写“需修正”、不改文件；等 ready 后重取基线重跑。
+- 写入者归因只认 `tool_use` 的 `name ∈ {Write, Edit}` 与 `input.file_path`，并与 `tool_result` 配对；不拿路径 grep 的命中行数当证据。
+- `timestamp` 先判 `null`，再统一 int/ISO；脚本崩溃前打印的 `NEW …` 行不能算写入者。
+- 接管验收先复放被接管包自己的案例，再用“泄露秘密的假扫描器”和“错误 `attendu_rc`”两个负控证明复放器会失败；负控还要断言复放器自身的退出码。
+- 校验器指纹只覆盖 `SKILL.md`，references 与脚本的哈希必须分别记录。
