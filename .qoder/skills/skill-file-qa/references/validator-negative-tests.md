@@ -320,3 +320,62 @@ py -3 "<scan-script>" --scan-dir "<projects-dir>" --target "<skill-dir>/SKILL.md
 - 本次补测的对照：同一脚本在 `ASTRO-Q°ODE_SYSTEME` 得到 `RESULT: PASS`、rc=0；在项目根用同一相对路径得到 `FAIL fichier absent`、rc=1。
 - 规则：每个 `bash`/`sh` 块按块前 cwd 原样执行，只替换已声明的占位符；退出码直接捕获（或用 `PIPESTATUS`），记录 cwd、替换值、预期/实测退出码。破坏性或需交互的命令标为示意并说明原因。
 - 未验证：没有为“占位符未说明即判 FAIL”构造自动夹具；该判断是人工复核。静态检查不覆盖文档命令，这一点是已验证的。
+
+## 写入者静默与来源链（已验证）
+
+来源：会话 `94884576-e776-4298-aa17-e34820e22af2`（2026-10-28，读取时仍在运行），目标为 `prototyper-variante-layout-sur-copie`。时间为 UTC；本地时间为 UTC+01:00。
+
+| 时间 | 事件 | 证据 |
+|---|---|---|
+| 10:16:41.924 | 并发会话 `41745dcd` 写入目标 SKILL.md | JSONL Write，9,055 字符 → 9,308 B |
+| 10:16:52.262 | 同一会话写入 `scripts/verifier_prototype.py` | JSONL Write，9,778 B；mtime 10:16:51.810 |
+| ~10:16:4x | `94884576` 列目录：SKILL.md 在，脚本缺失 | 该列表随后被当作现状 |
+| 10:17:02.102 | 据「脚本缺失」向用户提出三选一问题 | 此时脚本已落盘约 10 秒 |
+| 10:17:xx | 读取写入者状态 | `running`，`activeTurnId=915a1b31…`，rev 50 |
+| 10:18:17.485 | `wait_chat_sessions` 返回 | `turn_completed`、`ready`、rev 70、`activeTurnId=null` |
+| 10:18:35.188 | 重读脚本 | 9,778 B，距落盘 103 秒 |
+
+校验器对同一中途状态给出的不是「暂定」，而是真实 FAIL。同日用目标包 SKILL.md 做 A/B（临时目录，已删除）：
+
+| 夹具 | 输出 | rc |
+|---|---|---|
+| 只有 SKILL.md，scripts/ 缺失 | `FAIL local reference not found: 'scripts/verifier_prototype.py'` / `RESULT FAIL` | 1 |
+| 补上同一脚本 | `PASS local references: 1 checked` / `RESULT PASS` | 0 |
+
+`validate_skill.py` 的 `wait_for_stable` 只等待 SKILL.md；同包其他文件不在稳定性窗口内。
+
+**来源链。** 本任务的「来源会话」`94884576` 首条用户消息引用 `41745dcd`；`41745dcd` 首条用户消息引用 `527776b5`（标题 `Implémentation CSS Mizan`，`ready`，rev 273；在 `41745dcd` JSONL 中出现 11 次）。即被标为来源的会话本身是与它并行做同一任务的姊妹会话，真实上游在一跳之外。
+
+要点：
+
+- 缺失是时间函数。写入者先写 SKILL.md、后写脚本时，任何早于第二次写入的列表都会显示「断链」；这不是包缺陷，也不能据此让用户决策。
+- 判活看 `sessions[].runtimeState` 与 `activeTurnId`；`wait_chat_sessions` 的 outcome（`timeout`/`turn_completed`/`needs_attention`）本身不表示静默。
+- 静默后必须重新列目录并在最新字节上重跑；中途的 FAIL 与 PASS 都不进入最终结论。
+- 不替写入者补文件：并发的 `Write` 可能只是晚几秒，代写会造成重复或覆盖。
+- 来源链要读「首条用户消息」而不是会话标题：`41745dcd` 与 `94884576` 标题不同，任务相同。
+- 未验证：没有构造「写入者持续活动超过 `wait_chat_sessions` 超时」的夹具；超时分支只按工具契约记录，未实跑。
+
+## 重载请求与注入定位（已验证）
+
+来源：会话 `7f6a6a52-bc37-4cf4-a5cf-268dd121acb5`（2026-10-28），目标为本 Skill。时间为 UTC；本地为 UTC+01:00。被核对的是当时的 39,910 B / `5297078a…` 版本，此后 SKILL.md 已再修改，最终值只写入交付报告。
+
+| 时间 | 事件 | 证据 |
+|---|---|---|
+| 10:28:22.578 | 用户要求“执行 /skills reload 重载技能” | 人工消息 |
+| 10:28:35.227 | `mcp_list` 分别以 `skill` 与 `reload` 检索 | `reload` 只命中 `mcp__browser-use__navigate_page`（描述含 “by URL, history, or reload”），没有 Skill 重载工具 |
+| 10:28:52.338 | 磁盘基线 | 39,910 B / `5297078a…`；哨兵 `### 写入者静默前置门` 在 L182 命中 1 次 |
+| 10:28:59.609 | 只读调用，`BINDING=SFQA-20261028T102853Z-7c1a` | 工具结果只有 `Launching skill: skill-file-qa`，不含路径 |
+| 10:28:59.893 | 注入记录 | 本会话 JSONL L245，`isMeta=true`，19,341 字符；首行 Base directory 正确；末行 `ARGUMENTS:` 完整；哨兵 1 次；无截断 |
+| 10:29:33.652 | 扫描 `<home>/.qoder/projects` 下的 `**/*.jsonl`，mtime 窗口 900 秒 | 7 条命中（L239/241/245/248/250/257/259）；只有 L245 为 `isMeta=true`、`base=True`、哨兵 1 |
+| 10:29:35.277 | 去掉首行与 `ARGUMENTS:` 尾行后比较 | 注入 19,167 = 磁盘 19,167 字符，`EQUAL_AFTER_STRIP True`；调用前后 39,910 B / `5297078a…` 不变 |
+| 事后复扫 | 同一 BINDING 的命中增至 10 条（新增 L265/L272/L273） | 仍只有 L245 是 `isMeta=true` |
+
+要点：
+
+- 会话 ID 未知不阻塞取证：脚本没有使用会话 ID，按唯一 `BINDING` 扫描最近修改的 JSONL 即可。mtime 只用于缩小扫描范围，选择记录只认 `isMeta=true` 与 Base directory；不能按最新文件或邻近行号猜。
+- 命中条数不是判据：本回合自己的脚本输出、工具结果与报告都会复制 BINDING，条数从 7 增至 10。只有 `isMeta=true` 的记录是注入正文。
+- 首版扫描脚本的 mtime 分支写成 `pass`，等于没有过滤；第二版改为 `cutoff = now - 900` 后才得到上述 7 条。复跑时要确认过滤分支真的生效。
+- 代理不能执行 `/skills reload`；MCP 中只有浏览器页面的 reload。只读调用证明“本次注入正文 = 当时磁盘正文”，不证明 `/skills list` 的 description 或可见性元数据已刷新。
+- 被核对版本的 39,910 B / `5297078a…` 是当时快照；追加本案例前 SKILL.md 已被后续修改取代，当前最终值见交付报告，不在本文件声明。
+
+未验证：用户实际执行 reload 后注入记录发生变化的对照分支需要宿主执行，代理只能观测，未构造。

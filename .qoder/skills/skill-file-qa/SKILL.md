@@ -1,6 +1,6 @@
 ---
 name: skill-file-qa
-description: "在创建或更新 Skill 后对 SKILL.md 做写入后验收：用 PyYAML 严格解析 frontmatter（description 或其他纯量含「冒号+空格」时必须加引号）、校验 name 与目录一致、单行 description、正文行数、文件清单、本地引用与跨 Skill 引用（反引号中的已安装 Skill 名须解析到用户级/项目级 skills 目录且目标 SKILL.md 存在），抽取 Python/JS 代码块做语法检查，校验前后等待文件稳定并复核 size/mtime/SHA-256 指纹（并发写入或等待超时则失败），并对真实产物实跑文档中的验收片段，按文档标注的工作目录逐条实跑 bash/sh 命令并记录占位符替换，不能把 skipped 当作已验证；当目标 Skill 自带 CLI 验证器时，用临时副本逐项破坏不变量，断言退出码 0/1/2、严格警告与外部资源开关，清理副本并用 SHA-256 证明原件未变。用于 Skill 创建或更新后的交付前检查、Skill 未出现在可用列表、frontmatter 解析失败、跨 Skill 引用失效、验证器负向测试未覆盖、Windows 只读夹具导致 rmtree 报 WinError 5，或需要区分已验证项与未触发分支、文档命令无法原样执行、占位符（如 SKILL_DIR）未说明替换方式、bash 块被跳过导致 PASS 未覆盖路径错误、参考文档快照过时、references 与 SKILL.md 不一致、围栏代码块未配对、验收前文件已被改写、PASS 的版本不是方案基线、基线哈希不一致时；全部测试与真实运行结束后仍须双采样 SKILL.md 并与 validator 的 Fingerprint (final) 比对，变化时旧 PASS 作废、合并重跑，只引用最终稳定版本哈希；验收开始前先与方案或写入时基线的 size/SHA-256 比对，不同则旧 PASS 作废并按 UTC 窗口归因写入者（含 ERROR 编辑）、区分本会话与外来会话，锚点消失或部分应用交 adopt-source-session-update；参考文档记录了 SKILL.md 的行数、字节或哈希时，最终门要重算比对并回改失真项，复核围栏配对与标题，references 自身最终哈希只写入报告。"
+description: "在创建或更新 Skill 后对 SKILL.md 做写入后验收：用 PyYAML 严格解析 frontmatter（description 或其他纯量含「冒号+空格」时必须加引号）、校验 name 与目录一致、单行 description、正文行数、文件清单、本地引用与跨 Skill 引用（反引号中的已安装 Skill 名须解析到用户级/项目级 skills 目录且目标 SKILL.md 存在），抽取 Python/JS 代码块做语法检查，校验前后等待文件稳定并复核 size/mtime/SHA-256 指纹（并发写入或等待超时则失败），并对真实产物实跑文档中的验收片段，按文档标注的工作目录逐条实跑 bash/sh 命令并记录占位符替换，不能把 skipped 当作已验证；当目标 Skill 自带 CLI 验证器时，用临时副本逐项破坏不变量，断言退出码 0/1/2、严格警告与外部资源开关，清理副本并用 SHA-256 证明原件未变。用于 Skill 创建或更新后的交付前检查、Skill 未出现在可用列表、frontmatter 解析失败、跨 Skill 引用失效、验证器负向测试未覆盖、Windows 只读夹具导致 rmtree 报 WinError 5，或需要区分已验证项与未触发分支、文档命令无法原样执行、占位符（如 SKILL_DIR）未说明替换方式、bash 块被跳过导致 PASS 未覆盖路径错误、参考文档快照过时、references 与 SKILL.md 不一致、围栏代码块未配对、验收前文件已被改写、PASS 的版本不是方案基线、基线哈希不一致时；全部测试与真实运行结束后仍须双采样 SKILL.md 并与 validator 的 Fingerprint (final) 比对，变化时旧 PASS 作废、合并重跑，只引用最终稳定版本哈希；验收开始前先与方案或写入时基线的 size/SHA-256 比对，不同则旧 PASS 作废并按 UTC 窗口归因写入者（含 ERROR 编辑）、区分本会话与外来会话，锚点消失或部分应用交 adopt-source-session-update；参考文档记录了 SKILL.md 的行数、字节或哈希时，最终门要重算比对并回改失真项，复核围栏配对与标题，references 自身最终哈希只写入报告；来源会话可能是姊妹会话，写入者活动时资源暂缺不判断链。"
 ---
 
 # SKILL.md 写入后验收
@@ -16,6 +16,8 @@ description: "在创建或更新 Skill 后对 SKILL.md 做写入后验收：用 
 读取 `<skill-dir>/SKILL.md`，并列出目录内全部文件。确认目录名、文件数量和正文，而不是凭记忆描述。
 
 写入后不要立刻验收。若同一 Skill 可能被并发流程改写，先用校验器等待文件稳定；读取后再写文件会使前面的检查失效。报告必须记录实际读取版本的 SHA-256。
+
+列目录只是一次快照。若目标目录可能由仍在运行的会话写入，先过「写入者静默前置门」：确认 `runtimeState=ready` 且 `activeTurnId=null`，再重新列目录与采样。报告缺口或 FAIL 之前必须再列一次，不能引用数秒前的旧列表。
 
 开始验收前先绑定基线：取方案或最后一次写入时记录的 size 与 SHA-256，与当前文件比对。两者不同且不是行尾切换时，本次校验器的 PASS 不能作为该方案的验收结果，按「基线对比与写入者归因」处理，并写明旧 PASS 作废。
 
@@ -177,7 +179,19 @@ Skill 可能在验收期间被另一个流程改写。只比较最终读到的�
 - 校验器不写目标 Skill 目录；如果验收期间有别的流程写入，最终指纹会暴露变化，但无法判断哪个版本是权威版本，只能等写入结束后重跑。
 - 校验器内的起止指纹只覆盖它自己的运行窗口。真实产物验收、负向夹具和真实运行都在校验之后，必须在全部结束后再执行第 6 步的最终指纹门；只有与 `Fingerprint (final)` 一致的最终哈希才能写进报告。来源会话 `a48efc65`（2026-10-26）的 9,622 B 版本在 PASS 后被另一会话改写为 11,122 B，直到最终双采样才发现；完整案例见 `references/validator-negative-tests.md`。
 
+### 写入者静默前置门
+
+校验器的稳定性窗口只覆盖 SKILL.md（`scripts/validate_skill.py` 的 `wait_for_stable`），不覆盖同包的 scripts/ 与 references/。写入者可能先写 SKILL.md、数秒后才写脚本；在这段窗口列目录会得到「声明的资源缺失」，校验器也会给出真实的 `FAIL local reference not found`，但它描述的是中途状态，不是包缺陷。
+
+1. **判活。** 用 `read_chat_session` 记录写入者的 `runtimeState`、`activeTurnId`、`revision`；需要等待时用 `wait_chat_sessions`（如 `timeoutMs: 60000`）。静默判据是 `runtimeState=ready` 且 `activeTurnId=null`；`waiting-user` 且有未决交互属于暂停，同样不再写入。`wait_chat_sessions` 返回的是 `timeout`/`turn_completed`/`needs_attention` 等 outcome，必须读 `sessions[].runtimeState`，不能把 outcome 当作静默。
+2. **重新列目录。** 静默后重读 SKILL.md 与完整文件清单，并重采样整包指纹；不得用判活前的列表下结论。
+3. **分级缺失。** 写入者活动期间缺失标 `PROVISIONAL`：只报告「暂缺，写入者仍在写」，不判断链、不宣告缺口、不代为创建文件、不据此让用户决策。静默后仍缺失才是真实缺陷，此时 validator 的 FAIL 才可作为验收结论。
+4. **作废中途结果。** 静默后在最新字节上重跑校验器；中途的 FAIL 与 PASS 都不进入最终报告的有效结论。
+5. **边界。** 活性分级（QUIESCENT/PAUSED/RUNNING、连续采样）与静默后的接管步骤以 `audit-skill-during-live-creation` 为准；写入者已提交同一批改动时交 `adopt-source-session-update`。本节只规定验收开始前的前置门。
+
 ### 基线对比与写入者归因
+
+取证前先核对来源会话的身份：被用户或推荐数据标为「来源会话」的 ID 可能只是并行做同一任务的姊妹会话。读取它的首条用户消息；若其中引用另一个会话 ID，继续追到上游，并在报告中写明每一跳的角色（primary / sibling）。姊妹会话的转述、它的中途态目录与它的 QA 结论都不是一手证据，也不能当基线。
 
 校验器与最终门都假定「验收的对象就是方案的对象」，这个假定可能已经失效。开始验收时：
 
@@ -264,15 +278,17 @@ FAIL local reference not found: 'oeuvre_universelle/manifeste_anteriorite.py'
 
 边界：该检查只验证“名称能解析到本地已安装 Skill 且目标 SKILL.md 存在”。未安装的 Skill、CLI 内置或插件 Skill、拼写错误无法与普通反引号 token 区分，不会自动报错；需要时人工核对加载器或安装位置，不得把 `0 found` 当作已验证。
 
-## 重载后注入正文核对（仅在声称已加载时）
+## 重载后注入正文核对（声称已加载或用户要求 /skills reload 时）
 
-完成检查的最后一项要求不把文件存在当作已加载。只有报告要写“运行时已加载新版本”时才执行本节；否则在报告中标“未触发”。完整的新鲜度判定、版本定界与写入者归因交给 `verify-injected-skill-body-freshness`，路径与注入记录定位交给 `verify-skill-runtime-binding`。
+完成检查的最后一项要求不把文件存在当作已加载。报告要写“运行时已加载新版本”，或用户要求执行 `/skills reload` 时，执行本节；否则在报告中标“未触发”。完整的新鲜度判定、版本定界与写入者归因交给 `verify-injected-skill-body-freshness`，路径与注入记录定位交给 `verify-skill-runtime-binding`。
+
+`/skills reload` 是宿主 CLI 命令，代理没有可调用它的工具：按 `reload` 检索 MCP 工具只命中浏览器的 `navigate_page`。先说明这一点，不要假装执行；改用下面的只读调用证明本次注入正文是否新鲜。正文新鲜不等于 `/skills list` 的元数据已刷新——description、可见性与列表项可能仍是缓存，需要用户自己在输入框执行 reload。
 
 1. **哨兵取自磁盘。** 用 `grep -n -F` 在 frontmatter 之后选一个本次写入才出现的标题或短语，记下行号。不要凭记忆写哨兵：来源会话 `7f2a11b0`（2026-10-27）先查记忆中的“文档命令逐条实跑”，磁盘与注入记录均 0 次；真实哨兵是标题 `### 3. 文档命令可执行性`，各 1 次。
 2. **调用前后取指纹。** 记录 SKILL.md 的 size、mtime_ns、SHA-256；用只读 args 调用 Skill，末尾带唯一 `BINDING=<UTC>-<随机>` 标记，声明不执行工作流、不写文件；调用后重采，变化则判 UNVERIFIED。
-3. **定位注入记录。** 在会话 JSONL 中同时用三个条件过滤：`isMeta=true`、含该 `BINDING`、含 `Base directory for this skill`；记录命中行号，不要取 `tool_use` 之后的紧邻行。同一 BINDING 会命中多条 assistant/tool_use 记录：来源会话 `5a5fca96`（2026-10-28）实测命中 5 条（L266/L268/L272/L275/L277），只有 L272 是 `isMeta=true` 注入；L268 与 L272 之间还隔着 active-leaf 与 `tool_result`，且 BINDING 加 Base directory 仍会命中 L275/L277。核对首行 `Base directory for this skill: <skill-dir>` 等于目标目录、正文含哨兵、末行仍为 `ARGUMENTS:` 尾行；缺尾行或出现截断标志时判 UNVERIFIED。注入文本 = Base directory 行 + 正文 + `ARGUMENTS:` 尾行，比较只用中间正文。
+3. **定位注入记录。** 在会话 JSONL 中同时用三个条件过滤：`isMeta=true`、含该 `BINDING`、含 `Base directory for this skill`；记录命中行号，不要取 `tool_use` 之后的紧邻行。当前会话 ID 未知时，用 `glob` 扫描 `<home>/.qoder/projects` 下的 `**/*.jsonl`（`<home>` 替换为用户目录；`glob` 不展开 `~`），先按 mtime 只看最近窗口（如 15 分钟）内的文件——mtime 只用于缩小扫描范围，不能用来选记录；再用唯一 `BINDING` 找行，只认 `isMeta=true` 且首行为 `Base directory for this skill: <目标目录>` 的那条。仍有两条或以上候选时判 UNVERIFIED，不按最新文件或邻近行号猜。命中条数不是判据：本回合写下的脚本、工具结果与报告都会包含该 BINDING（来源会话 10:29:33 扫描 7 条，报告写入后为 10 条），仍只有 `isMeta=true` 的记录是注入。同一 BINDING 会命中多条 assistant/tool_use 记录：来源会话 `5a5fca96`（2026-10-28）实测命中 5 条（L266/L268/L272/L275/L277），只有 L272 是 `isMeta=true` 注入；L268 与 L272 之间还隔着 active-leaf 与 `tool_result`，且 BINDING 加 Base directory 仍会命中 L275/L277。核对首行 `Base directory for this skill: <skill-dir>` 等于目标目录、正文含哨兵、末行仍为 `ARGUMENTS:` 尾行；缺尾行或出现截断标志时判 UNVERIFIED。注入文本 = Base directory 行 + 正文 + `ARGUMENTS:` 尾行，比较只用中间正文。
 4. **双侧去空行再比较。** 注入正文与磁盘 frontmatter 之后的正文都先 `strip("\n")`：注入侧以换行开头，磁盘侧以空行开头，直接相等会误判 False，长度却可能完全相同。来源会话实测（对 `d085e59` 的 25,870 B 版本）：两侧原始均 12,203 字符，首差偏移 0，去空行后均为 12,201 字符且相等；同一注入正文与后续 26,993 B 版本比较为 False，证明结论只对比较时的版本成立。
-5. **结论绑定版本。** 报告写明 Base directory、哨兵、截断迹象、调用前后 size/mtime_ns/SHA-256 与比较结果；文件随后再变，该结论只对当时的版本成立。
+5. **结论绑定版本。** 报告写明 Base directory、哨兵、截断迹象、调用前后 size/mtime_ns/SHA-256 与比较结果；文件随后再变，该结论只对当时的版本成立。结论只写“本次注入的正文 = 当时磁盘正文”；若要写“元数据已刷新”，必须由用户执行 reload 后再核对 `/skills list`，否则写“元数据可能仍是缓存”。完整时间线见 `references/validator-negative-tests.md`。
 
 ## Windows 环境注意事项
 
@@ -309,6 +325,9 @@ FAIL local reference not found: 'oeuvre_universelle/manifeste_anteriorite.py'
 - [ ] 验收开始前已取方案或写入时的基线，并比对当前 size 与 SHA-256；不同且非 EOL 时旧 PASS 已作废，未把新版本 PASS 当作方案版本通过。
 - [ ] 归因窗口已换算为 UTC（无偏移的 `--since` 按 UTC 解析），覆盖基线 mtime，`ERROR` 编辑也计入，并区分本会话与外来会话。
 - [ ] 锚点消失或部分应用时已交 `adopt-source-session-update`，方案在当前版本上重算后才重跑。
+- [ ] 目标目录可能被活动会话写入时，先确认 `runtimeState=ready` 且 `activeTurnId=null`，再重新列目录；写入者活动期间缺失的 bundled 资源标为 `PROVISIONAL`，未判为断链、缺口或被代为创建。
+- [ ] 报告缺口或 FAIL 前重新列过目录与写入者状态，未引用判活前的旧列表；静默后已在最新字节上重跑校验器，中途 FAIL/PASS 未进入最终结论。
+- [ ] 标为「来源会话」的 ID 已核对首条用户消息；发现是姊妹会话时已追到上游，报告区分一手证据与转述。
 - [ ] 校验前已确认 SKILL.md 稳定；报告记录起始/最终 SHA-256 与 mtime。
 - [ ] 稳定性超时或校验期间内容变化时未宣称通过，已在稳定版本上重跑。
 - [ ] 指纹变化时已做 EOL 判别：LF 归一化 SHA-256 一致且字节差等于换行数才判行尾切换；未回退、未覆盖；部分转换、非 Git 或同内容重写未标为已验证。
@@ -321,6 +340,8 @@ FAIL local reference not found: 'oeuvre_universelle/manifeste_anteriorite.py'
 - [ ] 修改 `scripts/validate_skill.py` 后，已覆盖 `--stable-seconds 0` 与默认等待分支（或标注未触发）。
 - [ ] 若修改了 `scripts/validate_skill.py`，已用 `skill-validator-selftest` 回归；未修改时不得宣称静态校验器已验证。
 - [ ] 报告区分已验证、静态检查和未触发分支。
-- [ ] 报告声称运行时已加载新版本时，已做「重载后注入正文核对」，或标“未触发”。
+- [ ] 报告声称运行时已加载新版本，或用户要求 `/skills reload` 时，已做「重载后注入正文核对」，或标“未触发”；并说明代理不能执行该宿主命令，改用只读调用取证。
 - [ ] 哨兵取自磁盘 grep 结果（frontmatter 之后），未凭记忆；注入正文与磁盘正文双侧去空行后相等，并记录 Base directory、截断迹象与调用前后 size/mtime_ns/SHA-256。
 - [ ] 未把文件存在当作 Skill 已加载；必要时提示 `/skills reload`。
+- [ ] 当前会话 ID 未知时，已按唯一 `BINDING` 扫描最近修改的 JSONL，并只认 `isMeta=true` 且 Base directory 匹配的记录；多候选判 UNVERIFIED，未按 mtime、邻近行号或命中条数选择。
+- [ ] 未把“注入正文新鲜”写成“技能清单或 description 元数据已刷新”；需要元数据刷新时已请用户执行 reload。
