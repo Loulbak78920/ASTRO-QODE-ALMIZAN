@@ -1,6 +1,6 @@
 ---
 name: skill-file-qa
-description: "在创建或更新 Skill 后对 SKILL.md 做写入后验收：用 PyYAML 严格解析 frontmatter（description 或其他纯量含「冒号+空格」时必须加引号）、校验 name 与目录一致、单行 description、正文行数、文件清单、本地引用与跨 Skill 引用（反引号中的已安装 Skill 名须解析到用户级/项目级 skills 目录且目标 SKILL.md 存在），抽取 Python/JS 代码块做语法检查，校验前后等待文件稳定并复核 size/mtime/SHA-256 指纹（并发写入或等待超时则失败），并对真实产物实跑文档中的验收片段，按文档标注的工作目录逐条实跑 bash/sh 命令并记录占位符替换，不能把 skipped 当作已验证；当目标 Skill 自带 CLI 验证器时，用临时副本逐项破坏不变量，断言退出码 0/1/2、严格警告与外部资源开关，清理副本并用 SHA-256 证明原件未变。用于 Skill 创建或更新后的交付前检查、Skill 未出现在可用列表、frontmatter 解析失败、跨 Skill 引用失效、验证器负向测试未覆盖、Windows 只读夹具导致 rmtree 报 WinError 5，或需要区分已验证项与未触发分支、文档命令无法原样执行、占位符（如 SKILL_DIR）未说明替换方式、bash 块被跳过导致 PASS 未覆盖路径错误、参考文档快照过时、references 与 SKILL.md 不一致、围栏代码块未配对时；全部测试与真实运行结束后仍须双采样 SKILL.md 并与 validator 的 Fingerprint (final) 比对，变化时旧 PASS 作废、合并重跑，只引用最终稳定版本哈希；参考文档记录了 SKILL.md 的行数、字节或哈希时，最终门要重算比对并回改失真项，复核围栏配对与标题，references 自身最终哈希只写入报告。"
+description: "在创建或更新 Skill 后对 SKILL.md 做写入后验收：用 PyYAML 严格解析 frontmatter（description 或其他纯量含「冒号+空格」时必须加引号）、校验 name 与目录一致、单行 description、正文行数、文件清单、本地引用与跨 Skill 引用（反引号中的已安装 Skill 名须解析到用户级/项目级 skills 目录且目标 SKILL.md 存在），抽取 Python/JS 代码块做语法检查，校验前后等待文件稳定并复核 size/mtime/SHA-256 指纹（并发写入或等待超时则失败），并对真实产物实跑文档中的验收片段，按文档标注的工作目录逐条实跑 bash/sh 命令并记录占位符替换，不能把 skipped 当作已验证；当目标 Skill 自带 CLI 验证器时，用临时副本逐项破坏不变量，断言退出码 0/1/2、严格警告与外部资源开关，清理副本并用 SHA-256 证明原件未变。用于 Skill 创建或更新后的交付前检查、Skill 未出现在可用列表、frontmatter 解析失败、跨 Skill 引用失效、验证器负向测试未覆盖、Windows 只读夹具导致 rmtree 报 WinError 5，或需要区分已验证项与未触发分支、文档命令无法原样执行、占位符（如 SKILL_DIR）未说明替换方式、bash 块被跳过导致 PASS 未覆盖路径错误、参考文档快照过时、references 与 SKILL.md 不一致、围栏代码块未配对、验收前文件已被改写、PASS 的版本不是方案基线、基线哈希不一致时；全部测试与真实运行结束后仍须双采样 SKILL.md 并与 validator 的 Fingerprint (final) 比对，变化时旧 PASS 作废、合并重跑，只引用最终稳定版本哈希；验收开始前先与方案或写入时基线的 size/SHA-256 比对，不同则旧 PASS 作废并按 UTC 窗口归因写入者（含 ERROR 编辑）、区分本会话与外来会话，锚点消失或部分应用交 adopt-source-session-update；参考文档记录了 SKILL.md 的行数、字节或哈希时，最终门要重算比对并回改失真项，复核围栏配对与标题，references 自身最终哈希只写入报告。"
 ---
 
 # SKILL.md 写入后验收
@@ -11,11 +11,13 @@ description: "在创建或更新 Skill 后对 SKILL.md 做写入后验收：用 
 
 ## 工作流
 
-### 1. 读取实物
+### 1. 绑定基线并读取实物
 
 读取 `<skill-dir>/SKILL.md`，并列出目录内全部文件。确认目录名、文件数量和正文，而不是凭记忆描述。
 
 写入后不要立刻验收。若同一 Skill 可能被并发流程改写，先用校验器等待文件稳定；读取后再写文件会使前面的检查失效。报告必须记录实际读取版本的 SHA-256。
+
+开始验收前先绑定基线：取方案或最后一次写入时记录的 size 与 SHA-256，与当前文件比对。两者不同且不是行尾切换时，本次校验器的 PASS 不能作为该方案的验收结果，按「基线对比与写入者归因」处理，并写明旧 PASS 作废。
 
 ### 2. 运行结构校验
 
@@ -113,6 +115,7 @@ py -3 scripts/validate_skill.py <skill-dir> --workspace <workspace-root> \
 | 验证器负向 | 临时副本 | 每例一个破坏 | 按契约 0/1/2 | 见输出 | 已验证或未触发 |
 | 原件完整性 | SHA-256 | 验证器读取的项目文件 | 前后一致 | 见输出 | 已验证或未触发 |
 | 稳定性 | validate_skill.py 等待窗口 | 实际 SKILL.md | 窗口内 size/mtime/SHA-256 不变 | 见 Stability 行 | 已验证或未触发 |
+| 基线对比 | 当前 size/SHA-256 vs 方案或写入时基线 | 实际 SKILL.md 与基线记录 | 相同；不同则旧 PASS 作废并归因 | 见输出 | 已验证或未触发（无基线） |
 | 指纹复核 | SHA-256 起止比对 | 实际 SKILL.md | 起始 = 最终 | 见 Fingerprint 行 | 已验证 |
 | 代码块 | ast.parse / node --check | 实际代码块 | 全部可解析 | 见输出 | 仅静态 |
 | 文档命令 | 按标注 cwd 逐条实跑 | 实际 SKILL.md 与 references | 退出码与关键输出符合预期 | 见输出 | 已验证或未触发 |
@@ -121,7 +124,7 @@ py -3 scripts/validate_skill.py <skill-dir> --workspace <workspace-root> \
 | 注入正文 | 只读调用 + JSONL isMeta | 实际 SKILL.md 与当前会话 JSONL | 哨兵命中、去空行后正文相等、前后指纹一致 | 见输出 | 已验证或未触发 |
 | 验收断言 | 实际运行 | 真实产物 | 文档预期值 | 实测值 | 已验证或未触发 |
 
-`Stability` 行显示等待时长；`Fingerprint (start)` 与 `Fingerprint (final)` 的 SHA-256 必须一致。只记录其中一个不算复核。这两行只覆盖校验器运行期间；第 6 步的最终指纹门才覆盖此后的夹具与真实运行，报告引用的是最终门确认的版本。
+`Stability` 行显示等待时长；`Fingerprint (start)` 与 `Fingerprint (final)` 的 SHA-256 必须一致。只记录其中一个不算复核。这两行只覆盖校验器运行期间；第 6 步的最终指纹门才覆盖此后的夹具与真实运行，报告引用的是最终门确认的版本。`基线对比` 行覆盖这两者之前：它证明验收对象就是方案对象；不一致时，其余各行只对另一个版本成立。
 
 `local references: 0 checked` 只说明没有 Markdown 链接或可识别的路径引用，不代表跨 Skill 引用已检查；两项分开记录。
 
@@ -151,12 +154,36 @@ description: "Verify deliverables: CSV then HTML"
 
 Skill 可能在验收期间被另一个流程改写。只比较最终读到的内容，会把旧版本的检查结果当成新版本。
 
+三个窗口互不替代：基线到验收开始的比对（下一小节，唯一能发现「PASS 的版本不是方案版本」）；校验器运行窗口的 `Fingerprint (start)`/`(final)`；全部测试之后的第 6 步最终门。
+
 - 默认 `--stable-seconds 2`：校验器连续观察到 size、mtime_ns、SHA-256 不变后才开始检查；`--stability-timeout 30` 控制最长等待，超时以 exit 1 结束。
 - 校验结束前重新读取 SKILL.md 并打印 `Fingerprint (final)`。size 或 SHA-256 与起始值不同 → `FAIL fingerprint: SKILL.md changed during validation`，必须重跑；仅 mtime 变化但字节相同不算失败。
 - `--stable-seconds 0` 只跳过等待，仍保留起止指纹比对；不要用它掩盖正在写入的文件。
 - 报告必须写出实际起始/最终 SHA-256 和 mtime；无法给出时说明原因，不能宣称通过。
 - 校验器不写目标 Skill 目录；如果验收期间有别的流程写入，最终指纹会暴露变化，但无法判断哪个版本是权威版本，只能等写入结束后重跑。
 - 校验器内的起止指纹只覆盖它自己的运行窗口。真实产物验收、负向夹具和真实运行都在校验之后，必须在全部结束后再执行第 6 步的最终指纹门；只有与 `Fingerprint (final)` 一致的最终哈希才能写进报告。来源会话 `a48efc65`（2026-10-26）的 9,622 B 版本在 PASS 后被另一会话改写为 11,122 B，直到最终双采样才发现；完整案例见 `references/validator-negative-tests.md`。
+
+### 基线对比与写入者归因
+
+校验器与最终门都假定「验收的对象就是方案的对象」，这个假定可能已经失效。开始验收时：
+
+1. **取基线。** 方案或最后一次写入时记录的 size 与 SHA-256，例如 validator 的 `Fingerprint (final)` 或双采样。没有基线时现场采样，并在报告中写「无基线，本次验收只覆盖当前版本」。
+2. **比对当前文件。** size 与 SHA-256 都相同才继续。不同时先按下一小节判别：仅行尾切换则重设基线；EOL 归一化后仍不同就是内容写入。
+3. **作废旧 PASS。** 内容写入意味着此前对该 Skill 的任何 PASS 都不是当前版本的结论。不要把「校验器 PASS」写成「方案版本已通过」，也不要沿用按旧行号写的方案锚点。
+4. **归因写入者。** 用只读的 scan_skill_writers.py（在已安装的 `verify-injected-skill-body-freshness` 的 scripts 目录）扫描当前项目的会话 JSONL，窗口从基线 mtime 到当前时刻。`RESULT` 列标 `ERROR` 的编辑也要计入：它说明该会话尝试过但没有落地。
+
+   `<scan-script>` = 该脚本的绝对路径；`<projects-dir>` = 当前项目在 `~/.qoder/projects` 下的会话目录；`<baseline-utc>` = 基线 mtime 换算后的 UTC 时刻（留几分钟余量）；`<skill-dir>` = 目标 Skill 的绝对路径。cwd 任意，全部用绝对路径。
+
+   ```bash
+   py -3 "<scan-script>" --scan-dir "<projects-dir>" --target "<skill-dir>/SKILL.md" \
+     --since "<baseline-utc>" --include-results
+   ```
+
+5. **换算时区。** `--since`/`--until` 按 ISO-8601 解析，无偏移按 UTC；JSONL 时间戳是 UTC，validator 打印的 mtime 带本地偏移（如 `+01:00`）。把本地钟点直接写给 `--since` 会整体偏移并漏掉命中。实测同一目标：`--since 2026-10-28T01:00:00` 命中 0 条，`--since 2026-10-28T00:00:00Z` 命中 4 条。
+6. **判读与应用。** 区分本会话与外来会话。外来写入即使没有触碰方案的锚点，也会改变行号与预算，方案必须在当前版本上重算；锚点消失或只应用了一部分时，先交 `adopt-source-session-update` 做逐项对账，再由 `planifier-budget-paquet-skill` 重算方案。
+7. **重跑。** 在稳定版本上重跑校验器与第 6 步最终门，报告写明基线哈希、验收哈希、写入者会话 ID 与旧 PASS 作废原因。
+
+来源会话 `717fdc90`（2026-10-28）：基线 `f271a5fa…` / 17,811 B，validator 对已换成的 `37ebf27c…` / 19,058 B 返回 `RESULT PASS`；随后文件又被第三个会话改写，4 个方案锚点消失。完整时间线见 `references/validator-negative-tests.md`。
 
 ### EOL 切换与并发写入的区分
 
@@ -229,7 +256,7 @@ FAIL local reference not found: 'oeuvre_universelle/manifeste_anteriorite.py'
 
 1. **哨兵取自磁盘。** 用 `grep -n -F` 在 frontmatter 之后选一个本次写入才出现的标题或短语，记下行号。不要凭记忆写哨兵：来源会话 `7f2a11b0`（2026-10-27）先查记忆中的“文档命令逐条实跑”，磁盘与注入记录均 0 次；真实哨兵是标题 `### 3. 文档命令可执行性`，各 1 次。
 2. **调用前后取指纹。** 记录 SKILL.md 的 size、mtime_ns、SHA-256；用只读 args 调用 Skill，末尾带唯一 `BINDING=<UTC>-<随机>` 标记，声明不执行工作流、不写文件；调用后重采，变化则判 UNVERIFIED。
-3. **定位注入记录。** 在当前会话 JSONL 中找含该 `BINDING` 的 tool_use 记录，其后紧邻的 `isMeta=true` 用户记录即注入正文。核对首行 `Base directory for this skill: <skill-dir>` 等于目标目录、正文含哨兵、末行仍为 `ARGUMENTS:` 尾行；缺尾行或出现截断标志时判 UNVERIFIED。注入文本 = Base directory 行 + 正文 + `ARGUMENTS:` 尾行，比较只用中间正文。
+3. **定位注入记录。** 在会话 JSONL 中同时用三个条件过滤：`isMeta=true`、含该 `BINDING`、含 `Base directory for this skill`；记录命中行号，不要取 `tool_use` 之后的紧邻行。同一 BINDING 会命中多条 assistant/tool_use 记录：来源会话 `5a5fca96`（2026-10-28）实测命中 5 条（L266/L268/L272/L275/L277），只有 L272 是 `isMeta=true` 注入；L268 与 L272 之间还隔着 active-leaf 与 `tool_result`，且 BINDING 加 Base directory 仍会命中 L275/L277。核对首行 `Base directory for this skill: <skill-dir>` 等于目标目录、正文含哨兵、末行仍为 `ARGUMENTS:` 尾行；缺尾行或出现截断标志时判 UNVERIFIED。注入文本 = Base directory 行 + 正文 + `ARGUMENTS:` 尾行，比较只用中间正文。
 4. **双侧去空行再比较。** 注入正文与磁盘 frontmatter 之后的正文都先 `strip("\n")`：注入侧以换行开头，磁盘侧以空行开头，直接相等会误判 False，长度却可能完全相同。来源会话实测（对 `d085e59` 的 25,870 B 版本）：两侧原始均 12,203 字符，首差偏移 0，去空行后均为 12,201 字符且相等；同一注入正文与后续 26,993 B 版本比较为 False，证明结论只对比较时的版本成立。
 5. **结论绑定版本。** 报告写明 Base directory、哨兵、截断迹象、调用前后 size/mtime_ns/SHA-256 与比较结果；文件随后再变，该结论只对当时的版本成立。
 
@@ -262,6 +289,9 @@ FAIL local reference not found: 'oeuvre_universelle/manifeste_anteriorite.py'
 - [ ] 日期/mtime 敏感用例已固定时钟或动态推导预期。
 - [ ] 临时目录已清理，报告列出负向用例和未触发分支。
 - [ ] Windows 只读夹具已用 copyfile 复制并在 rmtree 前 chmod，清理无 WinError 5。
+- [ ] 验收开始前已取方案或写入时的基线，并比对当前 size 与 SHA-256；不同且非 EOL 时旧 PASS 已作废，未把新版本 PASS 当作方案版本通过。
+- [ ] 归因窗口已换算为 UTC（无偏移的 `--since` 按 UTC 解析），覆盖基线 mtime，`ERROR` 编辑也计入，并区分本会话与外来会话。
+- [ ] 锚点消失或部分应用时已交 `adopt-source-session-update`，方案在当前版本上重算后才重跑。
 - [ ] 校验前已确认 SKILL.md 稳定；报告记录起始/最终 SHA-256 与 mtime。
 - [ ] 稳定性超时或校验期间内容变化时未宣称通过，已在稳定版本上重跑。
 - [ ] 指纹变化时已做 EOL 判别：LF 归一化 SHA-256 一致且字节差等于换行数才判行尾切换；未回退、未覆盖；部分转换、非 Git 或同内容重写未标为已验证。
