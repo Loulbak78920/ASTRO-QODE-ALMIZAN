@@ -41,6 +41,8 @@ Faire exécuter la procédure d'un Skill installé par une session Qoder sans hi
 10. Un code de retour mesuré sur une commande accessoire (un `ls` final) n'est pas le code de retour de l'étape.
 11. Le rapport enfant est une pièce à conviction, pas une preuve : le parent refait l'empreinte, la liste de fichiers et le scan `__pycache__`, et requalifie chaque écart doc dans la cible avant de le retenir.
 12. Le verdict sépare explicitement « mesuré par le parent », « rapporté par l'enfant » et « non exécuté ».
+13. La couche index description se mesure, elle ne se déduit pas : entrée de liste verbatim, `prefix_match`, puis `first_diff` comparé à `visible`. Au-delà de la fenêtre visible, le verdict est UNVERIFIED, jamais PASS ; un déclencheur non visible n'est pas « vérifié ». Les déclencheurs décisifs doivent tenir dans les ~290 premiers caractères.
+14. `NONCE_IN_BODY: no` ne prouve pas un corps périmé : un appel sans argument n'ajoute pas de ligne `ARGUMENTS:`. Juger la fraîcheur du corps sur l'enregistrement `isMeta` et les sentinelles.
 
 ## Procédure
 
@@ -64,7 +66,7 @@ La baseline vit dans `$PARENT`, hors du répertoire que l'enfant nettoie : si el
 
 ### 1. Rédiger le prompt enfant
 
-Copier ce modèle et remplacer les valeurs entre chevrons. Générer une nonce unique (`ACCEPTANCE-NONCE-<horodatage>-<4 hex>`) et l'inscrire dans le prompt : elle permet à l'enfant comme au parent de retrouver le bon JSONL. Le bloc de contraintes et le format de rapport sont ceux qui ont produit un rapport exploitable.
+Copier ce modèle et remplacer les valeurs entre chevrons. Générer une nonce unique (`ACCEPTANCE-NONCE-<horodatage>-<4 hex>`) et l'inscrire dans le prompt : elle permet à l'enfant comme au parent de retrouver le bon JSONL. Le bloc de contraintes et le format de rapport sont ceux qui ont produit un rapport exploitable. L'étape 0 alimente la couche index (§6) ; la garder même hors périmètre, elle prouve que l'enfant avait bien une liste.
 
 ```text
 Test d'acceptation indépendant du Skill installé `<skill-name>` (installation : <chemin absolu de l'installation>).
@@ -79,6 +81,10 @@ CONTRAINTES ABSOLUES
 - Ne corrige rien dans le Skill : tu observes et tu signales.
 
 PROCÉDURE
+0. Avant tout appel, sans lire SKILL.md : copie verbatim l'entrée `<skill-name>` de TA liste de Skills,
+   ellipse comprise ; indique le point de troncature et le dernier caractère visible. Compte ensuite dans
+   cette entrée les occurrences de `<3 à 4 phrases de la queue>`. Puis, sans appeler aucun Skill, dis
+   lequel tu choisirais pour : <question de sondage>.
 1. Charge le Skill `<skill-name>` via l'outil Skill, puis suis son SKILL.md.
 2. Fixture : copie <skill de référence> vers <TMP>/child/fixture/<nom-copie> ; le nom du dossier doit rester égal au `name`.
 3. <étape 1 propre au Skill, commande exacte>
@@ -100,6 +106,9 @@ CONTRÔLE D'INTÉGRITÉ
 Relève le SHA-256 de <SKILL.md de l'installation> avant et après : il doit rester <sha attendu>.
 
 RAPPORT FINAL (≤ 400 mots, en français)
+LISTE_VERBATIM: «…» — troncature à : … ; dernier caractère visible : …
+LISTE_COMPTES: <phrase 1>=n, <phrase 2>=n, …
+SONDE: <nom du Skill> — <une phrase de justification>
 - Une ligne par étape : PASS/FAIL, code de retour exact de l'étape, champs JSON clés observés.
 - Tout écart entre la doc du Skill et le comportement réel (option, code de retour, clé de sortie, verdict).
 - Verdict global ACCEPTÉ / ACCEPTÉ AVEC RÉSERVES / REFUSÉ, et l'état final de l'installation (SHA-256).
@@ -135,15 +144,28 @@ ls -d "$HOME/.qoder/tmp"/acceptance-* 2>/dev/null | wc -l
 
 `compare` : code 0 = SAME, 1 = CHANGED (fichiers ajoutés/retirés/modifiés, `__pycache__` apparu ou SHA attendu faux), 2 = erreur d'environnement. Un `CHANGED` interdit le verdict ACCEPTÉ. Un code 2 avec `baseline not found` accuse la baseline disparue, pas l'installation : refaire une mesure indépendante avant de conclure.
 
-### 6. Verdict
+### 6. Couche index description (liste des Skills)
+
+Le client tronque chaque entrée de la liste des Skills : 299 caractères visibles (trois mesures concordantes), ellipse comprise dans l'entrée. À titre d'exemple, la description de ce Skill (967 caractères) laisse 668 caractères invisibles au modèle. Cette couche se mesure, elle ne se déduit pas.
+
+1. Exiger l'entrée **verbatim** du rapport enfant, ellipse comprise, avec le dernier caractère visible. Refuser tout texte reconstruit depuis `SKILL.md` : la comparaison serait circulaire.
+2. Mesurer `liste` (longueur de l'entrée), `visible` (longueur avant l'ellipse) et `prefix_match` (la description disque commence-t-elle par `visible` ?).
+3. Mesurer `first_diff`, premier caractère où la description courante diffère de la version de référence (sauvegarde d'avant écriture ou `git show HEAD:SKILL.md`). Si `first_diff > visible`, la fenêtre ne distingue pas les deux versions : UNVERIFIED, même quand `prefix_match` est vrai.
+4. Contrôle négatif : compter 3 ou 4 phrases de la queue dans l'entrée et dans la description disque. `0` dans la liste et `≥1` sur disque, cohérent avec la troncature, prouve seulement que ces phrases sont hors fenêtre — ni à jour, ni périmé.
+5. Sondage comportemental (demander à l'enfant, sans appel, quel Skill il choisirait) : poids faible. Il peut désigner un Skill concurrent, et un déclencheur hors fenêtre n'est de toute façon pas visible. Le consigner comme observation, jamais comme PASS.
+6. Un déclencheur qui doit être effectif doit tenir dans les ~290 premiers caractères : le déplacer, re-mesurer (< 1024), repasser `skill-file-qa`, refaire l'acceptation. Réécriture de description : `edit-skill-frontmatter-description`.
+
+Cas vérifié (2026-10-28, parent `717fdc90`, enfant `71cf2953`, cible `planifier-budget-paquet-skill`) : entrée 331 caractères = 31 (nom + « : ») + 299 visibles + 1 ellipse ; `prefix_match=True` ; `first_diff=309` > 299 → UNVERIFIED ; 4 phrases de queue à 0 dans la liste et 1 sur disque ; sonde → `verify-injected-skill-body-freshness`. Aucun déclencheur non visible n'a été présenté comme vérifié.
+
+### 7. Verdict
 
 | Verdict | Conditions |
 |---|---|
-| ACCEPTÉ | toutes les étapes PASS ou non exécutées avec raison valable ; `compare` SAME ; zéro `__pycache__` ; fixture supprimée ; chaque écart doc requalifié et retenu |
-| ACCEPTÉ AVEC RÉSERVES | branches d'erreur non exercées, écart doc mineur requalifié, ou couche non mesurée (panneau client) |
-| REFUSÉ | comportement contredisant la doc, installation modifiée, valeur inventée, écriture hors fixture, écart doc retenu sans requalification |
+| ACCEPTÉ | toutes les étapes PASS ou non exécutées avec raison valable ; `compare` SAME ; zéro `__pycache__` ; fixture supprimée ; chaque écart doc requalifié et retenu ; si la couche index est mesurée, `first_diff ≤ visible` |
+| ACCEPTÉ AVEC RÉSERVES | branches d'erreur non exercées, écart doc mineur requalifié, ou index description UNVERIFIED alors qu'il n'était pas l'objet demandé |
+| REFUSÉ | comportement contredisant la doc, installation modifiée, valeur inventée, écriture hors fixture, écart doc retenu sans requalification, ou index description UNVERIFIED alors que l'effet des nouveaux déclencheurs était l'objet demandé |
 
-### 7. Nettoyage
+### 8. Nettoyage
 
 Supprimer `$TMP` seulement après le `compare` de l'étape 5, puis vérifier l'absence de résidu `acceptance-*`. Supprimer les `__pycache__` créés, uniquement s'ils sont imputables à ce test.
 
@@ -173,6 +195,10 @@ Contraintes de `wait_chat_sessions` : `sessionIds` accepte 1 à 8 conversations 
 | injections comptées par `grep` brut | 1 injection authentique (`isMeta`) mais 19 lignes contenant la phrase, dont le prompt, le raisonnement et les motifs de recherche | compter les messages `user` avec `isMeta`, pas les occurrences brutes |
 | compteurs enfant divergents | 4 sentinelles mais 5 lignes `grep`, dont 1 dans la description | demander la réconciliation, pas un écart doc |
 | fixture contre installation | `description_len: 934` (copie) contre `disk_description_chars: 963` (installation) | préciser le chemin mesuré dans chaque étape |
+| `prefix_match=True` lu comme index PASS | 299 caractères visibles, premier écart à 309 | comparer `first_diff` à `visible` ; au-delà, UNVERIFIED |
+| entrée de liste reconstruite depuis SKILL.md | l'enfant recopie la description disque, le test devient circulaire | interdire la lecture pour cette étape et exiger le point de troncature |
+| `NONCE_IN_BODY: no` lu comme corps périmé | appel sans argument : pas de ligne `ARGUMENTS:` ; le corps portait 4/4 sentinelles neuves | juger sur `isMeta` + sentinelles, jamais sur la nonce |
+| sondage comportemental décisif | la question sur l'ancien enregistrement a fait choisir `verify-injected-skill-body-freshness` | consigner comme observation de poids faible |
 
 ## Checklist finale
 
@@ -183,14 +209,16 @@ Contraintes de `wait_chat_sessions` : `sessionIds` accepte 1 à 8 conversations 
 - [ ] JSONL enfant retrouvé par la nonce puis discriminé de celui du parent, injections authentiques comptées en `isMeta`.
 - [ ] Rapport enfant lu avec codes de retour par étape ; valeurs inventées écartées ; chaque écart doc requalifié dans la cible.
 - [ ] `compare` exécuté sur `$PARENT/snapshot-before.json`, SAME avec le SHA attendu ; zéro `__pycache__`.
+- [ ] Index description : entrée verbatim avec point de troncature, `prefix_match`, `first_diff` comparé à `visible`, contrôles 0/1 ; sonde notée à faible poids ; rien de non visible présenté comme vérifié.
+- [ ] Fraîcheur du corps jugée sur `isMeta` + sentinelles, pas sur `NONCE_IN_BODY`.
 - [ ] Fixture supprimée, `$TMP` supprimé après le `compare`, résidus `acceptance-*` absents.
 - [ ] Verdict et écarts consignés, en séparant mesuré et rapporté.
 
 ## Ressources
 
 - `scripts/acceptance_snapshot.py` : `snapshot` / `compare`, JSON ASCII, codes 0/1/2, lecture seule.
-- `references/cas-acceptation-2026-10-27.md` : chronologie, prompt utilisé, résultats enfant, comptes d'injections.
+- `references/cas-acceptation-2026-10-27.md` : chronologie, prompt utilisé, résultats enfant, comptes d'injections. Le cas index description du 2026-10-28 est résumé au §6.
 
 ## Skills liés
 
-`skill-file-qa`, `verify-skill-runtime-binding`, `verify-injected-skill-body-freshness`, `audit-skill-during-live-creation`, `skill-update-concurrency-safe`, `tester-publication-isolee-skill`, `replay-skill-reference-fixtures`, `write-skill-evidence-case-study`.
+`skill-file-qa`, `verify-skill-runtime-binding`, `verify-injected-skill-body-freshness`, `edit-skill-frontmatter-description`, `audit-skill-during-live-creation`, `skill-update-concurrency-safe`, `tester-publication-isolee-skill`, `replay-skill-reference-fixtures`, `write-skill-evidence-case-study`.
