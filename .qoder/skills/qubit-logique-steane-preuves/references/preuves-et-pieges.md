@@ -246,9 +246,13 @@ Le validateur résout chaque référence contre le répertoire de la skill puis 
 | Symptôme | Reproduction | Correction |
 | :--- | :--- | :--- |
 | `can't open file 'C:\Program Files\Git\scripts\auditer_livraison_qubit.py'`, rc=2 | `SKILL_DIR="…" py -3 "$SKILL_DIR/scripts/…" --help` : la variable s'étend avant l'affectation, `/scripts/…` est mappé par MSYS vers Git | affecter sur une ligne, appeler sur la suivante ; `--help` rend rc=0 |
-| `AttributeError: 'NoneType' object has no attribute '__dict__'` | `spec_from_file_location` + `exec_module` sur `qubit_logique_mizan.py` (`from __future__ import annotations`, `@dataclass(frozen=True)`) sans inscription | `sys.modules[spec.name] = module` avant `exec_module` ; chargement OK ensuite |
+| `AttributeError: 'NoneType' object has no attribute '__dict__'` | `spec_from_file_location` + `exec_module` sur un module à annotations différées (`from __future__ import annotations`) sans inscription | `sys.modules[spec.name] = module` avant `exec_module` ; chargement OK ensuite |
 | `--help` affiche `ASTRO-Q\ufffdODE_SYSTEME` | description contenant `°` imprimée sous console cp1252 | libellés ASCII : `ASTRO-Q-ODE_SYSTEME` |
 | audit « lecture seule » créant des caches | import du module sans garde | `sys.dont_write_bytecode = True` en tête du script |
+
+Le déclencheur est l'annotation différée, pas `@dataclass` : un dataclass sans
+`from __future__ import annotations` se charge sans erreur, et `frozen` est sans effet
+(sondes du 2026-10-27, avec et sans inscription dans `sys.modules`).
 
 Rejeu du 2026-10-27 : `RESULT PASS (7 controles)`, rc=0, et comptage récursif des
 `*.pyc` sous `ASTRO-Q°ODE_SYSTEME` identique avant/après (364 fichiers, liste
@@ -256,3 +260,26 @@ inchangée ; la valeur dépend de la machine). Sortie stdout intégralement `< 0
 
 Après toute édition du script : rejouer le PASS réel, puis une fixture dont
 l'empreinte du module est mutée → `RESULT FAIL (1/7 controles en echec)`, rc=1.
+
+### 9.3 Liaison runtime après modification
+
+Note historique — invocation de contrôle du 2026-10-27, alors que le paquet portait
+`SKILL.md` = `9aea5644…` (11113 octets). Le paquet a été modifié après cet appel : ces
+valeurs ne décrivent pas l'état courant.
+Source : session `83fdcb2d-e041-4641-879b-c915808619b0` (revision 22). L'utilisateur y
+répond `reload the skill` à une demande de lancer `/skills reload`, commande que l'agent
+ne peut pas exécuter : la preuve équivalente est une invocation en lecture seule.
+
+| Contrôle | Observation |
+| :--- | :--- |
+| Résultat de l'outil Skill | `Launching skill: qubit-logique-steane-preuves` seul, sans chemin |
+| Première ligne du message injecté | `Base directory for this skill: C:\Users\Administrateur\.qoder\skills\qubit-logique-steane-preuves` |
+| Marqueur du corps injecté | `### 7 — Valider le paquet lui-même` et la ligne de checklist du paquet présentes |
+| `sha256sum SKILL.md` avant / après l'appel | `9aea5644…` / `9aea5644…` (inchangé) |
+| `__pycache__` + `*.pyc` dans le paquet | 0 |
+
+L'empreinte et la taille datent l'observation. Un marqueur absent ne se compense ni par un
+hash inchangé ni par une ligne `Base directory` correcte : consigner `UNVERIFIED`. Ne pas
+demander `reload` à l'utilisateur ; méthode complète dans `verify-skill-runtime-binding`
+et `verify-injected-skill-body-freshness`.
+

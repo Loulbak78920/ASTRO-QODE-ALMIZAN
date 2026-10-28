@@ -157,15 +157,95 @@ Attendu : `Summary: 9 pass, 0 fail, 0 warn`, `RESULT PASS`, code 0. Le `--worksp
 doit désigner `ASTRO-Q°ODE_SYSTEME`, racine des références `docs/`, `resultats/`,
 `tests/` et `web_cloud/` ; avec la racine du dépôt, ces 7 références échouent.
 
+Les 11 références locales comptées sont **9 fichiers + `references/` + `scripts/`** ;
+`docs/`, `resultats/`, `tests/` et `web_cloud/` ne sont comptées qu'à travers leurs
+fichiers (ni préfixe ressource ni extension).
+
+#### Prouver que le `PASS` n'est pas vide
+
+Rejouer les quatre cas depuis `$SYSTEME` : A doit passer, B–D doivent échouer avec
+le message indiqué. Un `PASS` qui ne se laisse pas mettre en défaut ne prouve rien.
+
+| Cas | Variante | Attendu |
+| :--- | :--- | :--- |
+| A | `--workspace "$SYSTEME"` | `9 pass, 0 fail, 0 warn`, `RESULT PASS`, rc 0 |
+| B | `--workspace` = racine `IMAM8MAHDI` | `8 pass, 7 fail`, rc 1 ; 7 × `FAIL local reference not found` |
+| C | copie temporaire + marqueur de tâche non résolu (convention `TODO`, en début de ligne) | `8 pass, 1 fail` : `FAIL content: 1 unresolved TODO marker(s)`, rc 1 |
+| D | copie temporaire, une occurrence de `references/preuves-et-pieges.md` remplacée par un fichier absent | `8 pass, 1 fail` : `FAIL local reference not found: 'references/absent-fixture.md'`, rc 1 |
+
+```bash
+BASE="${QA_NEG_DIR:-C:/Users/Administrateur/.qoder/tmp/qa-neg-probe}"
+for c in todo ref; do
+  mkdir -p "$BASE/$c/qubit-logique-steane-preuves"
+  cp -R "$SKILL_DIR/." "$BASE/$c/qubit-logique-steane-preuves/"
+done
+```
+
+Conserver le nom de dossier `qubit-logique-steane-preuves` dans les copies : un
+répertoire renommé fait échouer le contrôle `name`. Éviter `~/.qoder/skills/`, où la
+copie serait vue comme une skill installée. Après C et D : `rm -rf "$BASE"`,
+revérifier les trois SHA-256 et `find . -name '__pycache__' -o -name '*.pyc'` → `0`.
+
+#### Écrire seulement si la mise à jour n'est pas déjà appliquée
+
+Une autre session peut avoir appliqué la modification pendant la planification.
+Avant toute écriture :
+
+1. Double-échantillonner `SKILL.md`, `references/` et `scripts/` (taille, mtime,
+   SHA-256 à 5 s d'intervalle) et relire le contenu courant, jamais un souvenir.
+2. Lire l'état de la session source avec `read_chat_session` : `runtimeState: running`
+   ou `activeTurnId` non nul impose zéro écriture ; attendre la fin du tour.
+3. Mapper chaque modification prévue en `CURRENT`, `ALREADY_APPLIED`, `PARTIAL` ou
+   `ABSENT`, avec une ancre exacte (`fichier:ligne`).
+4. Tout `ALREADY_APPLIED` : ne rien réécrire, exécuter seulement la validation et
+   `Prouver la version chargée` ; une seconde copie du même paragraphe est un défaut.
+5. `PARTIAL`/`ABSENT` : si l'empreinte diffère de la dernière lecture, relocaliser
+   l'ancre sur le contenu courant avant l'`Edit`, puis vérifier après écriture que le
+   paragraphe n'est pas dupliqué et que l'empreinte a changé.
+6. Vérifier dans le JSONL de la session nommée les assertions du rationale sur un
+   échec d'outil ou une absence d'écriture : compter les `tool_use` `Write`/`Edit`
+   et les `tool_result` en erreur. Un échec réel d'une session concurrente ne
+   s'attribue pas à la session source citée ; une session sans `Edit` ne peut pas
+   en avoir vu un échouer. Ne pas recopier une cause non vérifiée dans le paquet.
+7. Une sortie `read_chat_session` volumineuse est persistée dans un fichier : ne pas
+   l'imprimer directement sous cp1252 (`UnicodeEncodeError: 'charmap' ...`). La lire
+   avec `PYTHONIOENCODING=utf-8` et n'afficher que de l'ASCII (`ascii()` ou
+   `ensure_ascii=True`) ; analyser le fichier persisté, jamais l'aperçu tronqué.
+
+Méthode complète : `adopt-source-session-update` (adoption d'une mise à jour source)
+et `skill-update-concurrency-safe` (écriture concurrente).
+
 Maintenance de `scripts/auditer_livraison_qubit.py` :
 
 - affecter puis appeler sur deux lignes : `SKILL_DIR=… py -3 "$SKILL_DIR/…"` s'étend
   avant l'affectation et échoue en `can't open file '…Git\scripts…'`, code 2 ;
-- module chargé par chemin avec `@dataclass` : enregistrer `sys.modules[spec.name]`
-  avant `exec_module`, sinon `AttributeError: 'NoneType' object has no attribute '__dict__'` ;
+- module à annotations différées (`from __future__ import annotations`) chargé par
+  chemin : enregistrer `sys.modules[spec.name]` avant `exec_module`, sinon
+  `AttributeError: 'NoneType' object has no attribute '__dict__'` ;
 - conserver `sys.dont_write_bytecode = True` : l'audit ne crée aucun `__pycache__` ;
 - n'émettre que de l'ASCII : une console cp1252 remplace `°` par `\ufffd` ;
 - après édition : PASS réel, puis fixture à empreinte mutée → `RESULT FAIL (1/7)`, code 1.
+
+Méthode complète — contrat de sortie 0/1/2, trois contrôles négatifs obligatoires,
+socle réutilisable : `auditer-livraison-skill-module-projet`.
+
+#### Prouver la version chargée
+
+L'agent ne peut pas exécuter `/skills reload` : ne pas demander à l'utilisateur de le faire.
+Après toute modification du paquet, prouver la liaison par une invocation en lecture seule.
+
+1. Relever `sha256sum SKILL.md` avant d'écrire, puis après l'écriture.
+2. Invoquer cette skill avec l'outil Skill. Le résultat de l'outil se limite à
+   `Launching skill: qubit-logique-steane-preuves`, sans chemin : la preuve est dans le
+   message injecté, dont la première ligne annonce `Base directory for this skill:`
+   suivie du répertoire cible, et dont le corps contient un marqueur unique ajouté par la
+   modification (titre ou ligne de checklist), relu sur disque.
+3. Après l'appel : SHA-256 inchangé et `find . -name '__pycache__' -o -name '*.pyc' | wc -l`
+   vaut `0`.
+
+Si le marqueur manque alors que le disque est à jour, l'invocation a servi une version
+périmée : consigner `UNVERIFIED`, ne pas annoncer un rechargement réussi. Méthode
+complète : `verify-skill-runtime-binding` et `verify-injected-skill-body-freshness`.
 
 ## Pièges vérifiés
 
@@ -183,8 +263,10 @@ Maintenance de `scripts/auditer_livraison_qubit.py` :
 | `Edit` sans occurrence dans `docs/` | accents, CRLF ou texte déplacé | relire la zone exacte avant d'éditer |
 | `validate_skill.py` : 7 « local reference not found » | `--workspace` par défaut = cwd ; références relatives à `ASTRO-Q°ODE_SYSTEME` | `--workspace "$SYSTEME"` → 9 pass, 0 fail |
 | `can't open file '…\Git\scripts\auditer_livraison_qubit.py'`, code 2 | `SKILL_DIR=…` affecté sur la ligne de l'appel | deux lignes : affecter, puis appeler |
-| `AttributeError: 'NoneType' object has no attribute '__dict__'` | module `@dataclass` chargé par chemin sans `sys.modules` | `sys.modules[spec.name] = module` avant `exec_module` |
+| `AttributeError: 'NoneType' object has no attribute '__dict__'` | module à annotations différées chargé par chemin sans `sys.modules` ; `@dataclass` seul ne suffit pas | `sys.modules[spec.name] = module` avant `exec_module` |
 | `--help` affiche `\ufffd` au lieu de `°` | sortie non ASCII sous console cp1252 | libellés ASCII (`ASTRO-Q-ODE_SYSTEME`) |
+| `Launching skill: …` renvoyé seul, sans chemin | le résultat de l'outil ne porte pas le répertoire résolu | lire le message injecté : première ligne `Base directory for this skill: …` plus marqueur du corps |
+| `UnicodeEncodeError: 'charmap' codec can't encode ...` en lisant une session | sortie `read_chat_session` accentuée imprimée sous cp1252 | lire le fichier persisté avec `PYTHONIOENCODING=utf-8` ; n'imprimer que `ascii()` / `ensure_ascii=True` |
 
 ## Honnêteté (obligatoire)
 
@@ -210,6 +292,8 @@ comme une preuve d'exécution indépendante.
 - [ ] libellés opérationnel / simulé / spécifié conservés
 - [ ] aucune empreinte figée dans la documentation
 - [ ] paquet : `validate_skill.py --workspace "$SYSTEME"` → `RESULT PASS`
+- [ ] preuve non vide : B → 7 `FAIL`, C/D → 1 `FAIL` ; SHA-256 inchangés, 0 résidu `qa-neg-*`, 0 cache
+- [ ] après édition du paquet : invocation en lecture seule → `Base directory` = répertoire cible, marqueur présent, SHA-256 inchangé, 0 cache
 
 ## Ressources
 
