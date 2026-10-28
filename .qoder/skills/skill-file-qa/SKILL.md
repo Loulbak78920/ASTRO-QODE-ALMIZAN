@@ -63,7 +63,12 @@ py -3 scripts/validate_skill.py <skill-dir> --workspace <workspace-root> \
 
 ### 5. 随附验证器负向测试
 
-仅当目标 Skill 自带 CLI 验证器，且验证器声明了退出码/开关契约时执行；否则在报告中写“不适用/未触发”。本节针对目标 Skill 的项目验证器，不替代本 Skill 的静态校验；静态校验器自身的回归自测交给 `skill-validator-selftest`。
+仅当目标 Skill 自带 CLI，且它声明了退出码、JSON 键集或开关契约时执行；没有任何契约时才在报告中写“不适用/未触发”。先分清两种形态：
+
+- **项目验证器**：读取项目文件，可以破坏不变量；执行下面的 1–7 步。
+- **仅声明契约的 CLI**：诊断、探测或审计工具，没有可复制的项目输入，“复制验证器 + 破坏夹具”不适用；但声明的退出码与输出契约仍要实测，见本节末尾。
+
+不要用“不是项目验证器”把整个第 5 步标成不适用。本节不替代本 Skill 的静态校验；静态校验器自身的回归自测交给 `skill-validator-selftest`。
 
 1. 先跑正向基线：用真实产物运行目标验证器，记录退出码、FAIL/WARN 数量和关键输出。基线不通过时先调查，不构造负向用例。
 2. 复制到临时目录：把目标验证器及其读取的项目文件复制到系统临时目录，用显式 `--root`、`--csv`、`--html` 等参数指向副本。只改副本，不改原件；只运行验证器，不运行生成器或其他会写文件的脚本。
@@ -81,6 +86,15 @@ py -3 scripts/validate_skill.py <skill-dir> --workspace <workspace-root> \
 5. 用 `finally` 或 `TemporaryDirectory` 清理临时副本，并确认临时目录不存在。Windows 上夹具含只读文件（如 `VERROU.json`）时，`copytree` 或 `copy2` 会保留只读位，`rmtree` 抛 `PermissionError [WinError 5]`：复制时用 `copy_function=shutil.copyfile`，删除前对副本文件 `chmod(0o666)`，复制后再统一 `chmod(0o666)`。
 6. 在运行开始时记录验证器读取的全部项目文件的 SHA-256，结束后重算比对；每次重新取基线，不复用旧会话哈希。原件哈希变化时停止并报告，不能宣称通过。
 7. 在报告中列出负向用例表、退出码和未触发分支（例如目标验证器没有 `--strict-warnings`、Node 不可用、日期用例未固定）。
+
+**仅声明契约的 CLI 的替代覆盖**（不满足 1–7 的前提时执行）：
+
+1. 从 `--help`、代码或文档列出全部声明的退出码、JSON 键集与开关，逐个绑定到真实输入；每个声明的 rc 至少命中一次（成功、发现问题/拦截、用法错误各一），只测成功路径不算验证。
+2. 用真实输入运行（例如真实的受限目录、真实文件），不要为通过而自造一个空目标。
+3. 声明 `--json` 时，断言文档列出的全部键都存在，并断言内部字段不泄漏（例如给用法错误用的 `code` 不应出现在成功输出中）；“JSON 可解析”不等于契约满足。
+4. 声明了解析分支（例如仅继承 ACE、仅属性、路径缺失）时，为每个分支在临时目录构造最小真实夹具，断言判定结果与 rc；只读代码推断不算。
+5. 退出码直接捕获；管道会吞掉 rc，用 `PIPESTATUS` 或先重定向到文件再检查。
+6. 结论写“已验证”或“部分适用（列出未覆盖的 rc/键/分支）”，不写“不适用”。
 
 详细 harness 模板、来源会话已验证的 14 个用例、字节级夹具与完整性耦合和跨 Skill 引用自测边界见 `references/validator-negative-tests.md`。
 
@@ -266,6 +280,8 @@ FAIL local reference not found: 'oeuvre_universelle/manifeste_anteriorite.py'
 - Python 控制台可能是 cp1252。校验脚本的输出保持 ASCII；动态内容用 `backslashreplace` 处理，避免校验本身因 `UnicodeEncodeError` 崩溃。
 - 默认 Skill 根是 `~/.qoder/skills` 和 `<workspace>/.qoder/skills`；不要写死盘符，非标准安装用 `--skills-root`。
 - 内联 Bash 脚本中的反引号会截断命令。非平凡校验一律先 Write 到临时文件，再执行并清理。
+- Bash 工具的 heredoc 即使写成 `<<'PY'`，源码中的反斜杠也可能被折叠：`p.replace('\\\\','/')` 到达 Python 时只剩 `p.replace('\','/')`，报 `SyntaxError: unterminated string literal`。含反斜杠的脚本用 Write 写到临时 `.py` 再执行，或改用 `os.sep`/`PurePath` 避免字面反斜杠。
+- 原生 `py -3` 读不到 MSYS 的 `/tmp`：Bash 的 `/tmp` 映射到 `%TEMP%`，Python 把 `/tmp/acl.json` 解析为不存在的 `C:\tmp\acl.json`，`open()` 报 `FileNotFoundError`。先用 `cygpath -w "$T"` 转成 Windows 路径，再作为 `sys.argv[1]` 传给 Python，或直接写到 `%TEMP%` 下的 Windows 路径。
 - 夹具中的只读文件（例如 `VERROU.json`，权限 `-r--r--r--`）会被 `copytree` 或 `copy2` 原样复制。清理前必须对副本 `chmod(0o666)`，复制时用 `copy_function=shutil.copyfile`，否则 `rmtree` 报 `PermissionError [WinError 5]`。
 - 临时文件只放在系统临时目录，验证完成后删除。
 
@@ -282,7 +298,8 @@ FAIL local reference not found: 'oeuvre_universelle/manifeste_anteriorite.py'
 - [ ] 文档中每条安全可运行命令已按标注 cwd 实跑，记录 cwd、占位符替换、退出码与关键输出。
 - [ ] 未执行的命令已标为示意并说明原因；没有把 `skipped=N` 当作已验证。
 - [ ] 失败或含未说明占位符的命令已修正或降级为 `text`，复跑通过。
-- [ ] 目标 Skill 若带 CLI 验证器，至少覆盖成功、校验失败、输入/用法错误三类退出码；不适用时说明原因。
+- [ ] 目标 Skill 若带 CLI 并声明退出码/JSON 契约，按契约覆盖成功、发现/拦截、输入/用法错误各类 rc 与 JSON 键集；仅声明契约的 CLI 没有项目夹具时仍逐个实测，结论写“已验证”或“部分适用”，只有无任何契约时才写“不适用”。
+- [ ] 声明 `--json` 的 CLI 已断言完整键集合存在，且错误码字段（如 `code`）未泄漏到成功输出。
 - [ ] 负向用例只改临时副本，逐例恢复；原件 SHA-256 前后一致。
 - [ ] 内容夹具按字节改写；目标验证器同时校验完整性时，副本的完整性字段已重算，失败只命中目标门。
 - [ ] 目标验证器的开关（如 `--strict-warnings`、`--allow-external`）两侧行为均验证，或标注未触发。
