@@ -33,18 +33,83 @@ py -3 scripts/validate_skill.py <skill-dir> --workspace <workspace-root> \
 - Windows 上先确认解释器：`python --version` 若失败或提示 Microsoft Store，改用 `py -3`；不要假定 `python` 可用，也不要把个人绝对路径写进 Skill。
 - 退出码：0 = 无 FAIL，1 = 有 FAIL（含稳定性等待超时或校验期间内容变化），2 = 用法或环境错误。
 - 修复所有 FAIL 后再继续；WARN 表示未覆盖项，必须在报告中说明。
-- 默认先等待 SKILL.md 在 2 秒内 size、mtime、SHA-256 完全不变，再读取；结束时重新计算并比对，内容变化立即 FAIL。已确认不会并发写入时可用 `--stable-seconds 0` 跳过等待，但仍保留起止指纹比对。
-- 输出包含 `Fingerprint (start)` 和 `Fingerprint (final)`；报告中要写出实际 SHA-256，不能只写“文件存在”。
+- 默认先等待 SKILL.md 与 references/ 在 2 秒内 size、mtime、SHA-256 完全不变，再读取；结束时对两者重新计算并比对，任一处内容变化立即 FAIL。已确认不会并发写入时可用 `--stable-seconds 0` 跳过等待，但仍保留起止指纹比对。
+- 输出包含 `Fingerprint (start)`/`(final)`（SKILL.md）与 `References fingerprint (start)`/`(final)`（references/ 全量清单的聚合 SHA-256：按相对路径排序，逐文件 size 与 SHA-256 拼接后取哈希，忽略 `.git` 与 `__pycache__`）；报告中要写出两者的实际 SHA-256，不能只写“文件存在”。
 - 跨 Skill 引用默认在 `~/.qoder/skills` 与 `<workspace>/.qoder/skills` 中解析；非标准安装用可重复的 `--skills-root <dir>` 覆盖默认根，显式传入不存在的根是用法错误（exit 2）。
 
-脚本检查：frontmatter 严格 YAML 解析、name 与目录一致、hyphen-case、单行 description ≤1024 字符、正文 <500 行、TODO、文件布局、本地引用存在性、跨 Skill 引用（正文反引号中的已安装 Skill 名 → 目标 SKILL.md 存在）、Python 代码块语法、JS 代码块语法、校验期间并发写入与起止指纹。它只读 Skill 文件，不写目标目录；JS 临时文件只写入系统临时目录并自动删除。
+脚本检查（内容规则只针对 SKILL.md）：frontmatter 严格 YAML 解析、name 与目录一致、hyphen-case、单行 description ≤1024 字符、正文 <500 行、TODO、文件布局、本地引用存在性、跨 Skill 引用（正文反引号中的已安装 Skill 名 → 目标 SKILL.md 存在）、Python/JS 围栏代码块语法、校验期间并发写入与起止指纹（SKILL.md 与 references/ 各一套）。references/ 只参与稳定性等待与指纹比对，其内容不做语法或引用检查。它只读 Skill 文件，不写目标目录；JS 临时文件只写入系统临时目录并自动删除。它不读取 scripts/ 下的随附脚本，后者按第 2.1 节检查。
+
+### 2.1 随附 scripts/ 的编译检查（必做）
+
+`Code blocks: python=N js=N skipped=N` 只统计 SKILL.md 的围栏块；校验器不打开 `scripts/` 下的代码文件。`Files (N)` 只证明文件存在。包内有随附脚本时，按本节逐个检查；否则在报告中写“未触发（无 scripts/）”，不要用 `python=0` 代替本项。
+
+**枚举。** 对 `<skill-dir>/scripts` 递归列出 `.py`、`.js`、`.cjs`、`.mjs`；记录每个文件的相对路径、size 与 SHA-256。没有代码文件时写“已枚举，0 个代码文件”。
+
+**Python 编译。** 把下面片段写入系统临时目录的 `<temp-check.py>`，再执行；它只 `compile`，不执行脚本，也不写 `.pyc`：
+
+```python
+import hashlib
+import pathlib
+import sys
+import tokenize
+
+root = pathlib.Path(sys.argv[1])
+if not root.is_dir():
+    print("SCRIPTS_ABSENT")
+    sys.exit(0)
+files = sorted(
+    p for p in root.rglob("*")
+    if p.is_file() and p.suffix.lower() in {".py", ".js", ".cjs", ".mjs"}
+)
+if not files:
+    print("BUNDLED_SCRIPTS_NONE")
+for path in files:
+    data = path.read_bytes()
+    print("SCRIPT", path.relative_to(root), len(data), hashlib.sha256(data).hexdigest())
+for path in (p for p in files if p.suffix.lower() == ".py"):
+    try:
+        with tokenize.open(path) as handle:
+            source = handle.read()
+        compile(source, str(path), "exec")
+    except (SyntaxError, UnicodeDecodeError, LookupError, OSError) as exc:
+        print("PY_FAIL", path.relative_to(root), type(exc).__name__, exc)
+        sys.exit(1)
+    print("PY_OK", path.relative_to(root))
+```
+
+```bash
+# cwd 任意；<temp-check.py> 是上一段写入的临时文件；<skill-dir> 为目标 Skill 绝对路径。
+PYTHONIOENCODING=utf-8 py -3 "<temp-check.py>" "<skill-dir>/scripts"
+```
+
+语法错误时脚本打印 `PY_FAIL` 并以 1 退出；修复后重跑，直到每个 `.py` 都有 `PY_OK`。
+
+**JS 语法。** 先确认 node 可用，再逐个 `node --check`：
+
+```bash
+# cwd 任意；<skill-dir> 为目标 Skill 绝对路径。
+command -v node >/dev/null || { echo "JS_NOT_CHECKED node missing"; exit 2; }
+find "<skill-dir>/scripts" -type f \( -name '*.js' -o -name '*.cjs' -o -name '*.mjs' \) -print0 |
+while IFS= read -r -d '' f; do
+  node --check "$f" || exit 1
+  echo "JS_OK $f"
+done
+```
+
+没有 node 时整项标“未检查（node 缺失）”，rc=2 是环境缺失，不是脚本失败。`node --check` 只解析，不执行。
+
+**入口契约。** 脚本声明了退出码、JSON 键集或开关时，仍按第 5 步逐个命中声明的 rc；本节只保证文件可解析并记录指纹，不重复第 5 步。不要盲跑未知脚本；有副作用或需真实产物的入口只在临时副本执行，或标 `ILLUSTRATIVE`/未验证。
+
+**报告。** 每个脚本一行：`path | size | SHA-256 | PY_OK/JS_OK/未检查 | 语法`。`compile`/`node --check` 通过只写“仅静态（语法）”，不能写成“运行通过”。`.sh`、`.ps1`、`.bat` 不在本节范围；按第 3 或第 5 步处理，未处理时标“未触发”。
+
+来源会话 `c9dd500a`（2026-10-28 15:05:25 +01:00）：`RESULT PASS`、`Code blocks: python=0 js=0 skipped=1`，同一输出 `Files (3)` 含 [classifier_source.py](file:///C:/Users/Administrateur/.qoder/skills/qualifier-citations-par-type-source-skill/scripts/classifier_source.py)（当时 19,441 B）；该会话另行手动跑过脚本，但 PASS 文本本身不覆盖脚本语法。本 Skill 自身的 [scripts/validate_skill.py](file:///C:/Users/Administrateur/.qoder/skills/skill-file-qa/scripts/validate_skill.py) 也不会被它自己编译：基线只报 `python=1`（SKILL.md 的手动指纹块）。
 
 ### 3. 文档命令可执行性
 
 静态校验的 `skipped=N` 包含 bash/sh 块；`RESULT PASS` 不证明文档命令能运行。对 SKILL.md 与 references 中的每个 bash/sh 围栏块：
 
 1. 分类为 `EXECUTED`（只读，或可在临时副本安全执行）、`ILLUSTRATIVE`（破坏性、需交互、缺真实产物）、`NOT_APPLICABLE`（非命令）。
-2. 每条 `EXECUTED` 按块前标注的 cwd 原样执行，只替换已声明的占位符；记录 cwd、替换值、预期/实测退出码和关键输出。退出码直接捕获或用 `PIPESTATUS`，不让管道吞掉。
+2. 每条 `EXECUTED` 按块前标注的 cwd 原样执行，只替换已声明的占位符；记录 cwd、替换值、预期/实测退出码和关键输出。退出码直接捕获或用 `PIPESTATUS`，不让管道吞掉。**运行前先按命令设计写出预期 rc**：`grep` 无匹配是 1、`ls` 目标缺失是 2（`No such file or directory`）、`[ -f ]`/`test` 为假是 1，这些非零值是设计的成功路径，实测 rc 等于预期即该条通过；只有预期未命中，或本就该返回 0 的命令返回非零，才是 FAIL。文档已写明预期（如 `attendu : No such file or directory`、`rc=1 = succès`）时照文档判读，不按「非零即失败」处理。
 3. 占位符（`SKILL_DIR`、`PAGE.html`、`<skill-dir>`）必须在块前写出替换规则；没有规则的占位符是文档缺陷。文档只写规则，实际替换值记入报告，不把个人绝对路径写进 Skill。
 4. cwd 必须写明；相对路径按该 cwd 解析。写成“项目根”但实际在子目录时必须改正。
 5. 只读命令在真实环境执行；写、删、安装、上传、发布或访问生产环境的命令在临时副本执行，或标 `ILLUSTRATIVE` 并说明原因。不得为了跑通执行破坏性命令。
@@ -60,6 +125,7 @@ py -3 scripts/validate_skill.py <skill-dir> --workspace <workspace-root> \
 3. 用 Write 把非平凡片段写入临时 `.py` 或 `.js` 文件再执行；不要把含反引号、引号的代码内联进 Bash。
 4. 记录命令、真实输入、预期、实测；数字不一致时先调查，不修改预期来迁就结果。
 5. 浏览器类验收按项目现有流程执行；截图不可用时只做结构校验，并明确说明。
+6. **可测常量逐位复核。** 文档与 references 中凡能由随附脚本或验证器的真实输出复现的数值（计数、字节、行数、阈值、距离、差值），逐位比对实测值；`RESULT PASS` 只证明退出契约，不证明散文里的常量。至少覆盖三类：脚本直接打印的值；由文档自身引用的数字推导出的算术（两个零点坐标之差、两个计数之和）；脚本 docstring、SKILL.md 与 references 中重复出现的同一常量。不一致时先怀疑文档（含模块 docstring 与本次新写的草稿），按实测回改并重跑；脚本是逐字复制、不允许改动时，在 references 记录例外与正确值，不能把错误常量标为“实测”。报告写出 oracle 命令、实测值与比对清单。键/值形态的契约对账交 `verifier-parite-doc-script-skill`。来源会话 `61774d4c`（2026-10-28）：Lehmer 零点对 `7005,062866` / `7005,100565` 在模块 docstring 中写成“0,019”、在校验脚本 docstring 与同题草稿中写成“0,0187”，按同一对坐标相减为 `0,03769849773`；验证器只返回 PASS 时该错误不可见。
 
 不要自动执行与验收无关的文档片段，尤其是删除、上传、发布、安装或访问生产环境的命令。
 
@@ -94,15 +160,16 @@ py -3 scripts/validate_skill.py <skill-dir> --workspace <workspace-root> \
 1. 从 `--help`、代码或文档列出全部声明的退出码、JSON 键集与开关，逐个绑定到真实输入；每个声明的 rc 至少命中一次（成功、发现问题/拦截、用法错误各一），只测成功路径不算验证。
 2. 用真实输入运行（例如真实的受限目录、真实文件），不要为通过而自造一个空目标。
 3. 声明 `--json` 时，断言文档列出的全部键都存在，并断言内部字段不泄漏（例如给用法错误用的 `code` 不应出现在成功输出中）；“JSON 可解析”不等于契约满足。
-4. 声明了解析分支（例如仅继承 ACE、仅属性、路径缺失）时，为每个分支在临时目录构造最小真实夹具，断言判定结果与 rc；只读代码推断不算。
-5. 退出码直接捕获；管道会吞掉 rc，用 `PIPESTATUS` 或先重定向到文件再检查。
-6. 结论写“已验证”或“部分适用（列出未覆盖的 rc/键/分支）”，不写“不适用”。
+4. `KEY=VALUE` 行与 verdict 行混排时（如 `SELECTOR=0x…`、`CHAIN=8453`、`RESULT PASS` / `RESULT FAIL (n)`），按形态分别断言：声明的键用锚点 `^KEY=` 逐条匹配，verdict 用 `^RESULT (PASS|FAIL)` 单独匹配；不要把 `RESULT` 放进 `^KEY=` 循环，也不要用 `^RESULT=` 匹配 `RESULT PASS`。锚点不符时先核对文档声明的输出形态，不先判定脚本缺键。用法错误路径（rc=2）断言 `^RESULT` 不出现；未锚定的 `grep RESULT` 不算覆盖。
+5. 声明了解析分支（例如仅继承 ACE、仅属性、路径缺失）时，为每个分支在临时目录构造最小真实夹具，断言判定结果与 rc；只读代码推断不算。
+6. 退出码直接捕获；管道会吞掉 rc，用 `PIPESTATUS` 或先重定向到文件再检查。
+7. 结论写“已验证”或“部分适用（列出未覆盖的 rc/键/分支）”，不写“不适用”。
 
 详细 harness 模板、来源会话已验证的 14 个用例、字节级夹具与完整性耦合和跨 Skill 引用自测边界见 `references/validator-negative-tests.md`。
 
 ### 6. 全部测试后的最终指纹门
 
-校验器打印 `Fingerprint (final)` 只证明它自己的运行窗口内没有写入。第 3、4、5 步以及任何真实运行都发生在校验之后，期间仍可能有并发写入。全部测试结束后、写报告之前：
+校验器打印 `Fingerprint (final)` 与 `References fingerprint (final)` 只证明它自己的运行窗口内没有写入。第 3、4、5 步以及任何真实运行都发生在校验之后，期间仍可能有并发写入。全部测试结束后、写报告之前：
 
 1. 对 SKILL.md 间隔至少 2 秒连续双采样，记录 size、mtime_ns 与 SHA-256；size 与 SHA-256 必须一致，仅 mtime 变化但字节相同不算失败。
 2. 与本次校验器的 `Fingerprint (final)` 比对 size 与 SHA-256，不能只比本次双采样的两次。
@@ -116,8 +183,14 @@ py -3 scripts/validate_skill.py <skill-dir> --workspace <workspace-root> \
    - 自指边界：references 不得记录自身最终 SHA-256 或最终行数（写入即改变哈希）；自身最终值写入报告或单独清单。“最终哈希由报告记录”是允许的写法。
    - 结构复核：围栏代码块成对（总数为偶数，且每块有闭合围栏）、标题层级完整、SKILL.md 资源清单列出的文件实际存在。围栏与标题是人工复核，不自动断言。
    - 复核后再改 references：重算该文件哈希；SKILL.md 的校验结果仍有效，但报告必须引用最终 references 哈希。若 SKILL.md 再改，整个最终门重跑。
+8. **运行后包树复核与缓存清理（包内有 scripts/ 时必做）。** 第 2.1、3、4、5 步执行脚本后，Python 会在 `<skill-dir>/scripts/` 下生成 `__pycache__/*.pyc`。校验器的 `Files (N)` 只排除 `.git`，会把它们计入；`layout` 允许 `scripts/` 下的任意文件，`References fingerprint` 也忽略 `__pycache__`，所以运行后再跑校验器仍可能 `RESULT PASS`，而报告里的 `Files (N)` 已不是交付清单。全部真实运行结束后：
+   - 重列 `<skill-dir>` 的完整文件树，确认没有 `__pycache__`、`*.pyc`、`.pytest_cache` 等本次运行产物。
+   - 只删除本次运行产生的缓存；来源不明或用户保留的缓存先询问。删除后重列，并用 `find "<skill-dir>" \( -name __pycache__ -o -name '*.pyc' -o -name '*.pyo' \) -print` 确认输出为空。
+   - 报告中的 `Files (N)`、逐文件 size/SHA-256 与最终包树都取自清理后的列表；清理后又运行任何脚本时，重做本项。
+   - 删除缓存不改写 SKILL.md 与 references/，第 1–7 条指纹仍有效，但包树结论必须重新生成。
+   来源会话 `61774d4c`（2026-10-28）：运行包内验证器后出现 4 个 `.pyc`（其中 `riemann_certificat_intervalle` 52,022 B），而校验器此前已报 `Files (7)`；删除缓存后包树才回到 7 个预期文件。提交阶段的完整流程见 `commit-skill-work`。
 
-该门的前 1–6 条只覆盖 SKILL.md；第 7 条覆盖 references 的快照与结构；scripts 与每个 references 的最终哈希都在报告中单独记录。
+该门的前 1–6 条只覆盖 SKILL.md 的指纹；references/ 在校验器窗口内的文件级变化由 `References fingerprint` 比对捕获，但记录值语义仍是人工复核，脚本不解析其内容。第 7 条覆盖 references 的快照与结构；第 8 条覆盖运行后的包树与缓存。scripts 与每个 references 的最终 size、SHA-256 都在报告中单独记录，scripts 的解析结果见第 2.1 节。
 
 ### 7. 报告
 
@@ -126,23 +199,28 @@ py -3 scripts/validate_skill.py <skill-dir> --workspace <workspace-root> \
 | 检查 | 方式 | 真实输入 | 预期 | 实测 | 结论 |
 |---|---|---|---|---|---|
 | frontmatter | PyYAML | 实际 SKILL.md | 可解析且 name 一致 | 见输出 | 已验证 |
-| 跨 Skill 引用 | validate_skill.py 名称解析 | 实际 SKILL.md 反引号 | 目标 SKILL.md 存在 | N checked 或 0 found | 已验证或未触发 |
+| 跨 Skill 引用 | validate_skill.py 名称解析 + 正文反引号自行枚举 | 实际 SKILL.md 反引号 | 目标 SKILL.md 存在且逐个点名（`, +N` 截断时补齐） | 名称清单 + 计数，或 `0 found` | 已验证或未触发 |
 | 验证器正向 | 目标 CLI | 真实产物 | 退出 0、无 FAIL | 见输出 | 已验证或未触发 |
 | 验证器负向 | 临时副本 | 每例一个破坏 | 按契约 0/1/2 | 见输出 | 已验证或未触发 |
 | 原件完整性 | SHA-256 | 验证器读取的项目文件 | 前后一致 | 见输出 | 已验证或未触发 |
-| 稳定性 | validate_skill.py 等待窗口 | 实际 SKILL.md | 窗口内 size/mtime/SHA-256 不变 | 见 Stability 行 | 已验证或未触发 |
+| 稳定性 | validate_skill.py 等待窗口 | 实际 SKILL.md 与 references/ | 窗口内 size/mtime/SHA-256 不变 | 见 Stability 行 | 已验证或未触发 |
 | 基线对比 | 当前 size/SHA-256 vs 方案或写入时基线 | 实际 SKILL.md 与基线记录 | 相同；不同则旧 PASS 作废并归因 | 见输出 | 已验证或未触发（无基线） |
-| 指纹复核 | SHA-256 起止比对 | 实际 SKILL.md | 起始 = 最终 | 见 Fingerprint 行 | 已验证 |
+| 指纹复核 | SHA-256 起止比对 | 实际 SKILL.md 与 references/ | 起始 = 最终（两者各自） | 见 Fingerprint 与 References fingerprint 行 | 已验证 |
 | 代码块 | ast.parse / node --check | 实际代码块 | 全部可解析 | 见输出 | 仅静态 |
-| 文档命令 | 按标注 cwd 逐条实跑 | 实际 SKILL.md 与 references | 退出码与关键输出符合预期 | 见输出 | 已验证或未触发 |
+| 随附脚本 | 逐文件 compile/tokenize + node --check | scripts/ 下实际代码文件 | 全部可解析；逐文件 size/SHA-256 | 见输出 | 仅静态（语法）；入口 rc 见第 5 步 |
+| 文档命令 | 按标注 cwd 逐条实跑 | 实际 SKILL.md 与 references | 运行前声明的预期 rc 与实测 rc 一致（设计性非零算通过） | 见输出 | 已验证或未触发 |
 | 最终指纹门 | 全部测试后双采样，对比 validator final | 实际 SKILL.md | 两次一致且等于 final | 见输出 | 已验证或未触发 |
 | references 自洽性 | 重算行数/字节/哈希 + 围栏配对 | 实际 references | 记录值 = 最终值 | 见输出 | 已验证或未触发 |
 | 注入正文 | 只读调用 + JSONL isMeta | 实际 SKILL.md 与当前会话 JSONL | 哨兵命中、去空行后正文相等、前后指纹一致 | 见输出 | 已验证或未触发 |
 | 验收断言 | 实际运行 | 真实产物 | 文档预期值 | 实测值 | 已验证或未触发 |
+| 可测常量 | 脚本/验证器输出逐位比对（含文档自身数字的算术） | 实际文档与真实运行 | 文档值 = 实测值 | 见输出 | 已验证或未触发（无可测常量） |
+| 包树与缓存 | 全部运行后重列目录并删除 `__pycache__`/`*.pyc` | 实际 `<skill-dir>` | 无缓存，`Files (N)` 与报告一致 | 见输出 | 已验证或未触发（无 scripts/） |
 
-`Stability` 行显示等待时长；`Fingerprint (start)` 与 `Fingerprint (final)` 的 SHA-256 必须一致。只记录其中一个不算复核。这两行只覆盖校验器运行期间；第 6 步的最终指纹门才覆盖此后的夹具与真实运行，报告引用的是最终门确认的版本。`基线对比` 行覆盖这两者之前：它证明验收对象就是方案对象；不一致时，其余各行只对另一个版本成立。
+`Stability` 行显示等待时长；`Fingerprint (start)`/`(final)` 与 `References fingerprint (start)`/`(final)` 的 SHA-256 必须各自一致。只记录其中一个不算复核。这些行只覆盖校验器运行期间；第 6 步的最终指纹门才覆盖此后的夹具与真实运行，报告引用的是最终门确认的版本。`基线对比` 行覆盖这两者之前：它证明验收对象就是方案对象；不一致时，其余各行只对另一个版本成立。
 
 `local references: 0 checked` 只说明没有 Markdown 链接或可识别的路径引用，不代表跨 Skill 引用已检查；两项分开记录。
+
+`skill references` 的名称清单只显示 3 个，其余合并为 `, +N`：`PASS skill references: 4 checked (a, b, c, +1)` 中计数 4 是解析成功的总数，第 4 个名称不在输出里。报告不能只写 `N checked` 或「N 项全部解析」，必须从正文反引号自行枚举与已安装 Skill 名一致的 token，逐个写出已解析目标，并注明哪些名称来自校验器输出、哪些由自行枚举补齐；计数与名称清单两者都要成立。来源会话 `66c9add4`（2026-10-29）：对 purger-mentions-skill-supprime 得到 `4 checked (…, +1)`，报告只写「跨 Skill 引用 4 项全部解析」，被截断的第 4 个 verify-cross-skill-reference-liveness 从未出现在报告中，该名称由本次正文反引号枚举补齐。
 
 负向用例只写“验证器通过”不算完成；必须记录每例的退出码、关键输出和临时副本清理。`0` 退出但输出含 FAIL 视为失败。
 
@@ -173,7 +251,7 @@ Skill 可能在验收期间被另一个流程改写。只比较最终读到的�
 三个窗口互不替代：基线到验收开始的比对（下一小节，唯一能发现「PASS 的版本不是方案版本」）；校验器运行窗口的 `Fingerprint (start)`/`(final)`；全部测试之后的第 6 步最终门。
 
 - 默认 `--stable-seconds 2`：校验器连续观察到 size、mtime_ns、SHA-256 不变后才开始检查；`--stability-timeout 30` 控制最长等待，超时以 exit 1 结束。
-- 校验结束前重新读取 SKILL.md 并打印 `Fingerprint (final)`。size 或 SHA-256 与起始值不同 → `FAIL fingerprint: SKILL.md changed during validation`，必须重跑；仅 mtime 变化但字节相同不算失败。
+- 校验结束前重新读取 SKILL.md 与 references/，打印两行 final 指纹。SKILL.md 的 size 或 SHA-256 与起始值不同 → `FAIL fingerprint: SKILL.md changed during validation`；references/ 的清单或任一文件内容变化 → `FAIL fingerprint: references/ changed during validation`；两者都必须重跑。仅 mtime 变化但字节相同不算失败。
 - `--stable-seconds 0` 只跳过等待，仍保留起止指纹比对；不要用它掩盖正在写入的文件。
 - 报告必须写出实际起始/最终 SHA-256 和 mtime；无法给出时说明原因，不能宣称通过。
 - 校验器不写目标 Skill 目录；如果验收期间有别的流程写入，最终指纹会暴露变化，但无法判断哪个版本是权威版本，只能等写入结束后重跑。
@@ -181,7 +259,7 @@ Skill 可能在验收期间被另一个流程改写。只比较最终读到的�
 
 ### 写入者静默前置门
 
-校验器的稳定性窗口只覆盖 SKILL.md（`scripts/validate_skill.py` 的 `wait_for_stable`），不覆盖同包的 scripts/ 与 references/。写入者可能先写 SKILL.md、数秒后才写脚本；在这段窗口列目录会得到「声明的资源缺失」，校验器也会给出真实的 `FAIL local reference not found`，但它描述的是中途状态，不是包缺陷。
+校验器的稳定性窗口覆盖 SKILL.md 与 references/（`scripts/validate_skill.py` 的 `wait_for_stable`），不覆盖同包的 scripts/。写入者可能先写 SKILL.md、数秒后才写脚本；在这段窗口列目录会得到「声明的资源缺失」，校验器也会给出真实的 `FAIL local reference not found`，但它描述的是中途状态，不是包缺陷。
 
 1. **判活。** 用 `read_chat_session` 记录写入者的 `runtimeState`、`activeTurnId`、`revision`；需要等待时用 `wait_chat_sessions`（如 `timeoutMs: 60000`）。静默判据是 `runtimeState=ready` 且 `activeTurnId=null`；`waiting-user` 且有未决交互属于暂停，同样不再写入。`wait_chat_sessions` 返回的是 `timeout`/`turn_completed`/`needs_attention` 等 outcome，必须读 `sessions[].runtimeState`，不能把 outcome 当作静默。
 2. **重新列目录。** 静默后重读 SKILL.md 与完整文件清单，并重采样整包指纹；不得用判活前的列表下结论。
@@ -244,6 +322,7 @@ print(len(data), sha256(data).hexdigest())
 
 - 只语法检查标记为 `python`/`py` 和 `js`/`javascript` 的围栏代码块；其余语言跳过。
 - `bash`/`sh`、`yaml`、`text` 等块不解析也不执行，计入 `skipped=N`；静态 PASS 不覆盖其中的路径、cwd 与占位符错误，必须按第 3 步逐条实跑。
+- `Code blocks: python=N js=N skipped=N` 只统计 SKILL.md 的围栏块，不包含 `scripts/` 下的随附脚本；`Files (N)` 只证明文件存在。包内有随附代码时，必须执行第 2.1 节；`python=0` 不等于“包内无 Python 代码”，也不等于“脚本已验证”。
 - Python 用 `ast.parse`，不执行；JS 用 `node --check`，箭头函数按表达式包裹后检查。
 - 语法检查通过不等于片段可运行，更不等于文档中的断言成立。真实产物验收必须单独做。
 - 代码块含占位符时可能故意不可执行；若确属示意，改用 `text` 围栏或在正文说明，避免校验出现假阴性。
@@ -261,10 +340,13 @@ print(len(data), sha256(data).hexdigest())
 
 ```text
 PASS skill references: 2 checked (target-a, target-b)
+PASS skill references: 4 checked (target-a, target-b, target-c, +1)
 PASS skill references: 1 resolved of 2 (target-a)
 PASS skill references: 0 found (no installed skill names in backticks)
 FAIL skill reference 'target-c': SKILL.md missing in C:\...\target-c
 ```
+
+名称清单只显示前 3 个，其余合并为 `, +N`；`N checked` 的计数仍是解析成功的总数。需要逐个点名时按第 7 步从正文反引号自行枚举。
 
 `local references` 只统计 Markdown 链接，以及带 scripts、references 或 assets 目录前缀、或含斜杠加已知扩展名的行内路径；反引号中的 Skill 名由 `skill references` 单独统计。`local references: 0 checked` 或 `skill references: 0 found` 都不等于“没有引用”，必须结合两项输出判断。
 
@@ -309,13 +391,20 @@ FAIL local reference not found: 'oeuvre_universelle/manifeste_anteriorite.py'
 - [ ] 本地引用和 bundled scripts 均存在。
 - [ ] 正文反引号中没有外部仓库的项目相对路径（斜杠加已知扩展名会被当作本地引用）；外部文件只写模块名或文件名。
 - [ ] 跨 Skill 引用已解析，目标 SKILL.md 存在；`0 found` 有明确说明。
+- [ ] 跨 Skill 引用报告逐个点名：出现 `, +N` 截断时已从正文反引号自行枚举补齐，未用 `N checked` 或「N 项全部解析」代替名称清单。
 - [ ] Python/JS 代码块已检查，或明确标注未检查原因。
+- [ ] scripts/ 下每个 .py/.js/.cjs/.mjs 已枚举；Python 逐文件 compile（不执行、不写 .pyc），JS 逐文件 node --check；报告中逐文件记录 path、size、SHA-256 与结果，未检查项有原因。
+- [ ] 未把 `Code blocks: python=0 js=0` 或 `Files (N)` 当作随附脚本已验证；声明了 rc/JSON 契约的脚本已按第 5 步逐个命中，未声明项未臆造。
+- [ ] .sh/.ps1/.bat 等非 .py/.js 脚本未处理时已标未触发，未与本节的语法检查混为一谈。
 - [ ] 至少一条验收断言已在真实产物上运行。
+- [ ] 文档与 references 中可测的数值常量已用脚本/验证器实测输出逐位复核（含由文档自身数字推导的算术、脚本 docstring 中的同一常量）；不一致项已按实测回改或记录例外；无可测常量时已说明。
 - [ ] 文档中每条安全可运行命令已按标注 cwd 实跑，记录 cwd、占位符替换、退出码与关键输出。
 - [ ] 未执行的命令已标为示意并说明原因；没有把 `skipped=N` 当作已验证。
 - [ ] 失败或含未说明占位符的命令已修正或降级为 `text`，复跑通过。
+- [ ] 每条实跑命令的预期 rc 已在运行前按设计声明（`grep` 无匹配 1、`ls` 缺失 2、`test` 为假 1），实测等于预期即通过；没有把设计性非零误判为 FAIL。
 - [ ] 目标 Skill 若带 CLI 并声明退出码/JSON 契约，按契约覆盖成功、发现/拦截、输入/用法错误各类 rc 与 JSON 键集；仅声明契约的 CLI 没有项目夹具时仍逐个实测，结论写“已验证”或“部分适用”，只有无任何契约时才写“不适用”。
 - [ ] 声明 `--json` 的 CLI 已断言完整键集合存在，且错误码字段（如 `code`）未泄漏到成功输出。
+- [ ] `KEY=VALUE` 与 verdict 混排的输出已分开断言（键用 `^KEY=`，verdict 用 `^RESULT (PASS|FAIL)`）；rc=2 路径已断言无 `^RESULT`。
 - [ ] 负向用例只改临时副本，逐例恢复；原件 SHA-256 前后一致。
 - [ ] 内容夹具按字节改写；目标验证器同时校验完整性时，副本的完整性字段已重算，失败只命中目标门。
 - [ ] 目标验证器的开关（如 `--strict-warnings`、`--allow-external`）两侧行为均验证，或标注未触发。
@@ -332,6 +421,7 @@ FAIL local reference not found: 'oeuvre_universelle/manifeste_anteriorite.py'
 - [ ] 稳定性超时或校验期间内容变化时未宣称通过，已在稳定版本上重跑。
 - [ ] 指纹变化时已做 EOL 判别：LF 归一化 SHA-256 一致且字节差等于换行数才判行尾切换；未回退、未覆盖；部分转换、非 Git 或同内容重写未标为已验证。
 - [ ] 全部测试（真实产物、负向夹具与真实运行）结束后已做最终双采样，并与校验器 `Fingerprint (final)` 的 size 与 SHA-256 一致。
+- [ ] 全部真实运行结束后已重列包树并删除本次运行产生的 `__pycache__`/`*.pyc`；`Files (N)` 与逐文件指纹取自清理后的列表；清理后又运行脚本时已重做。
 - [ ] 最终门发现并发写入时，已完整重读、保留新增内容、确认本次修改仍在并重跑校验器；报告声明旧 PASS 作废。
 - [ ] 报告只引用最终稳定版本的 size 与 SHA-256；门禁之后没有未经复核的写入。
 - [ ] 包内有 references 时，已重算 SKILL.md 行数、字节、SHA-256 与 description 长度，并逐条比对 references 中的记录值；失真项已回改或标注为旧快照。

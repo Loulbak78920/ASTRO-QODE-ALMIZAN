@@ -50,6 +50,11 @@ class Fingerprint(NamedTuple):
     sha256: str
 
 
+class RefsFingerprint(NamedTuple):
+    count: int
+    sha256: str
+
+
 class StabilityError(RuntimeError):
     pass
 
@@ -67,6 +72,10 @@ def format_fingerprint(fp: Fingerprint) -> str:
     return f"{fp.size} bytes | mtime={format_mtime(fp.mtime_ns)} | sha256={fp.sha256}"
 
 
+def format_refs_fingerprint(fp: RefsFingerprint) -> str:
+    return f"{fp.count} file(s) | sha256={fp.sha256}"
+
+
 def snapshot(path: Path) -> tuple[Fingerprint, bytes] | None:
     before = path.stat()
     data = path.read_bytes()
@@ -76,36 +85,68 @@ def snapshot(path: Path) -> tuple[Fingerprint, bytes] | None:
     return Fingerprint(len(data), after.st_mtime_ns, hashlib.sha256(data).hexdigest()), data
 
 
+def list_reference_files(skill_dir: Path) -> list[Path]:
+    refs_dir = skill_dir / "references"
+    if not refs_dir.is_dir():
+        return []
+    files = []
+    for path in refs_dir.rglob("*"):
+        if not path.is_file():
+            continue
+        rel = path.relative_to(skill_dir)
+        if ".git" in rel.parts or "__pycache__" in rel.parts:
+            continue
+        files.append(path)
+    return sorted(files, key=lambda p: p.relative_to(skill_dir).as_posix())
+
+
+def snapshot_refs(skill_dir: Path) -> RefsFingerprint | None:
+    entries = []
+    for path in list_reference_files(skill_dir):
+        snap = snapshot(path)
+        if snap is None:
+            return None
+        fp, _ = snap
+        rel = path.relative_to(skill_dir).as_posix()
+        entries.append(f"{rel}\0{fp.size}\0{fp.sha256}\n")
+    digest = hashlib.sha256("".join(entries).encode("utf-8")).hexdigest()
+    return RefsFingerprint(len(entries), digest)
+
+
 def wait_for_stable(
-    path: Path, window: float, timeout: float
-) -> tuple[Fingerprint, bytes, float]:
+    skill_dir: Path, window: float, timeout: float
+) -> tuple[Fingerprint, RefsFingerprint, bytes, float]:
+    skill_md = skill_dir / "SKILL.md"
     started = time.monotonic()
     last = None
     stable_since = started
     while True:
         try:
-            snap = snapshot(path)
+            snap = snapshot(skill_md)
+            refs = snapshot_refs(skill_dir)
         except OSError as exc:
-            raise StabilityError(f"cannot read SKILL.md: {exc}") from exc
+            raise StabilityError(f"cannot read SKILL.md or references/: {exc}") from exc
         now = time.monotonic()
-        if snap is None:
+        if snap is None or refs is None:
             last = None
             stable_since = now
         else:
             fp, data = snap
-            if last is None or fp != last:
-                last = fp
+            current = (fp, refs)
+            if last is None or current != last:
+                last = current
                 stable_since = now
             elif window == 0 or now - stable_since >= window:
-                return fp, data, now - started
+                return fp, refs, data, now - started
         if now - started > timeout:
             detail = (
                 "last snapshot was unstable"
                 if last is None
-                else f"last sha256={last.sha256[:12]}..."
+                else f"last sha256={last[0].sha256[:12]}..., "
+                f"references sha256={last[1].sha256[:12]}..."
             )
             raise StabilityError(
-                f"SKILL.md did not remain unchanged for {window:.1f}s "
+                f"SKILL.md and references/ did not remain unchanged for {window:.1f}s "
                 f"within {timeout:.1f}s ({detail})"
             )
         time.sleep(min(0.2, max(0.02, timeout - (now - started))))
@@ -369,21 +410,36 @@ def check_js(code: str, node: str) -> str | None:
         return " | ".join(error.splitlines()[:3])[:500]
 
 
-def finish_fingerprint(skill_md: Path, start_fp: Fingerprint, report: Reporter) -> None:
+def finish_fingerprint(
+    skill_dir: Path,
+    start_fp: Fingerprint,
+    start_refs: RefsFingerprint,
+    report: Reporter,
+) -> None:
     try:
-        snap = snapshot(skill_md)
+        snap = snapshot(skill_dir / "SKILL.md")
+        refs = snapshot_refs(skill_dir)
     except OSError as exc:
-        report.fail(f"fingerprint: cannot re-read SKILL.md after validation ({ascii_text(exc)})")
+        report.fail(
+            "fingerprint: cannot re-read SKILL.md or references/ after validation "
+            f"({ascii_text(exc)})"
+        )
         return
-    if snap is None:
-        report.fail("fingerprint: SKILL.md was being modified at the end of validation; rerun")
+    if snap is None or refs is None:
+        report.fail("fingerprint: files were being modified at the end of validation; rerun")
         return
     final_fp, _ = snap
     print(f"Fingerprint (final): {ascii_text(format_fingerprint(final_fp))}")
+    print(f"References fingerprint (final): {ascii_text(format_refs_fingerprint(refs))}")
+    changed = False
     if final_fp.sha256 != start_fp.sha256 or final_fp.size != start_fp.size:
         report.fail("fingerprint: SKILL.md changed during validation; rerun on the stable version")
-        return
-    report.ok("fingerprint: unchanged during validation")
+        changed = True
+    if refs != start_refs:
+        report.fail("fingerprint: references/ changed during validation; rerun on the stable version")
+        changed = True
+    if not changed:
+        report.ok("fingerprint: SKILL.md and references/ unchanged during validation")
 
 
 def validate(
@@ -392,13 +448,14 @@ def validate(
     skill_roots: list[Path],
     raw: bytes,
     start_fp: Fingerprint,
+    start_refs: RefsFingerprint,
     stability_text: str,
 ) -> int:
-    skill_md = skill_dir / "SKILL.md"
     report = Reporter()
     print("Validator: read-only (skill files are not modified)")
     print(f"Stability: {ascii_text(stability_text)}")
     print(f"Fingerprint (start): {ascii_text(format_fingerprint(start_fp))}")
+    print(f"References fingerprint (start): {ascii_text(format_refs_fingerprint(start_refs))}")
     if raw.startswith(b"\xef\xbb\xbf"):
         report.fail("frontmatter: SKILL.md starts with a UTF-8 BOM; frontmatter detection may fail")
         text = raw.decode("utf-8-sig")
@@ -407,7 +464,7 @@ def validate(
             text = raw.decode("utf-8")
         except UnicodeDecodeError as exc:
             print(f"FAIL  encoding: SKILL.md is not valid UTF-8 ({ascii_text(exc)})")
-            finish_fingerprint(skill_md, start_fp, report)
+            finish_fingerprint(skill_dir, start_fp, start_refs, report)
             print("RESULT FAIL")
             return 1
 
@@ -522,7 +579,7 @@ def validate(
     if js_checked:
         report.ok(f"js blocks: {js_checked} checked (node --check, not executed)")
 
-    finish_fingerprint(skill_md, start_fp, report)
+    finish_fingerprint(skill_dir, start_fp, start_refs, report)
 
     print(f"Code blocks: python={python_checked} js={js_checked} skipped={skipped}")
     print(f"Summary: {report.passed} pass, {report.failed} fail, {report.warned} warn")
@@ -599,8 +656,8 @@ def main(argv=None) -> int:
         print(f"FAIL  SKILL.md not found in {ascii_text(skill_dir)}")
         return 2
     try:
-        start_fp, raw, waited = wait_for_stable(
-            skill_md, args.stable_seconds, args.stability_timeout
+        start_fp, start_refs, raw, waited = wait_for_stable(
+            skill_dir, args.stable_seconds, args.stability_timeout
         )
     except StabilityError as exc:
         print(f"FAIL  stability: {ascii_text(exc)}")
@@ -613,7 +670,9 @@ def main(argv=None) -> int:
             f"unchanged for {args.stable_seconds:.1f}s after {waited:.1f}s"
         )
     try:
-        return validate(skill_dir, workspace, skill_roots, raw, start_fp, stability_text)
+        return validate(
+            skill_dir, workspace, skill_roots, raw, start_fp, start_refs, stability_text
+        )
     except subprocess.TimeoutExpired:
         print("FAIL  node --check timed out")
         print("RESULT FAIL")

@@ -147,6 +147,45 @@ RESULT FAIL (1)
 
 证据分级：会话中的两段输出、`a1db38de`/`6af02d0b` 哈希与 `CRLF dans la source : 0` 来自工具结果，已核实；文本模式导致字节漂移是代理自述，快照未包含工具输入中的字面 `read_bytes`/`write_bytes` 调用，具体函数名为推断；A/B/C 三种情形为本次实跑复现，临时目录已清理。
 
+## 混合输出契约的断言（已验证）
+
+来源：会话 `3e764f99-9714-421a-87cd-99a7f440123e`（2026-10-28，回合 `788ac295`），目标 CLI 为 `verifier-abi-locale-contrat-deploye` 的 `scripts/verifier_abi_deploye.py`。该回合没有用户纠正；代理自检发现断言锚点错误后改道。
+
+完整运行（`--expect-chain 8453 --expect-entries 70`）输出 10 个 `KEY=VALUE` 行和一条 verdict，rc=0。节选（含 verdict，其余键从略）：
+
+```text
+SELECTOR=0xea76d981
+CHAIN=8453
+BLOCK=53199778
+OK   chaine attendue respectee (8453)
+OK   entrees ABI attendues respectees (70)
+CODE_BYTES=9344
+SELECTOR_IN_BYTECODE=PRESENT
+OK   selecteur 0xea76d981 present dans le bytecode deploye
+RESULT PASS
+rc=0
+```
+
+错误断言把 `RESULT` 当作键放进同一个循环（`grep -q "^$k="`），原样输出：
+
+```text
+KEY ABI OK
+KEY ABI_ENTRIES OK
+KEY ABI_VALID OK
+KEY FUNCTION OK
+KEY IN_ABI OK
+KEY SELECTOR OK
+KEY CODE_BYTES OK
+KEY SELECTOR_IN_BYTECODE OK
+KEY CHAIN OK
+KEY BLOCK OK
+KEY RESULT MISSING
+```
+
+原因：verdict 是空格分隔的 `RESULT PASS`，不是 `RESULT=`；其余 10 键全部命中，脚本本身没有缺陷。代理自检原文：「The RESULT line is a verdict (`RESULT PASS`), not `KEY=VALUE` — my assertion pattern was wrong, not the script.」修正后键仍用 `^KEY=`，verdict 改用 `^RESULT (PASS|FAIL)`，重跑得到 `RESULT PASS` 与 rc=0。
+
+rc=2（输入缺失）只输出 `ERROR lecture artefact impossible : [Errno 2] No such file or directory: 'C:\nope\A.json'`，不输出 verdict。会话用未锚定的 `grep -q "RESULT"` 断言不出现；本 Skill 的规则收紧为 `^RESULT`，避免错误消息提到 RESULT 时假通过。锚点不符只改断言并重跑，不改脚本，也不把 `MISSING` 写成缺键。
+
 ## 来源会话已验证的 14 个用例
 
 来源：会话 `4958a992-f36f-4d91-8ade-0826edb1ec6e`（2026-10-25），目标验证器为 `tableau-maitre-sequentiel` 的 `verifier_tableau_maitre.py`。脚本输出 `ALL NEGATIVE CASES PASSED`，随后清理临时目录。具体值（SEQ、S6 40/313/63、182 行）属于该目标 Skill，不是通用不变量；目标验证器版本变化后要重新确认预期。关键输出为摘要。
@@ -198,7 +237,7 @@ def reset() -> Path:
 
 `skill-validator-selftest` 覆盖 `scripts/validate_skill.py` 的 0/1/2、frontmatter、名称、description、正文、引用、布局、代码块、编码、自指、依赖缺失和用法错误。它默认不覆盖跨 Skill 引用：修改相关代码时，手动构造一个“目录存在但缺 SKILL.md”的反引号名称，确认 exit 1；不存在的名称会被静默跳过，不能当作已验证。
 
-它也不覆盖稳定性等待与起止指纹：修改相关代码时，手动制造并发写入，或用 `--stable-seconds 2 --stability-timeout 1` 触发超时，确认 exit 1 及 `FAIL stability` 或 `FAIL fingerprint`；正常 Skill 用默认等待运行，确认 `Fingerprint (start)` 与 `Fingerprint (final)` 的 SHA-256 相同。
+它也不覆盖稳定性等待与起止指纹：修改相关代码时，手动制造并发写入，或用 `--stable-seconds 2 --stability-timeout 1` 触发超时，确认 exit 1 及 `FAIL stability` 或 `FAIL fingerprint`；正常 Skill 用默认等待运行，确认 `Fingerprint (start)`/`(final)` 与 `References fingerprint (start)`/`(final)` 的 SHA-256 分别相同。2026-10-28 起指纹与稳定性窗口同时覆盖 references/ 的聚合清单哈希；该扩展以 5 个夹具与 1 次 shell 独立复算验证：无 references、单文件内容变更、新增文件、稳定无变化、持续写入触发超时。
 
 ## 哈希基线
 
@@ -278,7 +317,7 @@ py -3 "<scan-script>" --scan-dir "<projects-dir>" --target "<skill-dir>/SKILL.md
 
 要点：
 
-- validator 的 `RESULT PASS` 与 `Fingerprint (final)` 只描述 SKILL.md。参考文档中“最终 N 行 / N B / SHA-256”不会被任何现有检查比对；SKILL.md 在参考文档写入后再改，记录即失真。本案例的表格本来标注为“追加前快照”是正确的，失真的是正文那句带“更新后”的最终表述。
+- validator 的 `RESULT PASS` 与 `Fingerprint (final)` 描述 SKILL.md；2026-10-28 起另有 `References fingerprint (final)`，给出 references/ 全量清单的聚合 SHA-256，但脚本仍不解析参考文档正文里的“最终 N 行 / N B / SHA-256”，这些记录值不会被任何检查比对。SKILL.md 在参考文档写入后再改，记录即失真。本案例的表格本来标注为“追加前快照”是正确的，失真的是正文那句带“更新后”的最终表述。
 - 修复顺序：SKILL.md 冻结 → 重算行数、字节、哈希 → 检索 references 中的同类记录 → 只回改失真项 → 复核围栏配对与章节 → 重新记录两边最终指纹。
 - 自指边界：参考文档不能包含自身最终 SHA-256（写入即改变哈希），也不能在自身内部声明自身“最终行数”。本案例把 references 的最终哈希留在交付报告中，参考文档只记录 SKILL.md 的最终值。
 - 结构检查的最小集：围栏总数必须为偶数且每块有闭合围栏；标题层级不能因追加而断裂；SKILL.md 资源清单中的文件必须存在（`validate_skill.py` 已覆盖本地引用）。
@@ -379,3 +418,21 @@ py -3 "<scan-script>" --scan-dir "<projects-dir>" --target "<skill-dir>/SKILL.md
 - 被核对版本的 39,910 B / `5297078a…` 是当时快照；追加本案例前 SKILL.md 已被后续修改取代，当前最终值见交付报告，不在本文件声明。
 
 未验证：用户实际执行 reload 后注入记录发生变化的对照分支需要宿主执行，代理只能观测，未构造。
+
+## 可测常量与运行缓存（已验证）
+
+来源：会话 `61774d4c-3719-48c0-b52b-f4db055c4f7a`（2026-10-28，读取时 `runtimeState=running`、revision 12）。除注明外，时间为本地时间（UTC+01:00）。
+
+| 时间 | 事件 | 证据 |
+|---|---|---|
+| 18:43:57 起 | 运行当时的证书验证器后出现 `scripts/__pycache__`（首见 52,092 B；随后快照列出 4 个 `.pyc`：52,022 / 5,441 / 5,736 / 6,260 B） | 目录快照 |
+| 18:56:34 | `validate_skill.py` 报 `Files (7)`、9 PASS、`RESULT PASS`；此时缓存已移除 | 公开输出 |
+| 其后 | 证据档案把算术订正为 `7005,10056467265 − 7005,06286617492 = 0,03769849773`，并注明 0,0187 是误传（模块 docstring 写作 0,019） | 证据档案第 121–122 行 |
+| 19:09:25 | 只读复核同题草稿 `certificat-riemann-intervalle-borne`：SKILL.md 第 145 行与技术说明第 193 行仍写“écart 0,0187”，脚本内没有该常量 | 本次 grep；未修改该包 |
+
+要点：
+
+- `RESULT PASS` 只覆盖结构、引用、代码块与退出码，不解析散文中的数值。可测常量必须用脚本或验证器的真实输出逐位比对；由文档自身引用的数字推导的算术（两个坐标之差、两个计数之和）也要算一遍。本例按文档自己的两个坐标相减是 0,03769849773，而文档中的同一常量写 0,0187 或 0,019。
+- `Files (N)` 只排除 `.git`：`scripts/__pycache__/*.pyc` 会被计入；`layout` 因 `scripts/` 是允许目录而不报错，`References fingerprint` 又忽略 `__pycache__`。运行脚本后不重列目录，报告就会引用一份已失效的清单。
+- 清理只删除本次运行产生的缓存；来源不明的缓存先询问。清理后再运行脚本，必须重做清理与清单。提交阶段的缓存门见 `commit-skill-work`。
+- 未验证：没有为“文档常量错误但验证器 PASS”构造自动夹具；本例由人工算术与只读 grep 证实，验证器未检测。
