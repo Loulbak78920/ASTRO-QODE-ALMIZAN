@@ -1,6 +1,6 @@
 ---
 name: auditer-couverture-skill-avant-creation
-description: "在采纳「新建 Skill」推荐或开始写 SKILL.md 前，先审计已安装能力是否已覆盖：冻结推荐中的能力声明与否证句，枚举用户级与项目级全部 Skill 根，从 summary/rationale 提取高区分度能力 token（命令旗标、输出键、错误串、函数名、环境变量及中英法同义词），用只读脚本跨 SKILL.md、references 与 scripts 检索，再逐条读取规范条款与实现函数，判定 COVERED/PARTIAL/ABSENT/CONFLICT/UNSTABLE 并记录 file:line 与文件哈希；COVERED 改为更新现有 Skill，PARTIAL 收窄新 Skill 范围并写「不用于」与委派边界，ABSENT 才新建，CONFLICT 停止并列双方原文；方案定稿前与写入前各做一次全根快照，审计对象指纹变化时先采样至稳定，否则结论标 STALE；同时用磁盘命中反证推荐 rationale 的「现有 Skill 均未覆盖」。用于自动推荐 action=create、推荐声称若干 Skill 未覆盖、按记忆只查几个相邻 Skill、只 grep SKILL.md 漏掉 scripts 中的门禁、把提及当覆盖、创建前决定新建还是更新、避免近重复 Skill。English: audit capability coverage before creating a skill, installed skills overlap, avoid duplicate skill, grep rules and scripts, coverage matrix, file:line evidence. Français: auditer la couverture des compétences avant de créer un Skill, chevauchement entre Skills, matrice de couverture. 不替代并发重复接管（adopt-concurrent-duplicate-skill）、推荐声明与来源会话对账（verify-skill-recommendation-claims）、清单计数（inventory-installed-skills）、写入后验收（skill-file-qa）。"
+description: "在采纳「新建 Skill」推荐或开始写 SKILL.md 前，先审计已安装能力是否已覆盖。不替代并发重复接管（adopt-concurrent-duplicate-skill）、推荐声明与来源会话对账（verify-skill-recommendation-claims）、清单计数（inventory-installed-skills）、写入后验收（skill-file-qa）。冻结推荐中的能力声明与否证句，枚举用户级与项目级全部 Skill 根，从 summary/rationale 提取高区分度能力 token（命令旗标、输出键、错误串、函数名、环境变量及中英法同义词），用只读脚本跨 SKILL.md、references 与 scripts 检索，再逐条读取规范条款与实现函数，判定 COVERED/PARTIAL/ABSENT/CONFLICT/UNSTABLE 并记录 file:line 与文件哈希；COVERED 改为更新现有 Skill，PARTIAL 收窄新 Skill 范围并写「不用于」与委派边界，ABSENT 才新建，CONFLICT 停止并列双方原文；方案定稿前与写入前各做一次全根快照，审计对象指纹变化时先采样至稳定，否则结论标 STALE；同时用磁盘命中反证推荐 rationale 的「现有 Skill 均未覆盖」。用于自动推荐 action=create、推荐声称若干 Skill 未覆盖、按记忆只查几个相邻 Skill、只 grep SKILL.md 漏掉 scripts 中的门禁、把提及当覆盖、创建前决定新建还是更新、避免近重复 Skill。English: audit capability coverage before creating a skill, installed skills overlap, avoid duplicate skill, grep rules and scripts, coverage matrix, file:line evidence. Français: auditer la couverture des compétences avant de créer un Skill, chevauchement entre Skills, matrice de couverture."
 ---
 
 # 创建前的能力覆盖审计
@@ -31,7 +31,7 @@ description: "在采纳「新建 Skill」推荐或开始写 SKILL.md 前，先�
 6. **版本绑定。** 记录 `file:line`、文件 SHA-256、枚举时间。行号只在记录的哈希窗口内有效。
 7. **只读。** 审计本身不写任何 Skill 目录；快照只写 `~/.qoder/tmp` 并在用后删除；不产生 `__pycache__`。
 8. **并发标记。** 命中包正在被写入时判 `UNSTABLE`，不作为最终覆盖结论。
-9. **决策先于写入。** `COVERED` 不得新建；`PARTIAL` 必须收窄并写委派；只有 `ABSENT` 才进入 `skill-creator` 的 create。
+9. **决策先于写入，属主按加载时机定。** `COVERED` 不得新建。`PARTIAL` 不自动等于「收窄新建」：先问失败发生的那一刻哪个已装 Skill 会被加载——规则落在那一刻不会被加载的包里等于没写。属主取失败时刻在场的包；只有 `ABSENT`（在场包都不含该能力）才进入 `skill-creator` 的 create。部分覆盖的最终路线（更新属主 / 收窄新建 / 两者 / 只报告）交用户裁决，不按覆盖率百分比决定。
 10. **历史 Skill 不可得时不臆造。** 先找本地备份、删除记录与会话 JSONL 中的 Write/Edit；能恢复的版本按字节数与 SHA-256 核对后保留有效规则，取不到的才标 `UNVERIFIED`，只保留可核实的名称、能力与最后观察到的路径/大小。
 11. **不复制第二份事实源。** 已覆盖的规则只在正文写一句用途与 Skill 名，不复制步骤；同一规则只保留一个属主。
 12. **两次全根快照。** 方案定稿前与写入前各枚举一次两个 skills 根，记录目标 `SKILL.md` 的 size、mtime、SHA-256；两次 diff 为空才沿用矩阵，出现新增或变化先按 0c 稳定并重跑矩阵。
@@ -39,6 +39,9 @@ description: "在采纳「新建 Skill」推荐或开始写 SKILL.md 前，先�
 14. **基线已存在不等于并发。** 基线时已存在、且属主与指纹可核实并一致的目标按 update 处理；指纹一致但属主/来源冲突或无法核实，标 `UNVERIFIED` 交用户；只有审计期间新出现或基线后指纹变化才进入稳定门禁与接管判断。
 15. **声明资源先于委派。** 对新出现或刚修改的相邻 Skill，交叉引用其脚本或参考文件前先核对具名文件是否存在、目录是否为空、是否仍在变化；缺失时只引用思路、不调用脚本，并在矩阵标 `UNVERIFIED`。
 16. **来源断言独立复跑。** 来源会话的退出码、计数、URL 等关键断言若只有二手摘要，标 `UNVERIFIED` 并只读复跑无害分支；复跑 `skill-file-qa` 用位置参数，要求 `RESULT PASS`、rc=0、`skill references: N checked` 与 `Files (N)` 的 N 精确匹配；`0 found`/`0 checked` 是假 PASS（`--skill` 会被 argparse 缩写为 `--skills-root`）。
+17. **近邻差异落到脚本旗标时以字节为准。** 近邻与目标的实质差异若在其绑定脚本的 CLI（新增/缺失旗标、默认根、输出目录），只以规范脚本的 `行号 + SHA-256` 为证，不采信近邻 `SKILL.md` 的描述；差异判 `PARTIAL` 并列出新增/缺失旗标与行号。
+18. **先查上游未落盘方案。** 推荐名称在本机历史上若已被提出过（含推荐所引来源会话的上游），先检索同名与关键旗标；目标目录与委派行都不存在的方案只作线索，摘出参数差异并写明复用或偏离，不得当作已执行，也不得从零重复推导。
+19. **答复不等于执行。** 用户选定路线后，只有磁盘证据才算落地：create 看目标 `SKILL.md`，并存看近邻委派行，另加两包 `skill-file-qa` 的 `RESULT PASS`、`Files (N)` 与指纹；问题已有答复、方案写「确认后开始执行」都不作数。
 
 ## 流程
 
@@ -147,13 +150,32 @@ PYTHONIOENCODING=utf-8 py -3 "$SKILL_DIR/scripts/audit_coverage.py" \
 | 覆盖结论 | 决策 |
 |---|---|
 | 任一 `COVERED` | 不新建；改为更新现有 Skill，保留其有效规则 |
-| 仅 `PARTIAL` | 收窄新 Skill：只写真实增量，写「不用于」与委派边界 |
+| 仅 `PARTIAL` | 先按 6bis 定属主，再在更新属主 / 收窄新建 / 两者 / 只报告中交用户裁决；收窄新建时只写真实增量，写「不用于」与委派边界 |
 | 全部 `ABSENT` | 可以新建，且只写真实增量 |
 | 存在 `CONFLICT` | 停止；列出冲突双方原文与 `file:line`，交用户决定 |
 | 存在 `UNVERIFIED` | 先补读或复跑；不得把「还没找到」当成 `ABSENT` |
 | 存在 `UNSTABLE` | 等待稳定或只读保留；不得把中间态当最终结论 |
 
 收窄新建的最低要求：description 说明只补增量；正文开头写「不用于」；已覆盖规则只给一句用途加 Skill 名；属主变化时只改引用，不维护两份正文。
+
+### 6bis. 部分覆盖时的属主裁决
+
+覆盖率不是判据。判据是**失败发生的那一刻，哪个已装 Skill 会被加载**。
+
+1. 用一句话写出失配：哪个动作、在哪一步、哪条规则缺失。
+2. 列出那一刻在场的包。失败发生在写入后验收，就在修复包与校验器包里；发生在写前决策，就在本 Skill 与 create/update 分流包里。
+3. 候选规则只能落在在场的包里。一个尚未创建的 Skill 在失败时刻并不存在，不会被选中，因此**不能**成为该规则的属主——写进它的正文等于没写。
+4. 多个包都在场时，选失败分支已经运行的那一个，而不是「本应提前拦住」的那一个。
+5. 判完属主，把路线交用户四选一，并写明代价：
+
+| 路线 | 代价 | 何时选 |
+|---|---|---|
+| 更新属主 | 改一个已 PASS 的包，`Files (N)` 可能 +1 | 增量是单条判据或一段流程 |
+| 收窄后新建 | 新包 + 近邻委派行 + 两包 QA | 增量能独立成流程，且失败时刻确会加载它 |
+| 两者 | 两个包各跑 QA | 属主规则本身有错，且增量足够独立 |
+| 只报告 | 零写入，缺陷留在原处 | 只有一次观测、无法复现，或用户暂不处理 |
+
+6. 报告写清：属主、被拒路线与理由、为何覆盖率不作为依据。未裁决前不写目标目录。
 
 ### 7. 写进方案并等确认
 
@@ -162,6 +184,8 @@ PYTHONIOENCODING=utf-8 py -3 "$SKILL_DIR/scripts/audit_coverage.py" \
 ### 8. 写入前复查
 
 核对目标目录与两份快照一致：基线不存在且仍不存在才 create；基线已存在且指纹一致按 update；新出现或指纹变化按 0c 稳定后重跑矩阵，仍属职责重合再转 `adopt-concurrent-duplicate-skill`。写入流程交给 `skill-creator`，写后验收交给 `skill-file-qa`。写入后重跑矩阵：已覆盖规则是否只以交叉引用出现，是否复制了兄弟 Skill 的步骤；源断言按规则 16 复跑，`0 found` 不作证据。
+
+选定「收窄后新建并存」时，写入后还要：新包在「何时不用」或委派表点名近邻，近邻加一行委派（最小 Edit），并分别对两个包重跑 `skill-file-qa`、记录 `Files (N)` 与两份 SKILL.md 哈希；近邻 references 与已验证案例不动。只写新包、不补近邻委派行，等于路线未完成（规则 19）。
 
 ## 失败模式
 
@@ -181,6 +205,12 @@ PYTHONIOENCODING=utf-8 py -3 "$SKILL_DIR/scripts/audit_coverage.py" \
 | 校验器 PASS 但 `skill references: 0 found` | `--skill` 被缩写为 `--skills-root` | 用位置参数，要求计数精确匹配 |
 | 矩阵全绿但关键主张未复跑 | 把二手摘要当证据 | 标 `UNVERIFIED`，补读或补跑 |
 | 同一规则写进第二个 Skill | 未指定唯一属主 | 保留一个属主，其余改交叉引用 |
+| 近邻 SKILL.md 说脚本没有某旗标，规范脚本实际有 | 只读文档、未读脚本字节 | 按行号核对脚本并把差异判 `PARTIAL`；行号绑定脚本 SHA-256 |
+| 推荐重复推导上游已提出但未落盘的方案 | 未检索推荐名称的历史方案 | 检索同名与旗标，摘差异并写明复用或偏离；目标与委派行不存在即「未落盘」 |
+| 用户已选路线、方案写「确认后执行」，但目标与委派行都不存在 | 把问题答复当执行 | 以 `test -e`、委派行检索与两包 QA 为准；报告写「决策已定，执行未发生」 |
+| 按覆盖率百分比选 create/update | 覆盖率与「失败时谁会加载」无关 | 按 6bis 定属主，再把路线交用户 |
+| 把新规则写进尚未创建的 Skill | 失败时刻它不存在，不会被加载 | 写进失败时刻在场的包 |
+| 部分覆盖直接收窄新建，未问用户 | 与既有属主争同一决策 | 四选一，记录被拒路线与理由 |
 | 带参数调用后片段显示实参文本 | 注入层替换位置变量，磁盘未变 | 以磁盘原文为准，示例只用具名变量 |
 
 ## 已验证案例（2026-10-27）
@@ -189,8 +219,10 @@ PYTHONIOENCODING=utf-8 py -3 "$SKILL_DIR/scripts/audit_coverage.py" \
 - 上一会话 7bc3b7ac 实际检查了 5 个 Skill（`skill-validator-selftest`、`develop-skill-static-checker`、`replay-skill-reference-fixtures`、`valider-harnais-fixture-windows-msys`、`tester-fixture-triage-snapshots`），漏掉 `audit-skill-tool-contracts`；推荐 JSON 写「四个」→ 计数不准确，但「漏查重叠」的实质成立。
 - 本 Skill 创建前对 68 个用户级 + 2 个项目级 Skill 做实跑（最终复核时为 69+2，期间新增 1 个）：`inventory-installed-skills`、`adopt-concurrent-duplicate-skill`、`verify-skill-recommendation-claims` 均判 `PARTIAL`，全量 token 检索 + 五态判定的门禁判 `ABSENT`，故新建并窄化为本流程。
 - 历史 audit-recouvrement-skills-avant-creation 的最终版（369 行、34,040 B、SHA-256 `2b86cf43…`）已从归档仓库逐字恢复并核对哈希；本 Skill 保留其两次快照、`STALE` 稳定门禁、`CONFLICT`、声明资源与来源复跑等规则，细节见案例文件。
+- 会话 `59fbebb1`（2026-10-29）推荐新建 rediger-skill-md-exemples-sans-faux-positifs：审计显示四个包已覆盖约九成，唯一增量为「引用 vs 示例」；但两条 FAIL 发生在写入后验收，新建的写前包在那一刻并不存在，属主因此是修复包，用户裁决为更新。落地 reparer-paquet-skill-echecs-qa（18 159 B、`8b6313b2…`、`Files (4)`），本次独立复跑 QA 为 PASS 10/0/0。该实例证明属主按加载时机定，并反证推荐所称「auditor 只做覆盖统计」；其四选项表未被快照保留，不作证据。
+- 会话 `6b54b267`（2026-10-29）推荐新建 archiver-preuve-web-sha256：读近邻 archiver-preuves-web-chaine-sha256 的 `SKILL.md:48`/`:71`，再核对规范脚本 `archiver_preuve.py`（16 579 B，SHA-256 `4d8361ba…`，:40 取自身目录，:431 有 `--ecran`，全文件无 `--dossier`），确认差异落在「可移植 `--dossier` + 去截图」两点；上游会话 `6cd0c49a` 已提出同名方案但从未落盘。用户选定「新建 + 近邻加委派行」后会话结束，复核时目标目录与近邻委派行均不存在——该实例只证明前两步与「答复≠执行」，不证明委派行与双包 QA 已执行。
 
-细节、哈希、限制与未验证项见 `references/cas-2026-10-27-couverture.md`。
+细节、哈希、限制与未验证项见 `references/cas-2026-10-27-couverture.md` 与 `references/cas-2026-10-29-arbitrage-partiel.md`（6bis 的来源）。
 
 ## 验收
 
@@ -205,10 +237,17 @@ PYTHONIOENCODING=utf-8 py -3 "$SKILL_DIR/scripts/audit_coverage.py" \
 - [ ] `CONFLICT` 已停止并列出双方原文，未擅自选边。
 - [ ] 源断言已复跑，`0 found`/`0 checked` 未当作证据。
 - [ ] 写入前目标目录状态与两份快照一致；出现或变化已按 0c 处理。
+- [ ] 近邻差异涉及脚本旗标时，已在规范脚本中按行号核对并记录脚本 SHA-256。
+- [ ] 推荐名称的历史方案（含来源会话上游）已检索；未落盘者只作线索。
+- [ ] 选定路线已按磁盘核对落地；并存路线含近邻委派行与两包 QA。
+- [ ] 每条 `PARTIAL` 都记录了失败时刻在场的包与属主判定。
+- [ ] 部分覆盖的路线经用户裁决，报告列出被拒路线与理由。
+- [ ] 未用覆盖率百分比代替属主判据。
 - [ ] 报告区分已核实、推断、未验证。
 
 ## 资源
 
 - `scripts/audit_coverage.py`：只读枚举 + 跨文件 token 检索 + 矩阵骨架。`--help` 查看参数；`RESULT OK|PARTIAL` 退出码 0，用法/环境错误 2。默认忽略大小写，支持 `--regex`、`--format json`、`--list-skills`。
 - `references/cas-2026-10-27-couverture.md`：来源会话、5 个已查 Skill、规则与实现行号、历史 Skill 的两版恢复过程与哈希、脚本实测、限制。
+- `references/cas-2026-10-29-arbitrage-partiel.md`：覆盖约九成时的属主裁决、按加载时机定属主的反证、用户裁决原文、独立复跑结果与限制。
 - 委派：数量口径 → `inventory-installed-skills`；推荐声明与来源对账 → `verify-skill-recommendation-claims`；并发重复接管 → `adopt-concurrent-duplicate-skill`；写后验收 → `skill-file-qa`。
