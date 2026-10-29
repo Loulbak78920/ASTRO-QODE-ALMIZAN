@@ -33,6 +33,7 @@ PY_LANGS = {"python", "py"}
 JS_LANGS = {"js", "javascript", "mjs", "cjs"}
 RESOURCE_PREFIXES = ("scripts/", "references/", "assets/")
 ALLOWED_DIRS = {"scripts", "references", "assets"}
+ALLOWED_ROOT_FILES = {"SKILL.md", ".gitattributes"}
 PROHIBITED_DOCS = {"README.md", "CHANGELOG.md", "INSTALLATION_GUIDE.md"}
 KNOWN_EXTS = {
     ".py", ".js", ".cjs", ".mjs", ".ts", ".tsx", ".json", ".yaml", ".yml",
@@ -216,7 +217,7 @@ def list_files(skill_dir: Path) -> list[str]:
 def check_layout(files: list[str], report: Reporter) -> None:
     bad_doc = False
     for rel in files:
-        if rel == "SKILL.md":
+        if rel in ALLOWED_ROOT_FILES:
             continue
         parts = rel.split("/")
         if len(parts) > 1 and parts[0] in ALLOWED_DIRS:
