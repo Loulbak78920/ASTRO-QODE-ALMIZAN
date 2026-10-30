@@ -1,6 +1,6 @@
 ---
 name: deployer-site-sans-dol-vps
-description: "Mettre à jour sans dolosif le site public al-mizan.world sur le VPS OVH : recenser les routes réellement servies par la passerelle, requalifier chaque allégation en opérationnel, simulé ou spécifié, valider en local les pages et le JavaScript inline, déployer un lot cohérent de pages et de JSON d'API (ex. œuvre universelle), un lot mixte de fichiers existants et nouveaux, ou une archive ciblée web_cloud et modules modifiés, appliquer des en-têtes nginx avec sauvegarde et retour arrière, puis vérifier le site en direct et dans les journaux, y compris un triage de journaux illisible sans sudo. Utiliser pour corriger, publier ou vérifier www.al-mizan.world, le portail Al-Mizan, la passerelle VPS, une page du site, l'œuvre universelle ou une déclaration publique de l'écosystème."
+description: "Mettre à jour sans dolosif le site public al-mizan.world sur le VPS OVH : recenser les routes réellement servies par la passerelle, requalifier chaque allégation en opérationnel, simulé ou spécifié, valider en local les pages et le JavaScript inline, déployer un lot cohérent de pages et de JSON d'API (ex. œuvre universelle), un lot mixte de fichiers existants et nouveaux, ou une archive ciblée web_cloud et modules modifiés, appliquer des en-têtes nginx avec sauvegarde et retour arrière, puis vérifier le site en direct et dans les journaux, y compris un triage de journaux illisible sans sudo. Utiliser pour corriger, publier ou vérifier www.al-mizan.world, le portail Al-Mizan, la passerelle VPS, une page du site, l'œuvre universelle ou une déclaration publique de l'écosystème. Utiliser aussi avant de retoucher une page existante, pour vérifier quelle copie le routeur sert réellement."
 ---
 
 # Publier une mise à jour véridique du site Al-Mizan
@@ -15,12 +15,13 @@ Ce flux couvre la chaîne complète : audit des déclarations, correction des pa
 2. **Corriger la source, pas seulement la page.** Les textes du dialogue et les compteurs sont souvent régénérés par des modules Python. Si le générateur garde l'ancienne formulation, la page la réintroduit.
 3. **Toute écriture en production est réversible — et la réversibilité se prouve avant d'écrire.** Sauvegarde horodatée dont l'existence est vérifiée : archive non vide, `BACKUP_FICHIERS > 0`, SHA-256 relevé et `tar -tzf` recoupé avec la liste. Un compte nul arrête l'opération avant toute extraction. Chemin de restauration noté dans le rapport final.
 4. **Demander confirmation avant le premier déploiement** d'un lot non trivial. Un accord une fois donné ne vaut pas pour les lots suivants.
-5. **Secrets et sudo** : passer par `C:\Users\Administrateur\Desktop\IMAM8MAHDI\ASTRO-Q°ODE_SYSTEME\deploiement_vps\charger_credentials_ovh.py` (`hote_user_mdp()`). Sur ce VPS, `ubuntu` dispose de sudo NOPASSWD (`sudo -n true` → 0 constaté le 28/10/2026 ; à revérifier à chaque session) : exécuter les commandes privilégiées avec `sudo -n`, sans stdin. Ne jamais envoyer le mot de passe à `sudo -S` avec `bash -s` : il est exécuté comme une commande et recraché dans stderr. Ne jamais afficher, journaliser ni copier le secret dans un fichier du dépôt.
+5. **Secrets et sudo** : passer par `C:\Users\Administrateur\Desktop\IMAM8MAHDI\ASTRO-Q°ODE_SYSTEME\deploiement_vps\charger_credentials_ovh.py` (`hote_user_mdp()`). Sur ce VPS, `ubuntu` dispose de sudo NOPASSWD (`sudo -n true` → 0 constaté le 28/10/2026 ; à revérifier à chaque session) : exécuter les commandes privilégiées avec `sudo -n`, sans stdin. Ne jamais envoyer le mot de passe à `sudo -S` avec `bash -s` : il est exécuté comme une commande et recraché dans stderr. Ne jamais afficher, journaliser ni copier le secret dans un fichier du dépôt. **Transport d'un script multi-lignes** : `cli.exec_command("sudo -n bash -s")`, puis écrire le script sur `stdin`, appeler `stdin.channel.shutdown_write()`, lire `stdout`/`stderr`, et seulement ensuite `recv_exit_status()`. Ne pas composer la commande en `"bash -c " + repr(cmd)` : `repr()` échappe les sauts de ligne en `\n` littéraux que `bash -c` n'interprète pas (reproduit : `bash: line 1: echo A\necho B: No such file or directory`, rc 127). Le 29/10/2026, la variante `bash -c` a été abandonnée après un `NameError` local, avant tout envoi ; la variante `bash -s` a rendu `RC 0` sur les phases A et B.
 6. **La vérité des routes vient du code de la passerelle**, jamais du contenu du répertoire `web_cloud`.
 7. **Un lot page + API est atomique.** Une page publique et les JSON consommés par son API (ex. `oeuvre-universelle` : 3 pages + `resume.json` + `manifeste_anteriorite.json`) se déploient avec la même sauvegarde et la même vérification. Déployer une seule page crée une divergence entre ce que lit l'utilisateur et ce que renvoie l'API.
 8. **Un journal vide ou illisible est INCONCLUSIF.** Une lecture sans sudo peut rendre `LINES 0` avec un code 0 et un stderr vide ; ce n'est pas une preuve d'absence de 5xx. Lire les journaux avec `sudo -n` et ne conclure qu'avec une fenêtre et un décompte lisibles.
 9. **Une liste de chemins traversant Windows → VPS est en LF.** L'écrire en octets (`write_bytes`, jointure `b"\n"`), jamais avec `write_text` qui traduit en `\r\n` sous Windows ; côté distant, retirer un `\r` final avant tout usage. Une liste corrompue produit une sauvegarde vide, pas une erreur visible.
 10. **L'ordre tests → génération → déploiement est imposé, et une seule racine Merkle doit coïncider partout.** La suite œuvre rescelle le manifeste sans réécrire les pages ; lancée après génération, elle laisse les pages sur l'ancienne racine. `--verifier` reste vert car il compare les hachages des fichiers au manifeste stocké. Exiger la même racine dans les trois pages, `resume.json`, le manifeste et l'API.
+11. **Retoucher la copie que le routeur ouvre, pas un homonyme.** Avant toute retouche d'une page, résoudre le chemin exact dans le handler (`chemin in [...]` puis `Path(__file__).resolve().parent / "web_cloud" / "<fichier>"`), puis chercher les variantes de la même page dans le workspace. Un nom différent ne prouve pas un fichier différent : `HUB_PONTS_SYNCHRONES_AL_MIZAN.html` et `hub_ponts_synchrones.html` sont la même page. Comparer les octets, retoucher le seul fichier servi, et traiter la suppression d'une copie non servie comme une opération distincte, confirmée, avec taille et SHA-256 relevés avant le `rm`.
 
 ## 2. Repères
 
@@ -60,6 +61,39 @@ Pièges constatés :
 - `/video` sert un MP4 (`web_cloud/al_mizan_promotion_youtube_1080p.mp4`), pas une page.
 - Tous les accès directs du type `/livre_blanc_almizan.html` ou `/hub_ponts_synchrones.html` répondent **404** : seuls les alias de la table de routage fonctionnent. Ne jamais déduire une URL publique du nom de fichier.
 - Le sitemap doit donc être construit depuis la table des routes, en `https://www.al-mizan.world/...`, et `robots.txt` doit exclure `/api/`, `/webhook/`, `/unifie`.
+
+### 3.1 Quelle copie est réellement servie ?
+
+Une demande « applique ce layout à l'original » ne nomme pas le fichier que le routeur ouvre. Le 28/10/2026, `HUB_PONTS_SYNCHRONES_AL_MIZAN.html` (racine, 25 900 o, sha `86719d15…`) a été retouché en premier ; le handler ne sert que `ASTRO-Q°ODE_SYSTEME/web_cloud/hub_ponts_synchrones.html` (28 440 o avant retouche, sha `af301dbf…`). Le doublon racine était pré-audit : pas de bandeau de transparence, « Stabilité 99.83% », « Bride 0.6225 Scellée ». Le déployer aurait fait régresser l'invariant 1.
+
+Résoudre le handler, puis lister les variantes par tokens — un nom différent ne prouve pas une page différente. Adapter `"/ponts"` et le basename à la page visée. La copie racine ayant été supprimée, l'exemple ci-dessous utilise une variante encore présente ; remplacer `CANDIDAT` par le candidat listé. La liste est volatile : des prototypes peuvent apparaître pendant la session (constaté le 28/10), donc relister juste avant de choisir.
+
+```bash
+cd "C:/Users/Administrateur/Desktop/IMAM8MAHDI/ASTRO-Q°ODE_SYSTEME"
+grep -n 'chemin in \[.*"/ponts"' -A 8 passerelle_api_vps_mizan.py
+```
+
+```text
+923:        elif chemin in ["/ponts", "/hub-ponts", "/ponts-synchrones", "/hub"]:
+924:            chemin_ponts = Path(__file__).resolve().parent / "web_cloud" / "hub_ponts_synchrones.html"
+```
+
+```bash
+cd "C:/Users/Administrateur/Desktop/IMAM8MAHDI"
+find . -type f -iname '*.html' -not -path './.git/*' \
+  | grep -iE 'ponts|synchrones' | sort
+CANDIDAT="ASTRO-Q°ODE_SYSTEME/ponts_synchrones_al_mizan.html"
+sha256sum "$CANDIDAT" "ASTRO-Q°ODE_SYSTEME/web_cloud/hub_ponts_synchrones.html"
+diff -u "$CANDIDAT" "ASTRO-Q°ODE_SYSTEME/web_cloud/hub_ponts_synchrones.html" | head -80
+```
+
+Décision :
+
+- Seul le chemin rendu par le handler est servi. Les autres copies ne changent rien en production : un accès direct par nom de fichier répond 404 (invariant 6). Ne pas les retoucher « au cas où ».
+- Un candidat n'est pas forcément un doublon : le 28/10, `ASTRO-Q°ODE_SYSTEME/ponts_synchrones_al_mizan.html` (15 385 o, sha `2ca9fea1…`) partage les tokens mais porte un autre titre et n'est référencé par aucun handler de la passerelle. Le diff tranche ; ne rien supprimer sans demande.
+- Lire le diff avant d'écrire. Une copie sans bandeau de transparence, avec « Stabilité 99.83% » ou « Bride 0.6225 Scellée », est antérieure à l'audit : la déployer ferait régresser l'invariant 1.
+- Comparer aussi le fichier servi local au fichier distant : le local peut contenir des changements jamais déployés (28/10 : 27 848 o en ligne, 28 440 o en local, trois liens CGU/CGV/Signalement absents de la production). Trancher leur inclusion avec l'utilisateur avant d'envoyer.
+- Supprimer une copie non servie est une opération distincte : vérifier les références vivantes, relever taille et SHA-256, demander confirmation, puis `rm`. Ne jamais la supprimer comme effet de bord de la retouche.
 
 ## 4. Étape 2 — Auditer puis requalifier chaque allégation
 
@@ -117,17 +151,32 @@ console.log('ids dupliques:', [...new Set(ids.filter((v,i)=>ids.indexOf(v)!==i))
 
 ### 5.3 Passerelle locale
 
-```bash
-cd "C:/Users/Administrateur/Desktop/IMAM8MAHDI/ASTRO-Q°ODE_SYSTEME"
-nohup env PYTHONIOENCODING=utf-8 py -3 passerelle_api_vps_mizan.py --port 18095 > ./.qoder_tmp_gw.log 2>&1 &
-sleep 4
-curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:18095/api/v1/sante
+Le démarrage local est **fail-closed** depuis le durcissement du 27/10/2026 : `secret_webhooks_requis()` lit `MIZAN_WEBHOOK_SECRET` et `__main__` refuse de démarrer si la variable manque, avant d'ouvrir le port.
+
+```text
+[ERREUR] Démarrage refusé : MIZAN_WEBHOOK_SECRET absent : signature des webhooks impossible.
 ```
 
-Utiliser `18095` pour les tests d'API afin d'ignorer une instance déjà présente. N'utiliser `8095` que si un passage navigateur exige le port exact et qu'il est libre. Arrêter ensuite :
+Pour une validation locale en lecture seule, fournir une valeur factice à usage unique sur un port libre. Ne jamais l'écrire dans un fichier ni la réutiliser en production : le service VPS charge le vrai secret via `EnvironmentFile=`. Sans `MIZAN_VPS_API_KEY`, les routes protégées restent fermées — suffisant pour tester des pages et des JSON publics, pas pour un parcours authentifié.
+
+Vérifier le port **avant** de démarrer : une passerelle d'une session précédente peut y rester à l'écoute et servir son ancien code. Constaté le 29/10/2026 : PID 10668 à l'écoute sur 18095 renvoyait `{"succes": false, "erreur": "Route GET introuvable"}` sur `/quatrieme-dimension`, alors que la source courante contient ces handlers (`passerelle_api_vps_mizan.py:154-159`). Ce 404 simule une route manquante. Prendre un autre port plutôt que de tuer un PID inconnu ; si son arrêt est nécessaire, relever d'abord son heure de démarrage et son chemin. Si 18096 est aussi pris, prendre 18097.
 
 ```bash
-pid=$(netstat -ano | grep ":18095" | grep LISTENING | awk '{print $5}' | head -1)
+cd "C:/Users/Administrateur/Desktop/IMAM8MAHDI/ASTRO-Q°ODE_SYSTEME"
+PORT=18095
+if netstat -ano | grep ":$PORT" | grep -q LISTENING; then PORT=18096; fi
+nohup env PYTHONIOENCODING=utf-8 MIZAN_WEBHOOK_SECRET=local-test-only \
+  py -3 passerelle_api_vps_mizan.py --port "$PORT" > ./.qoder_tmp_gw.log 2>&1 &
+sleep 4
+tail -3 ./.qoder_tmp_gw.log
+curl -s -o /dev/null -w '%{http_code}\n' "http://127.0.0.1:$PORT/api/v1/sante"
+```
+
+Si le journal affiche le refus, la cause est le secret, pas le port. N'utiliser `8095` que si un passage navigateur exige le port exact et qu'il est libre. Arrêter le processus du port réellement ouvert — relire ce port dans la bannière du journal, pas dans une variable de shell perdue entre deux appels :
+
+```bash
+PORT=$(grep -o 'PORT [0-9]*' ./.qoder_tmp_gw.log | tail -1 | awk '{print $2}')
+pid=$(netstat -ano | grep ":$PORT" | grep LISTENING | awk '{print $5}' | head -1)
 if [ -n "$pid" ]; then taskkill //F //PID "$pid"; fi
 ```
 
@@ -175,7 +224,16 @@ print(ARCHIVE, ARCHIVE.stat().st_size, "fichiers", len(noms))
 
 Transférer l'archive et la liste (`sftp.put` vers `/tmp/al_mizan_update.tar.gz` et `/tmp/al_mizan_liste.txt`) via paramiko. `write_bytes` est obligatoire : `write_text` produit des `\r\n` sous Windows (invariant 9).
 
-**Phase A — sauvegarde.** Remplacer `23` par le compte imprimé localement, puis exécuter via `sudo -n bash -c '<commande>'` :
+**Contrôler les membres avant transfert.** Un `py_compile` local laisse un `__pycache__/*.pyc` dans la racine : s'il entre dans la liste, l'archive l'installe sur le VPS. Filtrer `__pycache__` et `*.pyc` dans tout le lot, pas seulement sous `web_cloud`, puis exiger :
+
+```bash
+test "$(tar -tzf ./.qoder_tmp_site.tar.gz | grep -Ec '(^|/)__pycache__/|\.pyc$')" -eq 0
+test "$(tar -tzf ./.qoder_tmp_site.tar.gz | wc -l)" -eq "$(wc -l < ./.qoder_tmp_liste.txt)"
+```
+
+Un compte égal ne prouve rien : le 30/10/2026, 8 membres pour 8 lignes de liste, dont `__pycache__/passerelle_api_vps_mizan.cpython-314.pyc` installé en `644` puis retiré par un `stat` + `rm` explicites.
+
+**Phase A — sauvegarde.** Remplacer `23` par le compte imprimé localement, puis transmettre le bloc par `cli.exec_command("sudo -n bash -s")` : `stdin.write(cmd)`, `stdin.channel.shutdown_write()`, lecture de `stdout`/`stderr`, puis `recv_exit_status()`. Ne pas l'envoyer en `bash -c` (invariant 5) :
 
 ```bash
 set -euo pipefail
@@ -268,7 +326,7 @@ Un lot peut mêler des fichiers déjà présents et des ajouts (constaté le 28/
 Règles de décision, dans cet ordre :
 
 1. Chemin présent dans `/tmp/al_mizan_modes.txt` : reprendre `u`, `g`, `m` relevés.
-2. Chemin nouveau : `ubuntu:ubuntu` et mode d'un frère de même extension dans le même répertoire (page HTML → page sœur, `.json`/`.md` → voisin de même extension, `.py` → `.py` voisin) ; à défaut `644`, et `666` pour un `.html`.
+2. Chemin nouveau : `ubuntu:ubuntu` et mode d'un frère de même extension dans le même répertoire (page HTML → page sœur, `.json`/`.md` → voisin de même extension, `.py` → `.py` voisin) ; à défaut `644`, et `666` pour un `.html`. Dans `web_cloud/`, le frère `.json` vaut `666` (quatre relevés le 29/10/2026) : un nouveau JSON y prend `666`, et un `666` existant ne se « corrige » pas en `644`. Le `644` ne vaut que hors `web_cloud` (ex. `resultats/oeuvre_universelle/`).
 3. `%n` rend un chemin absolu : le nom est précédé de `/` et suivi de `|`. Utiliser `grep -F "/$f|"` ; `grep "|$f"` et `grep '|…$'` ne matchent jamais (reproduit : 0, 0, 1, 1 sur les quatre formes).
 
 Le tar produit sous Windows stocke `666` et `uid/gid 0/0` pour chaque membre : sans `chmod`, les JSON `644` redeviennent `666 root:root`. Le `stat` final est la seule preuve des modes installés — le lot du 28/10 a appliqué un défaut unique (le 666 de la page sœur) aux six nouveaux fichiers et n'a pas imprimé ces modes : ne pas reconduire ce défaut sans le prouver.
@@ -288,6 +346,23 @@ sha256sum "$FICHIER"
 Retour arrière : réinstaller `"$FICHIER.bak-<ts>"` avec les mêmes `-o`/`-g`/`-m`, redémarrer, revérifier le hash et les routes. Relever le SHA-256 de la sauvegarde au moment où elle est créée : sans ce hash, une restauration ne prouve rien.
 
 Nettoyer l'archive temporaire locale et distante à la fin ; noter le chemin de sauvegarde dans le rapport.
+
+### Lot purement statique — prouver qu'aucun générateur ne réécrira les pages
+
+Un lot de pages et de JSON générés hors du VPS se déploie sans redémarrage. Avant d'écrire « la page ne sera pas écrasée par l'ancienne logique », prouver sur le VPS qu'aucun générateur ni planificateur ne réécrit ces fichiers :
+
+```bash
+sudo -n bash -c '
+R=/opt/al-mizan/ASTRO-Q°ODE_SYSTEME
+find "$R" \( -name "quatrieme_dimension.py" -o -name "generer_page_quatrieme_dimension.py" \) -print
+crontab -l -u ubuntu 2>/dev/null | grep -v "^#" || true
+crontab -l -u root 2>/dev/null | grep -v "^#" || true
+grep -RIs "quatrieme_dimension" /etc/cron* /etc/systemd/system 2>/dev/null || true
+systemctl list-timers --all --no-pager | grep -i "quatrieme\|oeuvre\|riemann" || true
+'
+```
+
+Attendu : aucune sortie. Le 29/10/2026, `find` n'a rendu aucun moteur, le cron utilisateur était vide (la commande ajoutée contrôle aussi celui de root), aucun service ou cron ne citait le générateur, et les timers listés ne concernaient que le système (sysstat, fwupd, certbot, apt…). La conclusion se limite à cet état daté : un générateur installé plus tard, ou une exécution manuelle, rouvre la question. Si `find` trouve un générateur sans planificateur, écrire « générateur présent, non planifié », pas « aucune réécriture possible ».
 
 ### Lot cohérent page + API — exemple `oeuvre-universelle`
 
@@ -353,13 +428,13 @@ Bloc appliqué (HSTS, nosniff, X-Frame-Options, Referrer-Policy, Permissions-Pol
 
 ## 8. Étape 6 — Vérifier en direct
 
-- **Égalité de contenu** : pour chaque route, télécharger, calculer SHA-256 et comparer au fichier local. Les pages lues en mode texte par la passerelle diffèrent en brut (CRLF Windows → LF) : normaliser avant de conclure, et dire explicitement quelles routes sont identiques en brut et lesquelles seulement après normalisation.
+- **Égalité de contenu** : pour chaque route, télécharger, calculer SHA-256 et comparer au fichier local. Les pages lues en mode texte par la passerelle diffèrent en brut (CRLF Windows → LF) : normaliser avant de conclure, et dire explicitement quelles routes sont identiques en brut et lesquelles seulement après normalisation. Exemple daté (lot 4D, 29/10/2026) : les trois HTML étaient `brut DIFF | LF EGAL`, le JSON `brut EGAL` avec le même SHA-256 (`49ec7172…`) des deux côtés ; ne pas annoncer « égal seulement après normalisation » pour un JSON identique en brut. Comparer au fichier **du lot stagé** (`.qoder/tmp/lot/…`), pas à l'original du dépôt, quand un lot voisin non déployé modifie le même fichier : le 30/10/2026, `/` (`d33ac95d…` servi) et `/sitemap.xml` (`e40a1636…` servi) différaient des originaux du dépôt (`3a99f0fc…`, `a95772e4…`), qui portaient le lot `reglement-dettes-redistribution` resté local (404 public). Un DIFF n'est une dérive qu'après comparaison au lot stagé. L'égalité octet pour octet se prouve par `size_download`/`Content-Length` et SHA-256, jamais par `$body_bytes_sent` : une page servie en `Transfer-Encoding: chunked` journalise 43 863 o pour un corps de 43 803 o (+60 o de tramage constatés le 30/10/2026).
 - **Routes** : tous les statuts 200 attendus, favicon `image/x-icon`, aucun 404 sur les alias.
-- **En-têtes** : les six en-têtes présents sur `/`.
+- **En-têtes** : les contrôler par GET, `curl -s -D - -o /dev/null <url>`. `curl -I` ne prouve rien : `do_HEAD` est une sonde de connectivité qui répond toujours `200` en `text/html` (`passerelle_api_vps_mizan.py:436-441`), sans résoudre la route — une route inexistante répond aussi `200`. Constaté le 29/10/2026 sur la route JSON : `text/html` en HEAD, puis `application/json` + `Content-Length: 15106` + `nosniff` + `no-cache` en GET. Les six en-têtes se vérifient sur `/` en GET.
 - **Dialogue** : réponse fonctionnelle et honnête (aucun matériel quantique physique revendiqué).
 - **Console** : scénarios simulés générés, aucune erreur JavaScript.
-- **Journaux** : déléguer le tri à `verifier-journaux-nginx-vps`, mais contrôler d'abord la lisibilité. `ls -l /var/log/nginx/access.log` montre `640 www-data:adm` ; sans sudo, `wc -l` répond `Permission denied` et un `tail | awk` peut rendre `LINES 0` avec un code 0 et un stderr vide. Ce n'est pas « 0 réponse 5xx » : marquer `INCONCLUSIF`, puis lire avec `sudo -n` après avoir vérifié `sudo -n true` → 0 (invariant 5) ; aucune saisie de mot de passe. Ne conclure qu'avec la fenêtre `SINCE …`, `LINES n`, le nombre de 5xx et de 404 ; un 404 isolé de robot (`/wp-admin/install.php`) n'est pas une régression du site.
-- **Parité trilingue** : dériver les motifs du HTML produit, pas de l'intention. Les alternates sont en guillemets simples (`rel='alternate' hreflang=`), et `count("class='langue")` compte aussi `class='langues'` (4 au lieu de 3) : soustraire `class='langues'` ou ancrer `langue on'`. Un contrôle écrit en guillemets doubles a rendu 4 faux FAIL sur des pages conformes (28/10).
+- **Journaux** : déléguer le tri à `verifier-journaux-nginx-vps`, mais contrôler d'abord la lisibilité. `ls -l /var/log/nginx/access.log` montre `640 www-data:adm` ; sans sudo, `wc -l` répond `Permission denied` et un `tail | awk` peut rendre `LINES 0` avec un code 0 et un stderr vide. Ce n'est pas « 0 réponse 5xx » : marquer `INCONCLUSIF`, puis lire avec `sudo -n` après avoir vérifié `sudo -n true` → 0 (invariant 5) ; aucune saisie de mot de passe. Ne conclure qu'avec la fenêtre `SINCE …`, `LINES n`, le nombre de 5xx et de 404 ; un 404 isolé de robot (`/wp-admin/install.php`) n'est pas une régression du site. Fenêtrer sur la date entre crochets avec une ancre qui ne suppose pas le début de ligne : `sudo -n awk -v s="["$SINCE 'index($0,s)>0 && $9 ~ /^5/' /var/log/nginx/access.log | wc -l`. `index($0,s)==1` rend `LINES 0` alors que des lignes existent, car la ligne combinée commence par l'IP (reproduit : 0 contre 1 le 29/10/2026 ; le 30/10, `LOG_LISIBLE oui` et `FENETRE_LIGNES 0` alors que `tail -3` montrait des GET à 02:01:26, puis 11 lignes / 8 retro / 0 5xx / 0 404 après correction). Avant de conclure `LINES 0`, afficher `tail -3` du journal : un journal lisible et vide est une ancre fausse, pas une absence de trafic.
+- **Parité trilingue** : dériver les motifs du HTML produit, pas de l'intention. Les alternates sont en guillemets simples (`rel='alternate' hreflang=`), et `count("class='langue")` compte aussi `class='langues'` (4 au lieu de 3) : soustraire `class='langues'` ou ancrer `langue on'`. Un contrôle écrit en guillemets doubles a rendu 4 faux FAIL sur des pages conformes (28/10). Parser les attributs avec les deux styles de guillemets, `re.findall(r"(\w[\w:-]*)\s*=\s*(['\"])(.*?)\2", tag)` — trois groupes, donc déballer trois valeurs : un parseur limité aux guillemets doubles n'a vu que 1 alternate sur 4 (`x-default` seul) le 30/10/2026 et a conclu à tort à des alternates incomplets ; le parseur corrigé rend 4 alternates + canonical sur chaque page.
 
 Rapport final : tableau `changement → preuve → étiquette`, sauvegardes disponibles, commande de restauration, et liste explicite de ce qui reste non vérifié.
 
@@ -370,15 +445,16 @@ Rapport final : tableau `changement → preuve → étiquette`, sauvegardes disp
 - **Code Python inline multiligne** : `py -3 -c "..."` avec apostrophes, `\n` et `%d` mélangés produit `SyntaxError: unterminated string literal` (constaté deux fois). Écrire le script dans `.qoder/tmp/*.py` avec Write, l'exécuter, puis supprimer le fichier.
 - **`/tmp` non partagé** : un fichier créé par `curl -o /tmp/x.json` n'est pas vu par un processus Python qui ouvre `/tmp/x.json` (`FileNotFoundError`). Écrire les temporaires dans le workspace (`./.qoder_tmp_x.json`) et les supprimer.
 - **Art ASCII** : les espaces de tête sont significatifs. Afficher les lignes exactes avant toute édition et copier la sous-chaîne depuis la sortie, sans la retaper.
-- **Port occupé** : une instance précédente reste à l'écoute. Identifier le PID (`netstat -ano | grep ":PORT" | grep LISTENING`) puis `taskkill //F //PID`.
+- **Port occupé** : une instance précédente reste à l'écoute. Identifier le PID (`netstat -ano | grep ":PORT" | grep LISTENING`) puis `taskkill //F //PID`. Ne pas tester une route sur un port déjà tenu : l'ancien processus sert son code et rend 404 des routes présentes dans la source courante (29/10/2026, PID 10668 sur 18095). Prendre un autre port plutôt que de tuer un PID inconnu (§5.3).
 - **Interpréteur** : utiliser `py -3` ; l'alias Microsoft Store de `python` peut échouer.
 - **`$USER` sous sudo** : dans `sudo -n bash -c '...'`, `$USER` vaut l'utilisateur cible (`root`), pas `ubuntu`. Écrire l'utilisateur applicatif en clair et vérifier avec `stat -c '%U %G %a'`.
-- **Journaux `640 www-data:adm`** : sans sudo, `LINES 0` est un faux négatif, pas une absence de 5xx ; voir §8.
+- **Journaux `640 www-data:adm`** : sans sudo, `LINES 0` est un faux négatif, pas une absence de 5xx ; ancre la fenêtre sur `[` + date et non sur le début de ligne (§8).
 - **Liste de fichiers CRLF** : une liste écrite par `Path.write_text` sous Windows arrive avec `\r\n`. La boucle distante `while read` garde le `\r` : `chown: cannot access 'passerelle_api_vps_mizan.py'$'\r'` ; la sauvegarde copie 0 fichier (archive de 159 octets), puis l'extraction écrase quand même les fichiers existants. Constaté le 28/10/2026 : 20 fichiers extraits, dont 8 écrasés sans sauvegarde exploitable. Écrire avec `write_bytes` et retirer `\r` côté distant.
 - **Horodatage de sauvegarde** : le calculer sur le serveur (`date +%Y%m%d-%H%M%S`), pas avec l'horloge locale, pour que le nom `.bak-<ts>` se situe dans les journaux du VPS.
 - **Paramiko** : sur une commande bavarde, lire `stdout`/`stderr` avant `recv_exit_status()`. Les scripts de la session appelaient `recv_exit_status()` d'abord et ne passaient que parce que la sortie restait courte.
 - **Carte de modes `stat`** : `%n` rend le chemin absolu ; dans `/tmp/al_mizan_modes.txt`, le nom est précédé de `/` et suivi de `|`. `grep "|$f"` ne matche pas → `grep -F "/$f|"` (sonde locale sur les quatre formes : 0, 0, 1, 1).
 - **Enveloppe de l'API manifeste** : la réponse est `{"succes": …, "manifeste": {…}}` ; `mj["racine_merkle_sha256"]` lève `KeyError` (constaté 28/10). Lire `mj["manifeste"]["racine_merkle_sha256"]`.
+- **Copie homonyme d'une page** : `HUB_PONTS_SYNCHRONES_AL_MIZAN.html` (racine) et `hub_ponts_synchrones.html` (`web_cloud`) sont la même page sous deux noms. Le 28/10, la première a été retouchée alors que le routeur ne sert que la seconde ; le doublon était pré-audit. Résoudre le handler et differ avant d'éditer (invariant 11, §3.1).
 - **Nettoyage** : supprimer le temporaire `/tmp` dans la même commande que l'installation et la copie distante du workspace (`./.qoder/tmp/remote_*.py`) après le diff.
 
 ## Ressources
@@ -387,5 +463,8 @@ Rapport final : tableau `changement → preuve → étiquette`, sauvegardes disp
 - `references/preuves-redeploiement-oeuvre-2026-10-27.md` — redéploiement du lot œuvre universelle (5 fichiers), journaux `640 www-data:adm`, faux négatif `LINES 0`, absence de redémarrage et limites.
 - `references/preuves-echec-sauvegarde-2026-10-28.md` — échec de sauvegarde par liste CRLF sur le lot Riemann : `BACKUP_FICHIERS 0`, archive de 159 octets, 8 fichiers écrasés en `root:root`, réparation et limites.
 - `references/preuves-lot-mixte-riemann-2026-10-28.md` — lot mixte de 19 fichiers (13 existants, 6 nouveaux) : carte des modes, piège `grep`, boucle de modes rejouée en fixture avec ses gardes, ordre tests → génération et double racine Merkle, faux FAIL de parité trilingue, sonde tar Windows et limites.
+- `references/preuves-copie-servie-hub-ponts-2026-10-28.md` — copie servie vs doublon racine : handler lignes 922-931, diff pré-audit/audité, déploiement du seul fichier servi, suppressions confirmées et troisième variante non servie.
+- `references/preuves-lot-4d-2026-10-29.md` — lot statique 4D : passerelle locale fail-closed, PID résiduel 10668 sur 18095 et faux 404, validation sur 18096, sauvegarde et 4/4 hashes, absence de générateur/cron/timer distant, égalité brut/LF et limites.
+- `references/preuves-lot-lqg-2026-10-29.md` — lot LQG (7 fichiers) : transport `bash -s` après échec `bash -c`/`repr`, sauvegarde 3 fichiers `c0f7614d…`, modes 666 de `web_cloud`, fenêtre de journaux ancrée sur `[` + date, `do_HEAD` vs GET et limites.
 - `verifier-journaux-nginx-vps` — tri des journaux nginx (délégation de l'étape 6).
 - `skill-file-qa` — validation post-écriture de ce Skill (frontmatter, références, blocs de code).
