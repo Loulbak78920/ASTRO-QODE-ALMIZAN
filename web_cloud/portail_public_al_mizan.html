@@ -1,0 +1,2744 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AL-MIZAN.WORLD — Portail de l'écosystème logiciel Al-Mizan</title>
+    <meta name="description" content="AL-MIZAN.WORLD — Portail de l'écosystème logiciel Al-Mizan : économie sans Riba (règle de conception), dialogue IA, audit statique de code et télémétrie. Les valeurs physiques sont simulées et clairement signalées.">
+    <meta name="keywords" content="Al-Mizan, al-mizan.world, économie sans riba, intelligence logicielle, audit de code, NZT 1989, Ahmed EL BAHLOUL">
+    <meta name="author" content="Ahmed EL BAHLOUL (NZT 1989) — Al-Mizan">
+    <meta name="robots" content="index, follow">
+    <meta name="color-scheme" content="dark">
+    <link rel="canonical" href="https://www.al-mizan.world/">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.al-mizan.world/">
+    <meta property="og:title" content="AL-MIZAN.WORLD — Portail de l'écosystème logiciel Al-Mizan">
+    <meta property="og:description" content="Économie sans Riba, dialogue IA, audit statique de code et télémétrie. Les valeurs physiques sont simulées et signalées comme telles.">
+    <meta property="og:site_name" content="AL-MIZAN.WORLD">
+    <meta name="theme-color" content="#05070c">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2310b981'/%3E%3Ctext x='32' y='45' font-size='36' text-anchor='middle' fill='%2305070c'%3E%E2%9A%96%3C/text%3E%3C/svg%3E">
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "AL-MIZAN.WORLD",
+      "url": "https://www.al-mizan.world/",
+      "description": "Portail de l'écosystème logiciel Al-Mizan",
+      "publisher": {
+        "@type": "Organization",
+        "name": "NZT 1989 / Al-Mizan",
+        "url": "https://www.al-mizan.world/"
+      }
+    }
+    </script>
+
+    <style>
+        /* =================================================================
+           AL-MIZAN.WORLD — feuille de style du portail
+           Palette : encre nocturne, ivoire chaud, or discret, émeraude de
+           mesure. Une seule règle : l'ornement ne doit jamais mentir.
+           ================================================================= */
+        :root {
+            color-scheme: dark;
+            --ink: #070a11;
+            --ink-2: #0a0f18;
+            --surface: #0d1420;
+            --surface-2: #111a28;
+            --card: #101827;
+            --ivory: #f5f0e2;
+            --muted: #a7b3c4;
+            --faint: #7e8b9e;
+            --gold: #d8b06a;
+            --emerald: #41cf9b;
+            --cyan: #63c8de;
+            --purple: #b6a6f2;
+            --rust: #e08a7a;
+            --line: rgba(232, 224, 205, 0.10);
+            --line-2: rgba(232, 224, 205, 0.22);
+            --gold-line: rgba(216, 176, 106, 0.28);
+            --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+            --sans: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif;
+            --mono: ui-monospace, "Cascadia Code", Consolas, "Courier New", monospace;
+            --maxw: 1180px;
+            --gutter: clamp(20px, 4vw, 48px);
+            --ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+            /* Alias historiques : les scripts et styles hérités y font référence. */
+            --bg-base: var(--ink);
+            --bg-surface: var(--surface);
+            --bg-card: var(--card);
+            --border: var(--line);
+            --border-hover: var(--line-2);
+            --accent-emerald: var(--emerald);
+            --accent-cyan: var(--cyan);
+            --accent-gold: var(--gold);
+            --accent-purple: var(--purple);
+            --text-primary: var(--ivory);
+            --text-secondary: var(--muted);
+            --text-muted: var(--faint);
+            --radius-sm: 6px;
+            --radius-md: 12px;
+            --radius-lg: 18px;
+            --font: var(--sans);
+            --transition: all 0.28s var(--ease);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
+        * { margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
+        body {
+            font-family: var(--sans);
+            font-size: 16px;
+            background-color: var(--ink);
+            color: var(--ivory);
+            line-height: 1.65;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background:
+                radial-gradient(120% 70% at 50% -20%, rgba(216, 176, 106, 0.10) 0%, transparent 55%),
+                radial-gradient(80% 60% at 90% 10%, rgba(65, 207, 155, 0.07) 0%, transparent 60%),
+                linear-gradient(180deg, var(--ink-2) 0%, var(--ink) 45%, #05080e 100%);
+        }
+
+        a { color: inherit; }
+        img, svg { max-width: 100%; }
+        ::selection { background: rgba(216, 176, 106, 0.28); color: #fff; }
+        :focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 3px; }
+
+        .skip-link {
+            position: absolute;
+            left: -9999px;
+            top: 0;
+            z-index: 200;
+            background: var(--gold);
+            color: #14100a;
+            padding: 10px 18px;
+            font-weight: 700;
+            border-radius: 0 0 8px 0;
+            text-decoration: none;
+        }
+        .skip-link:focus { left: 0; }
+
+        .sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+        /* ---------------------------------------------------------------- */
+        /* EN-TÊTE                                                          */
+        /* ---------------------------------------------------------------- */
+        .site-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(7, 10, 17, 0.86);
+            -webkit-backdrop-filter: blur(18px) saturate(140%);
+            backdrop-filter: blur(18px) saturate(140%);
+            border-bottom: 1px solid var(--line);
+            transition: background 0.3s var(--ease), border-color 0.3s var(--ease);
+        }
+        .site-header.is-scrolled {
+            background: rgba(7, 10, 17, 0.95);
+            border-bottom-color: var(--gold-line);
+        }
+        .header-inner {
+            max-width: var(--maxw);
+            margin: 0 auto;
+            padding: 0 var(--gutter);
+            height: 74px;
+            display: flex;
+            align-items: center;
+            gap: 28px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            flex-shrink: 0;
+        }
+        .brand-mark {
+            width: 34px;
+            height: 34px;
+            color: var(--gold);
+            flex-shrink: 0;
+        }
+        .brand-name {
+            display: block;
+            font-family: var(--serif);
+            font-size: 16px;
+            letter-spacing: 0.14em;
+            color: var(--ivory);
+            line-height: 1.15;
+        }
+        .brand-sub {
+            display: block;
+            font-size: 9.5px;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: var(--faint);
+            margin-top: 3px;
+        }
+
+        .nav-main {
+            display: flex;
+            align-items: center;
+            gap: 26px;
+            margin-left: auto;
+        }
+        .nav-link {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 13px;
+            letter-spacing: 0.02em;
+            padding: 6px 0;
+            border-bottom: 1px solid transparent;
+            transition: color 0.2s var(--ease), border-color 0.2s var(--ease);
+            white-space: nowrap;
+        }
+        .nav-link:hover { color: var(--ivory); border-bottom-color: var(--gold); }
+
+        .menu { position: relative; }
+        .menu > summary {
+            list-style: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12.5px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--muted);
+            padding: 8px 12px;
+            border: 1px solid var(--line);
+            border-radius: 4px;
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+        .menu > summary::-webkit-details-marker { display: none; }
+        .menu > summary:hover,
+        .menu[open] > summary { color: var(--ivory); border-color: var(--gold-line); }
+        .menu > summary .chev { width: 9px; height: 9px; transition: transform 0.25s var(--ease); }
+        .menu[open] > summary .chev { transform: rotate(180deg); }
+
+        .menu-panel {
+            position: absolute;
+            right: 0;
+            top: calc(100% + 12px);
+            width: min(620px, calc(100vw - 2 * var(--gutter)));
+            background: var(--surface);
+            border: 1px solid var(--line-2);
+            border-radius: 10px;
+            padding: 22px 24px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px 26px;
+            box-shadow: 0 28px 60px rgba(0, 0, 0, 0.55);
+        }
+        .menu-panel h4 {
+            font-size: 10.5px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--gold);
+            font-weight: 600;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--line);
+        }
+        .menu-panel a {
+            display: block;
+            font-size: 13px;
+            color: var(--muted);
+            text-decoration: none;
+            padding: 5px 0;
+            transition: color 0.18s var(--ease);
+        }
+        .menu-panel a:hover { color: var(--ivory); }
+        .menu-panel .col { min-width: 0; }
+
+        .header-actions { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            letter-spacing: 0.04em;
+            color: var(--muted);
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--emerald);
+            box-shadow: 0 0 0 3px rgba(65, 207, 155, 0.12);
+        }
+        .btn-souverain {
+            background: transparent;
+            border: 1px solid var(--gold-line);
+            color: var(--gold);
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 12px;
+            letter-spacing: 0.06em;
+            font-family: var(--sans);
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+        .btn-souverain:hover { background: rgba(216, 176, 106, 0.10); border-color: var(--gold); }
+
+        /* ---------------------------------------------------------------- */
+        /* STRUCTURE GÉNÉRALE                                               */
+        /* ---------------------------------------------------------------- */
+        .container {
+            max-width: var(--maxw);
+            margin: 0 auto;
+            padding: 0 var(--gutter);
+        }
+
+        .band { padding: clamp(64px, 8vw, 104px) 0 0; }
+        section[id] { scroll-margin-top: 96px; }
+        .band-head { max-width: 760px; margin-bottom: 44px; }
+        .eyebrow {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-size: 10.5px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--gold);
+            font-weight: 600;
+            margin-bottom: 18px;
+        }
+        .eyebrow::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, var(--gold-line), transparent);
+        }
+        .band-title {
+            font-family: var(--serif);
+            font-weight: 400;
+            font-size: clamp(1.75rem, 3.4vw, 2.6rem);
+            line-height: 1.16;
+            letter-spacing: -0.01em;
+            color: var(--ivory);
+            margin-bottom: 16px;
+            text-wrap: balance;
+        }
+        .band-desc {
+            font-size: 15.5px;
+            line-height: 1.75;
+            color: var(--muted);
+            max-width: 66ch;
+        }
+        .band-desc strong { color: var(--ivory); font-weight: 600; }
+        .section-tag {
+            display: inline-block;
+            font-size: 10.5px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--gold);
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        .section-title {
+            font-family: var(--serif);
+            font-weight: 400;
+            font-size: clamp(1.5rem, 2.6vw, 2rem);
+            line-height: 1.2;
+            color: var(--ivory);
+            margin-bottom: 10px;
+        }
+
+        /* ---------------------------------------------------------------- */
+        /* HÉROS                                                            */
+        /* ---------------------------------------------------------------- */
+        .hero { position: relative; padding: clamp(56px, 9vw, 104px) 0 0; }
+        .hero::before {
+            content: "";
+            position: absolute;
+            inset: -60px 0 0 0;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23d8b06a' stroke-width='1'%3E%3Cpath d='M60 10 72 46 108 60 72 74 60 110 48 74 12 60 48 46Z'/%3E%3Cpath d='M28 28 92 92M92 28 28 92' stroke-opacity='.35'/%3E%3C/g%3E%3C/svg%3E");
+            background-size: 120px 120px;
+            opacity: 0.05;
+            -webkit-mask-image: radial-gradient(80% 80% at 50% 20%, #000 0%, transparent 78%);
+            mask-image: radial-gradient(80% 80% at 50% 20%, #000 0%, transparent 78%);
+            pointer-events: none;
+        }
+        .hero-grid {
+            position: relative;
+            display: grid;
+            grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+            gap: clamp(32px, 6vw, 72px);
+            align-items: start;
+        }
+        .doctrine-badge {
+            display: inline-flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-family: var(--serif);
+            font-style: italic;
+            font-size: 14.5px;
+            line-height: 1.5;
+            color: var(--gold);
+            margin-bottom: 26px;
+            max-width: 46ch;
+        }
+        .doctrine-badge::before {
+            content: "";
+            width: 18px;
+            height: 1px;
+            background: var(--gold);
+            margin-top: 12px;
+            flex-shrink: 0;
+        }
+        .hero-title {
+            font-family: var(--serif);
+            font-weight: 400;
+            font-size: clamp(2.35rem, 5.1vw, 4rem);
+            line-height: 1.06;
+            letter-spacing: -0.015em;
+            color: var(--ivory);
+            margin-bottom: 24px;
+            text-wrap: balance;
+        }
+        .hero-title .accent { color: var(--gold); font-style: italic; }
+        .hero-subtitle {
+            font-size: clamp(15px, 1.2vw, 16.5px);
+            line-height: 1.8;
+            color: var(--muted);
+            max-width: 60ch;
+            margin-bottom: 32px;
+        }
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        .hero-foot {
+            font-size: 11.5px;
+            color: var(--faint);
+            letter-spacing: 0.02em;
+            margin-top: 14px;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            background: var(--ivory);
+            color: #0b0f17;
+            font-family: var(--sans);
+            font-size: 13.5px;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            padding: 12px 22px;
+            border-radius: 4px;
+            border: 1px solid var(--ivory);
+            text-decoration: none;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .btn-primary:hover { background: #fff; transform: translateY(-1px); }
+        .btn-primary svg { width: 15px; height: 15px; }
+        .btn-ghost {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            background: transparent;
+            color: var(--ivory);
+            font-family: var(--sans);
+            font-size: 13.5px;
+            font-weight: 500;
+            padding: 12px 22px;
+            border-radius: 4px;
+            border: 1px solid var(--line-2);
+            text-decoration: none;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
+        .btn-ghost svg { width: 15px; height: 15px; opacity: 0.8; }
+
+        /* Panneau des invariants */
+        .balance {
+            position: relative;
+            border: 1px solid var(--line-2);
+            border-radius: 10px;
+            background: linear-gradient(180deg, rgba(17, 26, 40, 0.9), rgba(10, 15, 24, 0.9));
+            padding: 8px 22px 14px;
+        }
+        .balance-head {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 14px 0 12px;
+            border-bottom: 1px solid var(--line);
+        }
+        .balance-head span:first-child {
+            font-size: 10px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--gold);
+        }
+        .balance-head span:last-child { font-size: 10.5px; color: var(--faint); }
+        .invariant {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 14px;
+            padding: 13px 0;
+            border-bottom: 1px solid var(--line);
+        }
+        .invariant:last-of-type { border-bottom: 0; }
+        .invariant dt {
+            font-size: 12px;
+            color: var(--muted);
+            letter-spacing: 0.01em;
+        }
+        .invariant dd {
+            font-family: var(--serif);
+            font-size: 17px;
+            color: var(--ivory);
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+        .invariant dd em {
+            display: block;
+            font-family: var(--sans);
+            font-style: normal;
+            font-size: 9.5px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--faint);
+            margin-top: 2px;
+        }
+        .invariant dd.sim { color: var(--gold); }
+        .balance-foot {
+            font-size: 10.5px;
+            line-height: 1.55;
+            color: var(--faint);
+            padding-top: 12px;
+            border-top: 1px solid var(--line);
+        }
+
+        /* Bandeau de mesures */
+        .metrics-bar {
+            position: relative;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            border-top: 1px solid var(--line);
+            border-bottom: 1px solid var(--line);
+            margin-top: clamp(44px, 6vw, 72px);
+        }
+        .metric-cell {
+            padding: 24px 20px 22px;
+            border-right: 1px solid var(--line);
+            min-width: 0;
+        }
+        .metric-cell:last-child { border-right: 0; }
+        .metric-val {
+            font-family: var(--serif);
+            font-size: clamp(20px, 2.3vw, 27px);
+            font-weight: 400;
+            color: var(--ivory);
+            line-height: 1.2;
+            margin-bottom: 6px;
+            font-variant-numeric: tabular-nums;
+        }
+        .metric-label {
+            font-size: 10px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            font-weight: 600;
+        }
+        .metric-sub {
+            font-size: 10.5px;
+            color: var(--faint);
+            margin-top: 6px;
+            line-height: 1.4;
+        }
+
+        /* ---------------------------------------------------------------- */
+        /* COMPTES / OFFRES                                                 */
+        /* ---------------------------------------------------------------- */
+        .tiers {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1px;
+            background: var(--line);
+            border: 1px solid var(--line);
+        }
+        .tier {
+            background: var(--ink-2);
+            padding: 30px 28px;
+            display: flex;
+            flex-direction: column;
+            transition: background 0.3s var(--ease);
+        }
+        .tier:hover { background: var(--surface); }
+        .tier h3 {
+            font-family: var(--serif);
+            font-size: 21px;
+            font-weight: 400;
+            color: var(--ivory);
+            margin-bottom: 12px;
+        }
+        .tier .tier-kicker {
+            font-size: 10px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 12px;
+        }
+        .tier p { font-size: 13.5px; color: var(--muted); line-height: 1.7; margin-bottom: 12px; }
+        .tier .fine { font-size: 12px; color: var(--faint); }
+        .tier a.link {
+            margin-top: auto;
+            padding-top: 18px;
+            font-size: 12.5px;
+            color: var(--ivory);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid transparent;
+            align-self: flex-start;
+            transition: var(--transition);
+        }
+        .tier a.link:hover { color: var(--gold); border-bottom-color: var(--gold-line); }
+
+        .inline-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 18px;
+            font-size: 12.5px;
+            color: var(--faint);
+            margin-top: 22px;
+        }
+        .inline-links a { color: var(--muted); text-decoration: none; }
+        .inline-links a:hover { color: var(--gold); }
+
+        /* ---------------------------------------------------------------- */
+        /* CINQ AXES                                                        */
+        /* ---------------------------------------------------------------- */
+        .axes {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 20px;
+        }
+        .axis {
+            grid-column: span 2;
+            background: var(--ink-2);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 30px 28px 26px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transition: transform 0.35s var(--ease), border-color 0.35s var(--ease), background 0.35s var(--ease);
+        }
+        .axis:nth-child(-n+2) { grid-column: span 3; }
+        .axis:hover {
+            transform: translateY(-3px);
+            border-color: var(--gold-line);
+            background: var(--surface);
+        }
+        .axis::before {
+            content: "";
+            position: absolute;
+            left: -1px;
+            top: 26px;
+            width: 2px;
+            height: 0;
+            background: var(--gold);
+            transition: height 0.4s var(--ease);
+        }
+        .axis:hover::before { height: 36px; }
+        .axis-icon {
+            width: 42px;
+            height: 42px;
+            border: 1px solid var(--line-2);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 22px;
+            color: var(--gold);
+        }
+        .axis-icon svg { width: 20px; height: 20px; }
+        .axis:nth-child(2) .axis-icon { color: var(--purple); }
+        .axis:nth-child(3) .axis-icon { color: var(--emerald); }
+        .axis:nth-child(4) .axis-icon { color: var(--cyan); }
+        .axis:nth-child(5) .axis-icon { color: var(--rust); }
+        .axis-index {
+            position: absolute;
+            top: 26px;
+            right: 26px;
+            font-family: var(--serif);
+            font-style: italic;
+            font-size: 13px;
+            color: var(--faint);
+        }
+        .axis h3 {
+            font-family: var(--serif);
+            font-weight: 400;
+            font-size: 21px;
+            line-height: 1.25;
+            color: var(--ivory);
+            margin-bottom: 12px;
+            padding-right: 28px;
+        }
+        .axis p {
+            font-size: 13.5px;
+            line-height: 1.7;
+            color: var(--muted);
+            margin-bottom: 20px;
+            flex-grow: 1;
+        }
+        .axis-kpi {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px 18px;
+            padding-top: 14px;
+            border-top: 1px solid var(--line);
+            font-size: 11.5px;
+            color: var(--faint);
+            margin-bottom: 18px;
+        }
+        .axis-kpi strong { color: var(--ivory); font-weight: 600; }
+        .axis-btn {
+            align-self: flex-start;
+            background: none;
+            border: 0;
+            border-bottom: 1px solid var(--line-2);
+            color: var(--ivory);
+            font-family: var(--sans);
+            font-size: 12.5px;
+            letter-spacing: 0.02em;
+            padding: 0 0 4px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+        .axis-btn:hover { color: var(--gold); border-bottom-color: var(--gold); }
+
+        /* ---------------------------------------------------------------- */
+        /* BLOCS ÉDITORIAUX (QUBIT, TRINITER)                               */
+        /* ---------------------------------------------------------------- */
+        .split {
+            display: grid;
+            grid-template-columns: minmax(0, 0.9fr) minmax(0, 2fr);
+            gap: clamp(28px, 5vw, 64px);
+            align-items: start;
+            padding-top: 4px;
+        }
+        .split-aside { position: sticky; top: 100px; }
+        .split-aside .num {
+            font-family: var(--serif);
+            font-style: italic;
+            font-size: 13px;
+            color: var(--gold);
+            display: block;
+            margin-bottom: 14px;
+        }
+        .split-aside h2 {
+            font-family: var(--serif);
+            font-weight: 400;
+            font-size: clamp(1.6rem, 2.7vw, 2.1rem);
+            line-height: 1.18;
+            color: var(--ivory);
+            margin-bottom: 16px;
+            text-wrap: balance;
+        }
+        .split-aside p { font-size: 13.5px; line-height: 1.75; color: var(--muted); }
+        .split-aside .links { margin-top: 24px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+
+        .rows { border-top: 1px solid var(--line); }
+        .row {
+            display: grid;
+            grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.4fr);
+            gap: 20px 40px;
+            padding: 26px 0;
+            border-bottom: 1px solid var(--line);
+        }
+        .row h3 {
+            font-family: var(--serif);
+            font-weight: 400;
+            font-size: 18.5px;
+            line-height: 1.3;
+            color: var(--ivory);
+        }
+        .row p { font-size: 13.5px; line-height: 1.75; color: var(--muted); }
+        .row p + p { margin-top: 8px; }
+        .row .meta {
+            display: block;
+            margin-top: 10px;
+            font-size: 10.5px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--faint);
+        }
+        .row code, .band-desc code, .notice code, .ledger code {
+            font-family: var(--mono);
+            font-size: 0.92em;
+            color: var(--gold);
+            background: rgba(216, 176, 106, 0.08);
+            padding: 1px 5px;
+            border-radius: 3px;
+        }
+        .split-note {
+            margin-top: 22px;
+            font-size: 12px;
+            line-height: 1.7;
+            color: var(--faint);
+            border-left: 1px solid var(--gold-line);
+            padding-left: 16px;
+            max-width: 78ch;
+        }
+
+        /* ---------------------------------------------------------------- */
+        /* ŒUVRE UNIVERSELLE                                                */
+        /* ---------------------------------------------------------------- */
+        .status-strip {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            border-top: 1px solid var(--line-2);
+            border-bottom: 1px solid var(--line-2);
+            margin: 8px 0 40px;
+        }
+        .status-strip div {
+            padding: 22px 20px;
+            border-right: 1px solid var(--line);
+        }
+        .status-strip div:last-child { border-right: 0; }
+        .status-strip b {
+            display: block;
+            font-family: var(--serif);
+            font-weight: 400;
+            font-size: 34px;
+            line-height: 1;
+            color: var(--ivory);
+            margin-bottom: 8px;
+        }
+        .status-strip span {
+            font-size: 10px;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+        .status-strip div:nth-child(3) b { color: var(--gold); }
+        .status-strip div:nth-child(4) b { color: var(--cyan); }
+
+        .feature-link {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr) auto;
+            gap: 20px;
+            align-items: center;
+            border: 1px solid var(--line-2);
+            border-radius: 8px;
+            padding: 22px 26px;
+            margin-top: 30px;
+            text-decoration: none;
+            background: linear-gradient(90deg, rgba(216, 176, 106, 0.06), transparent 60%);
+            transition: var(--transition);
+        }
+        .feature-link:hover { border-color: var(--gold); background: linear-gradient(90deg, rgba(216, 176, 106, 0.11), transparent 65%); }
+        .feature-link .tag {
+            font-size: 10px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--gold);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .feature-link .txt strong {
+            display: block;
+            font-family: var(--serif);
+            font-weight: 400;
+            font-size: 18px;
+            color: var(--ivory);
+            margin-bottom: 4px;
+        }
+        .feature-link .txt span { font-size: 12.5px; color: var(--muted); line-height: 1.6; display: block; }
+        .feature-link .arrow { color: var(--gold); font-size: 18px; }
+
+        /* ---------------------------------------------------------------- */
+        /* LABORATOIRE INTERACTIF                                           */
+        /* ---------------------------------------------------------------- */
+        .lab {
+            border: 1px solid var(--line-2);
+            border-radius: 10px;
+            background: linear-gradient(180deg, rgba(17, 26, 40, 0.75), rgba(10, 15, 24, 0.85));
+            padding: clamp(24px, 4vw, 40px);
+        }
+        .lab-head {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .lab-head h3 {
+            font-family: var(--serif);
+            font-weight: 400;
+            font-size: clamp(1.4rem, 2.3vw, 1.8rem);
+            color: var(--ivory);
+        }
+        .lab-head span { font-size: 11px; color: var(--faint); letter-spacing: 0.06em; }
+
+        .hub-tabs {
+            display: flex;
+            gap: 6px;
+            border-bottom: 1px solid var(--line);
+            margin: 20px 0 28px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .hub-tabs::-webkit-scrollbar { display: none; }
+        .tab-btn {
+            background: none;
+            border: 0;
+            border-bottom: 2px solid transparent;
+            color: var(--faint);
+            font-family: var(--sans);
+            font-size: 12.5px;
+            letter-spacing: 0.02em;
+            padding: 12px 16px 13px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: color 0.2s var(--ease), border-color 0.2s var(--ease);
+        }
+        .tab-btn:hover { color: var(--ivory); }
+        .tab-btn.active { color: var(--ivory); border-bottom-color: var(--gold); }
+        .tab-btn.active::before {
+            content: "";
+            display: inline-block;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: var(--gold);
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; animation: fadeIn 0.35s var(--ease); }
+
+        .panel-lede { font-size: 13.5px; line-height: 1.75; color: var(--muted); margin-bottom: 20px; max-width: 80ch; }
+        .panel-lede strong { color: var(--ivory); font-weight: 600; }
+
+        .field-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 18px; }
+        .input {
+            flex: 1;
+            min-width: 240px;
+            padding: 12px 15px;
+            border-radius: 4px;
+            background: #060910;
+            border: 1px solid var(--line-2);
+            color: var(--ivory);
+            font-family: var(--sans);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
+        }
+        .input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(216, 176, 106, 0.12); }
+        .input::placeholder { color: #5f6b7c; }
+
+        .result-box {
+            background: #060910;
+            border: 1px solid var(--line-2);
+            border-radius: 6px;
+            padding: 18px 20px;
+            font-size: 13px;
+            color: var(--ivory);
+            line-height: 1.7;
+            min-height: 76px;
+            white-space: pre-wrap;
+        }
+        .result-box .target { color: var(--cyan); font-weight: 600; margin-bottom: 8px; }
+        .result-box .detail { font-size: 12.5px; color: var(--muted); }
+
+        .zakat-row { display: flex; flex-wrap: wrap; gap: 18px; align-items: stretch; margin-bottom: 20px; }
+        .zakat-field { flex: 1; min-width: 240px; }
+        .zakat-field label {
+            display: block;
+            font-size: 10.5px;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--faint);
+            margin-bottom: 8px;
+        }
+        .zakat-out {
+            background: #060910;
+            border: 1px solid var(--gold-line);
+            border-radius: 6px;
+            padding: 16px 26px;
+            min-width: 250px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .zakat-out .k { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); }
+        .zakat-out .v {
+            font-family: var(--serif);
+            font-size: 27px;
+            color: var(--gold);
+            margin: 5px 0 3px;
+            font-variant-numeric: tabular-nums;
+        }
+        .zakat-out .n { font-size: 11px; color: var(--emerald); }
+
+        .voice-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
+        .voice-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: transparent;
+            border: 1px solid var(--emerald);
+            color: var(--emerald);
+            font-family: var(--sans);
+            font-size: 11.5px;
+            letter-spacing: 0.06em;
+            padding: 11px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .voice-btn:hover { background: rgba(65, 207, 155, 0.10); }
+        .voice-btn.is-recording { background: var(--rust); border-color: var(--rust); color: #17090a; }
+        .stop-btn {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            background: transparent;
+            border: 1px solid var(--rust);
+            color: var(--rust);
+            font-family: var(--sans);
+            font-size: 11.5px;
+            letter-spacing: 0.06em;
+            padding: 11px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .voice-status {
+            font-size: 11.5px;
+            color: var(--cyan);
+            margin-bottom: 14px;
+            letter-spacing: 0.01em;
+            min-height: 18px;
+        }
+
+        .spectre {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #090d16;
+            border: 1px solid var(--line);
+            border-radius: 4px;
+            padding: 10px 14px;
+            margin-bottom: 14px;
+        }
+        .spectre .k {
+            font-size: 9.5px;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--faint);
+            white-space: nowrap;
+        }
+        .spectre .bar {
+            flex: 1;
+            display: flex;
+            height: 4px;
+            background: #1b2431;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .spectre .state { font-size: 10px; color: var(--emerald); white-space: nowrap; }
+
+        .mini-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1px;
+            background: var(--line);
+            border: 1px solid var(--line);
+            margin-bottom: 20px;
+        }
+        .mini {
+            background: #060910;
+            padding: 18px 16px;
+            text-align: center;
+        }
+        .mini .k { font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); }
+        .mini .v {
+            font-family: var(--serif);
+            font-size: 21px;
+            color: var(--cyan);
+            margin: 5px 0 3px;
+            font-variant-numeric: tabular-nums;
+        }
+        .mini .n { font-size: 10px; color: var(--faint); line-height: 1.4; }
+
+        /* ---------------------------------------------------------------- */
+        /* TRANSPARENCE                                                     */
+        /* ---------------------------------------------------------------- */
+        .ledger {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: clamp(24px, 4vw, 48px);
+        }
+        .ledger-col { border-top: 1px solid var(--line-2); padding-top: 20px; }
+        .ledger-col h3 {
+            font-family: var(--sans);
+            font-size: 11px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--gold);
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        .ledger-col:nth-child(2) h3 { color: var(--emerald); }
+        .ledger-col:nth-child(3) h3 { color: var(--cyan); }
+        .ledger-col ul { list-style: none; display: flex; flex-direction: column; gap: 14px; }
+        .ledger-col li {
+            font-size: 13px;
+            line-height: 1.7;
+            color: var(--muted);
+            padding-left: 14px;
+            position: relative;
+        }
+        .ledger-col li::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 10px;
+            width: 6px;
+            height: 1px;
+            background: var(--line-2);
+        }
+        .ledger-col a { color: var(--ivory); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+        .ledger-col a:hover { color: var(--gold); border-bottom-color: var(--gold); }
+        .ledger-col .warn { color: var(--gold); }
+
+        .notice {
+            margin-top: 36px;
+            border: 1px solid var(--gold-line);
+            border-left: 2px solid var(--gold);
+            border-radius: 4px;
+            background: rgba(216, 176, 106, 0.05);
+            padding: 20px 24px;
+            font-size: 12.5px;
+            line-height: 1.75;
+            color: var(--muted);
+        }
+        .notice strong { color: var(--gold); font-weight: 600; }
+        .notice p + p { margin-top: 10px; }
+
+        /* ---------------------------------------------------------------- */
+        /* PIED DE PAGE                                                     */
+        /* ---------------------------------------------------------------- */
+        footer {
+            margin-top: clamp(72px, 9vw, 120px);
+            border-top: 1px solid var(--line);
+            background: #04060b;
+            padding: clamp(48px, 6vw, 72px) var(--gutter) 28px;
+            font-size: 12.5px;
+            color: var(--faint);
+        }
+        .footer-grid {
+            max-width: var(--maxw);
+            margin: 0 auto 44px;
+            display: grid;
+            grid-template-columns: 1.7fr 1fr 1fr 1fr;
+            gap: clamp(28px, 4vw, 52px);
+        }
+        .footer-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+        .footer-brand svg { width: 22px; height: 22px; color: var(--gold); }
+        .footer-brand strong {
+            font-family: var(--serif);
+            font-weight: 400;
+            font-size: 14px;
+            letter-spacing: 0.12em;
+            color: var(--ivory);
+        }
+        .footer-col h4 {
+            font-size: 10px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--gold);
+            font-weight: 600;
+            margin-bottom: 14px;
+        }
+        .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+        .footer-col a { color: var(--muted); text-decoration: none; font-size: 12.5px; transition: color 0.18s var(--ease); }
+        .footer-col a:hover { color: var(--gold); }
+        .footer-col li span { color: var(--faint); }
+        .legal-lines { font-size: 11.5px; line-height: 1.8; color: var(--faint); margin-top: 16px; }
+        .legal-lines code { font-family: var(--mono); font-size: 0.95em; color: var(--muted); white-space: nowrap; }
+        .footer-bottom {
+            max-width: var(--maxw);
+            margin: 0 auto;
+            padding-top: 22px;
+            border-top: 1px solid var(--line);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            font-size: 11px;
+            color: var(--faint);
+        }
+        .footer-bottom .tags { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+        .footer-bottom a { color: var(--faint); text-decoration: none; }
+        .footer-bottom a:hover { color: var(--gold); }
+
+        /* ---------------------------------------------------------------- */
+        /* MODALE                                                           */
+        /* ---------------------------------------------------------------- */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(3, 5, 9, 0.86);
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-sheet {
+            background: var(--surface);
+            border: 1px solid var(--gold-line);
+            border-radius: 10px;
+            max-width: 540px;
+            width: 100%;
+            padding: 34px 32px;
+            box-shadow: 0 40px 90px rgba(0, 0, 0, 0.6);
+        }
+        .modal-sheet .seal { color: var(--gold); display: flex; justify-content: center; margin-bottom: 16px; }
+        .modal-sheet .seal svg { width: 34px; height: 34px; }
+        .modal-sheet h3 {
+            font-family: var(--serif);
+            font-weight: 400;
+            font-size: 21px;
+            color: var(--ivory);
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        .modal-sheet p { font-size: 13px; line-height: 1.75; color: var(--muted); margin-bottom: 12px; }
+        .modal-sheet a { color: var(--cyan); }
+        .modal-sheet .fine { font-size: 11.5px; color: var(--faint); margin: 16px 0 22px; }
+        .modal-sheet .btn-primary { width: 100%; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ---------------------------------------------------------------- */
+        /* RESPONSIVE                                                       */
+        /* ---------------------------------------------------------------- */
+        @media (max-width: 1280px) {
+            .status-pill { display: none; }
+            .nav-main { gap: 18px; }
+            .header-inner { gap: 20px; }
+        }
+        @media (max-width: 1120px) {
+            .nav-main .nav-link:nth-child(n+4) { display: none; }
+        }
+        @media (max-width: 980px) {
+            .hero-grid { grid-template-columns: 1fr; }
+            .split { grid-template-columns: 1fr; }
+            .split-aside { position: static; }
+            .axes { grid-template-columns: repeat(2, 1fr); }
+            .axis, .axis:nth-child(-n+2) { grid-column: span 1; }
+            .footer-grid { grid-template-columns: 1fr 1fr; }
+            .footer-grid > :first-child { grid-column: 1 / -1; }
+            .ledger { grid-template-columns: 1fr; gap: 32px; }
+        }
+        @media (max-width: 860px) {
+            .nav-main { display: none; }
+            .menu { margin-left: auto; }
+            .header-actions { margin-left: 0; }
+            .menu-panel { grid-template-columns: 1fr 1fr; }
+            .tiers { grid-template-columns: 1fr; }
+            .metrics-bar { grid-template-columns: repeat(2, 1fr); }
+            .metric-cell:nth-child(2n) { border-right: 0; }
+            .metric-cell { border-bottom: 1px solid var(--line); }
+            .metric-cell:last-child { grid-column: 1 / -1; border-bottom: 0; }
+            .status-strip { grid-template-columns: 1fr 1fr; }
+            .status-strip div:nth-child(2n) { border-right: 0; }
+            .status-strip div:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+            .mini-grid { grid-template-columns: 1fr; }
+            .feature-link { grid-template-columns: 1fr; gap: 10px; }
+            .feature-link .arrow { display: none; }
+        }
+        @media (max-width: 620px) {
+            .header-inner { height: 64px; }
+            .brand-sub { display: none; }
+            .brand-name { font-size: 14px; letter-spacing: 0.1em; }
+            .btn-souverain { display: none; }
+            .hero-actions .btn-primary, .hero-actions .btn-ghost { width: 100%; }
+            .axes { grid-template-columns: 1fr; }
+            .row { grid-template-columns: 1fr; gap: 8px; }
+            .menu-panel { grid-template-columns: 1fr; width: calc(100vw - 40px); right: 0; }
+            .footer-grid { grid-template-columns: 1fr; }
+            .metrics-bar { grid-template-columns: 1fr; }
+            .metric-cell { border-right: 0; }
+            .metric-cell:last-child { grid-column: auto; }
+            .status-strip { grid-template-columns: 1fr 1fr; }
+            .zakat-out { width: 100%; }
+            .field-row .btn-primary, .field-row .btn-ghost { width: 100%; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            html { scroll-behavior: auto; }
+            *, *::before, *::after {
+                animation-duration: 0.001ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.001ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <a class="skip-link" href="#contenu">Aller au contenu principal</a>
+
+    <svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <symbol id="i-star" viewBox="0 0 24 24">
+            <path d="M12 2.5 14.2 9.8 21.5 12 14.2 14.2 12 21.5 9.8 14.2 2.5 12 9.8 9.8Z" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+            <path d="M5.5 5.5 18.5 18.5M18.5 5.5 5.5 18.5" stroke="currentColor" stroke-width="0.8" stroke-opacity=".5"/>
+        </symbol>
+        <symbol id="i-scales" viewBox="0 0 24 24">
+            <path d="M12 3v18M6.5 21h11M4 7h16M7 7l-3 6a3 3 0 0 0 6 0L7 7Zm10 0-3 6a3 3 0 0 0 6 0l-3-6Z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+        </symbol>
+        <symbol id="i-brain" viewBox="0 0 24 24">
+            <path d="M9.5 4.5A2.8 2.8 0 0 0 6.7 7.3a3 3 0 0 0-1 5.6 3 3 0 0 0 2.6 4.6 3 3 0 0 0 4.2-2.6V7.2a2.7 2.7 0 0 0-3-2.7Z" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+            <path d="M14.5 4.5a2.8 2.8 0 0 1 2.8 2.8 3 3 0 0 1 1 5.6 3 3 0 0 1-2.6 4.6 3 3 0 0 1-4.2-2.6V7.2a2.7 2.7 0 0 1 3-2.7Z" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+            <path d="M9 9.5h2M13 12h2M9 13.5h2" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-opacity=".7"/>
+        </symbol>
+        <symbol id="i-shield" viewBox="0 0 24 24">
+            <path d="M12 3l7 3v5.2c0 4.5-3 8.1-7 9.8-4-1.7-7-5.3-7-9.8V6l7-3Z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+            <path d="M9 12l2.1 2.1L15.2 10" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+        </symbol>
+        <symbol id="i-bolt" viewBox="0 0 24 24">
+            <path d="M13 2.5 4.5 13.8H10L9 21.5l8.5-11.3H12l1-7.7Z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+        </symbol>
+        <symbol id="i-cpu" viewBox="0 0 24 24">
+            <rect x="7" y="7" width="10" height="10" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+            <rect x="10.5" y="10.5" width="3" height="3" fill="currentColor" opacity=".55"/>
+            <path d="M10 3v2.5M14 3v2.5M10 18.5V21M14 18.5V21M3 10h2.5M3 14h2.5M18.5 10H21M18.5 14H21" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        </symbol>
+        <symbol id="i-table" viewBox="0 0 24 24">
+            <rect x="3.5" y="4.5" width="17" height="15" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+            <path d="M3.5 9.5h17M9.5 9.5v10M3.5 14.5h17" stroke="currentColor" stroke-width="1.1" stroke-opacity=".75"/>
+        </symbol>
+        <symbol id="i-book" viewBox="0 0 24 24">
+            <path d="M12 6.5C10.5 5 8.3 4.4 4.5 4.5v13c3.8-.1 6 .5 7.5 2 1.5-1.5 3.7-2.1 7.5-2v-13c-3.8-.1-6 .5-7.5 2Z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+            <path d="M12 6.5v13" stroke="currentColor" stroke-width="1.1"/>
+        </symbol>
+        <symbol id="i-atom" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="1.6" fill="currentColor"/>
+            <ellipse cx="12" cy="12" rx="9" ry="3.6" fill="none" stroke="currentColor" stroke-width="1.1" transform="rotate(30 12 12)"/>
+            <ellipse cx="12" cy="12" rx="9" ry="3.6" fill="none" stroke="currentColor" stroke-width="1.1" transform="rotate(-30 12 12)"/>
+            <ellipse cx="12" cy="12" rx="9" ry="3.6" fill="none" stroke="currentColor" stroke-width="1.1" transform="rotate(90 12 12)" stroke-opacity=".6"/>
+        </symbol>
+        <symbol id="i-arrow" viewBox="0 0 24 24">
+            <path d="M4.5 12h15M13.5 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </symbol>
+        <symbol id="i-lock" viewBox="0 0 24 24">
+            <rect x="5" y="10" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.3"/>
+            <path d="M8.5 10V7.5a3.5 3.5 0 0 1 7 0V10" fill="none" stroke="currentColor" stroke-width="1.3"/>
+            <circle cx="12" cy="15" r="1.2" fill="currentColor"/>
+        </symbol>
+        <symbol id="i-wave" viewBox="0 0 24 24">
+            <path d="M2 12h3l2-5 3 10 3-13 3 15 2-7h4" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+        </symbol>
+        <symbol id="i-link" viewBox="0 0 24 24">
+            <path d="M9.5 14.5 14.5 9.5M8 11 6 13a3.5 3.5 0 0 0 5 5l2-2M16 13l2-2a3.5 3.5 0 0 0-5-5l-2 2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+        </symbol>
+    </svg>
+
+    <header class="site-header" id="entete">
+        <div class="header-inner">
+            <a href="/" class="brand" aria-label="AL-MIZAN.WORLD — accueil">
+                <svg class="brand-mark" aria-hidden="true"><use href="#i-star"></use></svg>
+                <span>
+                    <span class="brand-name">AL-MIZAN.WORLD</span>
+                    <span class="brand-sub">Le portail universel · NZT 1989</span>
+                </span>
+            </a>
+
+            <nav class="nav-main" aria-label="Navigation principale">
+                <a href="#univers" class="nav-link">Les cinq axes</a>
+                <a href="/oeuvre-universelle" class="nav-link">L'Œuvre</a>
+                <a href="/qubit-logique" class="nav-link">Qubit logique</a>
+                <a href="/tableau" class="nav-link">Tableau Maître</a>
+                <a href="#transparence" class="nav-link">Transparence</a>
+            </nav>
+
+            <details class="menu" id="menu-site">
+                <summary>
+                    Tout le site
+                    <svg class="chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 4.5 6 8.5 10 4.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </summary>
+                <div class="menu-panel">
+                    <div class="col">
+                        <h4>Explorer</h4>
+                        <a href="/tableau">Tableau Maître (226)</a>
+                        <a href="/livre-blanc">Livre Blanc MZN</a>
+                        <a href="/ponts">Ponts synchrones</a>
+                        <a href="/qubit-logique">Qubit logique</a>
+                        <a href="/observateur-triniter">Observateur Triniter</a>
+                        <a href="/oeuvre-universelle">L'Œuvre universelle</a>
+                    </div>
+                    <div class="col">
+                        <h4>Services</h4>
+                        <a href="/offres">Offres</a>
+                        <a href="/services">Catalogue de services</a>
+                        <a href="#comptes">Comptes</a>
+                        <a href="#hub-interactif">Démonstrateurs</a>
+                        <a href="/statut">État du service</a>
+                        <a href="/developpeurs">Développeurs</a>
+                    </div>
+                    <div class="col">
+                        <h4>Institution</h4>
+                        <a href="/mentions-legales">Mentions légales</a>
+                        <a href="/contact">Contact</a>
+                        <a href="/connexion">Compte &amp; connexion</a>
+                        <a href="/api/v1/sante" target="_blank" rel="noopener">Télémétrie API</a>
+                        <a href="#" onclick="ouvrirModalSas(); return false;">Espace souverain</a>
+                    </div>
+                </div>
+            </details>
+
+            <div class="header-actions">
+                <div class="status-pill">
+                    <span class="status-dot"></span>
+                    <span>Paramètre · 135,097 MHz</span>
+                </div>
+                <button type="button" class="btn-souverain" onclick="ouvrirModalSas()">Espace souverain</button>
+            </div>
+        </div>
+    </header>
+
+    <main id="contenu" class="container">
+
+        <!-- ============================ HÉROS ============================ -->
+        <section class="hero" aria-labelledby="titre-portail">
+            <div class="hero-grid">
+                <div>
+                    <p class="doctrine-badge">« On ne supprime rien, on harmonise. Englober dans la continuité. »</p>
+                    <h1 class="hero-title" id="titre-portail">Le portail de l'écosystème logiciel <span class="accent">Al-Mizan</span></h1>
+                    <p class="hero-subtitle">
+                        Une plateforme expérimentale qui rassemble une économie sans Riba (règle de conception), un dialogue assisté par IA, un audit statique de code, une télémétrie de simulation et un ancrage juridique déclaré. Les mesures physiques ne sont pas réalisées : les valeurs correspondantes sont simulées et signalées.
+                    </p>
+                    <div class="hero-actions">
+                        <a href="/tableau" class="btn-primary">
+                            <svg aria-hidden="true"><use href="#i-table"></use></svg>
+                            Tableau Maître (226 entrées)
+                        </a>
+                        <a href="/livre-blanc" class="btn-ghost">
+                            <svg aria-hidden="true"><use href="#i-book"></use></svg>
+                            Livre Blanc MZN
+                        </a>
+                    </div>
+                    <p class="hero-foot">Base Mainnet · chain ID 8453 · aucune carte bancaire demandée aujourd'hui.</p>
+                </div>
+
+                <aside class="balance" aria-label="Invariants déclarés du système">
+                    <div class="balance-head">
+                        <span>Invariants</span>
+                        <span>Paramètres de conception</span>
+                    </div>
+                    <dl>
+                        <div class="invariant">
+                            <dt>Taux d'usure (Riba)</dt>
+                            <dd>0,0 %<em>règle de conception</em></dd>
+                        </div>
+                        <div class="invariant">
+                            <dt>Zakat légale</dt>
+                            <dd>2,5 %<em>au-delà du Nisab</em></dd>
+                        </div>
+                        <div class="invariant">
+                            <dt>Horloge logique</dt>
+                            <dd>135,097 MHz<em>dt = 7,401 ns</em></dd>
+                        </div>
+                        <div class="invariant">
+                            <dt>Cryogénie</dt>
+                            <dd class="sim"><span id="metric-cryo">22,50 mK</span><em>simulée · aucun QPU</em></dd>
+                        </div>
+                        <div class="invariant">
+                            <dt>Indice d'harmonie</dt>
+                            <dd><span id="metric-harmonie">0,6225</span><em>auto-évaluation interne</em></dd>
+                        </div>
+                    </dl>
+                    <p class="balance-foot">Valeurs affichées comme déclarées ou simulées. Aucun capteur, cryostat ni processeur quantique physique n'existe sur ce serveur.</p>
+                </aside>
+            </div>
+
+            <div class="metrics-bar" role="list" aria-label="Chiffres du registre">
+                <div class="metric-cell" role="listitem">
+                    <div class="metric-val">20</div>
+                    <div class="metric-label">Problèmes formalisés</div>
+                    <div class="metric-sub">Œuvre universelle, 7 strates</div>
+                </div>
+                <div class="metric-cell" role="listitem">
+                    <div class="metric-val">7</div>
+                    <div class="metric-label">Strates de l'œuvre</div>
+                    <div class="metric-sub">Physique, vivant, économie, droit, technique, langues, mathématiques</div>
+                </div>
+                <div class="metric-cell" role="listitem">
+                    <div class="metric-val">226</div>
+                    <div class="metric-label">Entrées au Tableau Maître</div>
+                    <div class="metric-sub">22 strates, S0 à S21</div>
+                </div>
+                <div class="metric-cell" role="listitem">
+                    <div class="metric-val">3 · 13 · 4</div>
+                    <div class="metric-label">Statuts de l'œuvre</div>
+                    <div class="metric-sub">Opérationnel · simulé · spécifié</div>
+                </div>
+                <div class="metric-cell" role="listitem">
+                    <div class="metric-val">0</div>
+                    <div class="metric-label">QPU ou capteur physique</div>
+                    <div class="metric-sub">Tout est logiciel ; les valeurs simulées sont signalées</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================ COMPTES ============================ -->
+        <section class="band" id="comptes" aria-labelledby="titre-comptes">
+            <div class="band-head">
+                <p class="eyebrow">01 · Comptes</p>
+                <div class="doctrine-badge">Un compte unique · une identité vérifiable · une garde anti-usurpation</div>
+                <h2 class="band-title" id="titre-comptes">Comptes, services et juste accès</h2>
+                <p class="band-desc">
+                    Les comptes sont opérationnels : vérification email, sessions, double validation, export et suppression immédiate des données.
+                    Les offres payantes ne sont pas encore activées ; aucun moyen de paiement n'est demandé aujourd'hui.
+                </p>
+            </div>
+
+            <div class="tiers">
+                <article class="tier">
+                    <p class="tier-kicker">Particuliers</p>
+                    <h3>Compte personnel</h3>
+                    <p>Compte personnel, accès au dialogue, aux audits statiques et à la télémétrie publique.</p>
+                    <p class="fine">Gratuit pendant la phase de fondation. Offre payante annoncée et publiée avant toute activation.</p>
+                    <a class="link" href="/inscription">Créer un compte <svg width="14" height="14" aria-hidden="true"><use href="#i-arrow"></use></svg></a>
+                </article>
+                <article class="tier">
+                    <p class="tier-kicker">Entreprises privées</p>
+                    <h3>Dossier d'organisation</h3>
+                    <p>Vérification du domaine de l'organisation, revue humaine, quotas dédiés et traçabilité des accès.</p>
+                    <p class="fine">Payant à l'activation. Tarifs, factures et conditions publiés avant tout prélèvement.</p>
+                    <a class="link" href="/inscription">Ouvrir un dossier <svg width="14" height="14" aria-hidden="true"><use href="#i-arrow"></use></svg></a>
+                </article>
+                <article class="tier">
+                    <p class="tier-kicker">Infrastructure publique</p>
+                    <h3>Accès sur dossier</h3>
+                    <p>Accès gratuit sur dossier : domaine officiel, vérification DNS et email, revue humaine.</p>
+                    <p class="fine">Gratuité soumise à validation et à un quota plafonné ; retirée en cas d'abus ou de fausse déclaration.</p>
+                    <a class="link" href="/inscription">Déposer une demande <svg width="14" height="14" aria-hidden="true"><use href="#i-arrow"></use></svg></a>
+                </article>
+            </div>
+
+            <p class="inline-links">
+                <a href="/connexion">Se connecter</a>
+                <a href="/cgu">Conditions générales</a>
+                <a href="/cgv">Conditions de vente</a>
+                <a href="/confidentialite">Confidentialité</a>
+                <a href="/cookies">Cookies</a>
+                <a href="/signalement">Signalement</a>
+                <a href="/portefeuille">Portefeuille souverain</a>
+                <span>aucune carte bancaire demandée aujourd'hui.</span>
+            </p>
+        </section>
+
+        <!-- ============================ CINQ AXES ============================ -->
+        <section class="band" id="univers" aria-labelledby="titre-axes">
+            <div class="band-head">
+                <p class="eyebrow">02 · Les cinq axes</p>
+                <h2 class="band-title" id="titre-axes">Cinq axes, un même socle logiciel</h2>
+                <p class="band-desc">Chaque axe s'appuie sur le même socle logiciel. Les éléments opérationnels, simulés et spécifiés sont distingués explicitement dans la section Transparence.</p>
+            </div>
+
+            <div class="axes">
+                <article class="axis">
+                    <span class="axis-index">i</span>
+                    <div class="axis-icon"><svg aria-hidden="true"><use href="#i-scales"></use></svg></div>
+                    <h3>Économie sans Riba &amp; monnaie étalon</h3>
+                    <p>Grand livre sans intérêt usuraire (règle de conception), contrats participatifs 50/50, calcul de la Zakat légale (2,5 %) au-delà du Nisab. L'adossement à des réserves d'or et d'argent est déclaré, sans audit par un tiers à ce jour.</p>
+                    <div class="axis-kpi">
+                        <span>Riba : <strong>0,0 % (conception)</strong></span>
+                        <span>Zakat : <strong>2,5 % au-delà du Nisab</strong></span>
+                    </div>
+                    <button type="button" class="axis-btn" onclick="activerTab('tab-eco')">Explorer l'économie</button>
+                </article>
+
+                <article class="axis">
+                    <span class="axis-index">ii</span>
+                    <div class="axis-icon"><svg aria-hidden="true"><use href="#i-brain"></use></svg></div>
+                    <h3>Dialogue &amp; assistance IA</h3>
+                    <p>Matrice logicielle de 8 288 poids synaptiques en mémoire vive (aucune synapse biologique), bibliothèque documentaire embarquée et dialogue assisté par un modèle de génération de texte — API Google Gemini si une clé est configurée, sinon synthétiseur local déterministe.</p>
+                    <div class="axis-kpi">
+                        <span>Poids logiciels : <strong id="metric-synapses">8 288</strong></span>
+                        <span>Boucle permanente : <strong id="metric-boucle">à vérifier</strong></span>
+                    </div>
+                    <button type="button" class="axis-btn" onclick="activerTab('tab-ia')">Dialoguer avec l'IA</button>
+                </article>
+
+                <article class="axis">
+                    <span class="axis-index">iii</span>
+                    <div class="axis-icon"><svg aria-hidden="true"><use href="#i-shield"></use></svg></div>
+                    <h3>Cybersécurité &amp; résilience</h3>
+                    <p>Analyse heuristique des en-têtes HTTP/TLS d'un site public, avec garde-fous anti-SSRF et marge d'incertitude ε déclarée. Il s'agit d'un indicateur, pas d'un audit certifié : aucune certification externe n'est détenue à ce jour.</p>
+                    <div class="axis-kpi">
+                        <span>Tarification : <strong>sur devis</strong></span>
+                        <span>SLA : <strong>aucun SLA public</strong></span>
+                    </div>
+                    <button type="button" class="axis-btn" onclick="activerTab('tab-cyber')">Lancer un audit cyber</button>
+                </article>
+
+                <article class="axis">
+                    <span class="axis-index">iv</span>
+                    <div class="axis-icon"><svg aria-hidden="true"><use href="#i-bolt"></use></svg></div>
+                    <h3>Audit statique de code</h3>
+                    <p>Un agent logiciel analyse le code source : syntaxe, invariants déclarés et dépendances entre modules. Le score affiché est une auto-évaluation interne, non une certification ; les modules à dépendance faible sont comptés et signalés.</p>
+                    <div class="axis-kpi">
+                        <span>Score interne : <strong id="metric-score-code">à vérifier</strong></span>
+                        <span>Modules examinés : <strong id="metric-modules">à vérifier</strong></span>
+                    </div>
+                    <button type="button" class="axis-btn" onclick="activerTab('tab-code')">Voir l'agent de code</button>
+                </article>
+
+                <article class="axis">
+                    <span class="axis-index">v</span>
+                    <div class="axis-icon"><svg aria-hidden="true"><use href="#i-cpu"></use></svg></div>
+                    <h3>Matériel, simulation &amp; entreprise</h3>
+                    <p>Le système s'exécute sur un serveur CPU, sans QPU ni GPU physique. La cryogénie (22,5 mK) et l'émulateur de silicium sont des modèles logiciels. L'exploitation est déclarée sous la bannière NZT 1989 (SIREN 815 336 599).</p>
+                    <div class="axis-kpi">
+                        <span>SIREN : <strong>815 336 599</strong></span>
+                        <span>APE : <strong>7022Z</strong></span>
+                    </div>
+                    <a class="axis-btn" href="/mentions-legales">Consulter la légalité</a>
+                </article>
+            </div>
+        </section>
+
+        <!-- ============================ QUBIT ============================ -->
+        <section class="band" id="qubit-logique" aria-labelledby="titre-qubit">
+            <div class="split">
+                <div class="split-aside">
+                    <span class="num">03 · Calcul exact</span>
+                    <h2 id="titre-qubit">Le qubit logique [[7,1,3]], posé en équations et vérifié</h2>
+                    <p>Un qubit logique construit sur sept qubits physiques, vérifié par énumération exhaustive : stabilisateurs, opérateurs logiques, distance et décodeur. S'y ajoute le rôle du processeur et des transistors CMOS dans le contrôle et le décodage.</p>
+                    <div class="links">
+                        <a class="btn-ghost" href="/qubit-logique">
+                            <svg aria-hidden="true"><use href="#i-atom"></use></svg>
+                            Lire les équations et les résultats
+                        </a>
+                        <a class="btn-ghost" href="/api/v1/qubit_logique" target="_blank" rel="noopener">Résultats JSON</a>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="rows">
+                        <div class="row">
+                            <h3>Code et preuve</h3>
+                            <div>
+                                <p>Code de Steane, six stabilisateurs, distance <strong>d = 3</strong>. Les 211 Pauli de poids ≤ 2 laissent la projection invariante ; un opérateur logique de poids 3 est exhibé.</p>
+                                <span class="meta">Vérification : PASS · 21 corrections de poids 1 testées</span>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <h3>Bruit et seuil</h3>
+                            <div>
+                                <p>Taux d'erreur logique <strong>exact</strong> sur 16 384 motifs de Pauli, recoupé par Monte Carlo. Décroissance en <code>p²</code> à bas bruit, seuil de pseudo-concaténation ≈ <strong>8,1 %</strong>.</p>
+                                <span class="meta">Modèle de bruit déclaré · simulé, non mesuré</span>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <h3>Processeur et transistors</h3>
+                            <div>
+                                <p>DAC CMOS, gigue d'horloge, bruit 1/f, décohérence et décodeur : le budget matériel montre qu'il faut environ <strong>11 bits</strong> et <strong>127 ps</strong> de gigue pour viser 10⁻⁴.</p>
+                                <span class="meta">Modèle d'ingénierie paramétré · aucun QPU physique</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="split-note">Sans dol : ces résultats sont logiciels et simulés. Aucun processeur quantique, cryostat ou capteur physique n'existe sur ce serveur ; aucune reconnaissance par les pairs n'est acquise.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================ TRINITER ============================ -->
+        <section class="band" id="observateur-triniter" aria-labelledby="titre-triniter">
+            <div class="split">
+                <div class="split-aside">
+                    <span class="num">04 · Observateur</span>
+                    <h2 id="titre-triniter">Triniter observe la lumière : 3 états, l'état 0 et 3 gaz</h2>
+                    <p>La Trinité temporelle devient observatrice multimodale : elle décompose un spectre en <strong>7 états scellés</strong> — photosphérique, chromosphérique, coronaire, origine inerte Hélium-4, et trois gaz — puis le traduit en langage humain et mesure son ignorance.</p>
+                    <div class="links">
+                        <a class="btn-ghost" href="/observateur-triniter">
+                            <svg aria-hidden="true"><use href="#i-wave"></use></svg>
+                            Ouvrir l'observateur Triniter
+                        </a>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="rows">
+                        <div class="row">
+                            <h3>Comprendre et traduire</h3>
+                            <div>
+                                <p>Décomposition non négative exacte sur les <code>2⁷</code> sous-ensembles, composition <code>Σ p_i = 1</code>, résidu mesuré. La phrase humaine nomme chaque état au-dessus de 8 %.</p>
+                                <span class="meta">Démonstrateur exécuté dans le navigateur · spectres synthétisés</span>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <h3>Ignorance continue</h3>
+                            <div>
+                                <p><code>I = 0,5·H_norm + 0,5·ρ</code>, gain borné par <code>MIZAN = 0,6225</code>, plancher doctrinal <code>0,122</code>. La complétude tend vers <strong>0,878</strong> sans jamais atteindre 1,0.</p>
+                                <span class="meta">Aucune omniscience · aucun qubit physique local</span>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <h3>Continuité dossier ↔ site</h3>
+                            <div>
+                                <p>Chaque capacité est publiée si page, route, sitemap et test sont présents : <code>K = 1,0</code> pour l'observateur. On ne supprime que le strictement redondant, jamais automatiquement.</p>
+                                <span class="meta">Actes A243–A245 · couche ㊱ · strate S21</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="split-note">Sans dol : le moteur et le calcul sont logiciels. Aucun spectromètre n'est branché ; une calibration physique reste à faire et n'est pas revendiquée.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================ ŒUVRE ============================ -->
+        <section class="band" id="oeuvre-universelle" aria-labelledby="titre-oeuvre">
+            <div class="band-head">
+                <p class="eyebrow">05 · Œuvre universelle · 20 problèmes · 3 langues</p>
+                <h2 class="band-title" id="titre-oeuvre">Poser l'équation, calculer, publier — et montrer les limites</h2>
+                <p class="band-desc">
+                    Vingt problèmes formalisés en sept strates : physique, vivant, économie, droit, technique, langues et mathématiques. Chaque entrée expose son équation, ses paramètres déclarés, un résultat recalculé par du code exécutable, son code source et ses limites.
+                </p>
+            </div>
+
+            <div class="status-strip" aria-label="Statuts des résultats de l'œuvre">
+                <div><b>20</b><span>Résultats</span></div>
+                <div><b>3</b><span>Opérationnels</span></div>
+                <div><b>13</b><span>Simulés</span></div>
+                <div><b>4</b><span>Spécifiés</span></div>
+            </div>
+
+            <div class="rows">
+                <div class="row">
+                    <h3>Équation → résultat → code</h3>
+                    <div>
+                        <p>Chaque carte affiche la formule, les paramètres et la valeur calculée. Le code de la fonction est copiable. Aucun chiffre n'est saisi à la main.</p>
+                        <span class="meta">20 résultats · statut OPÉRATIONNEL, SIMULÉ ou SPÉCIFIÉ</span>
+                    </div>
+                </div>
+                <div class="row">
+                    <h3>Réseau de contrats non-custodial</h3>
+                    <div>
+                        <p>Zakat/sadaqa directe, pools à produit constant et pondérés, accord 50/50, registre d'adresses publiques et registre multimodal : aucune clé privée, aucune garde de fonds, aucun déploiement automatique.</p>
+                        <span class="meta">Sources spécifiées · audit requis avant déploiement</span>
+                    </div>
+                </div>
+                <div class="row">
+                    <h3>Intégrité et antériorité</h3>
+                    <div>
+                        <p>Un manifeste SHA-256 et une racine de Merkle couvrent les sources, contrats et actes. Il prouve l'intégrité du contenu, pas la causalité des bouleversements mondiaux.</p>
+                        <span class="meta">Preuve locale · ancrage OpenTimestamps ou DOI pour une date opposable</span>
+                    </div>
+                </div>
+            </div>
+
+            <a class="feature-link" href="/riemann">
+                <span class="tag">MAT-01</span>
+                <span class="txt">
+                    <strong>Hypothèse de Riemann — vérification bornée, non démonstration</strong>
+                    <span>Pour 0,5 &lt; t &lt; 50, le comptage indépendant par principe de l'argument coïncide avec les zéros trouvés sur la droite critique (1, 3, 6, 10) ; l'hypothèse reste non démontrée.</span>
+                </span>
+                <span class="arrow" aria-hidden="true">→</span>
+            </a>
+
+            <a class="feature-link" href="/quatrieme-dimension">
+                <span class="tag">PHY-01</span>
+                <span class="txt">
+                    <strong>La quatrième dimension — 13 équations posées et résolues</strong>
+                    <span>Tesseract (16 sommets, 32 arêtes), intervalle de Minkowski, cône de lumière, Kaluza-Klein, Gravity Probe B et ondes gravitationnelles : calculs reproductibles, conventions Al-Mizan explicitées, aucune revendication de preuve.</span>
+                </span>
+                <span class="arrow" aria-hidden="true">→</span>
+            </a>
+
+            <a class="feature-link" href="/gravitation-quantique-boucles">
+                <span class="tag">PHY-02</span>
+                <span class="txt">
+                    <strong>Gravitation quantique à boucles — 13 équations, 13 contrôles</strong>
+                    <span>Spectre d'aire, Immirzi calibré par l'entropie, trou noir solaire, rebond cosmique, réseaux de spins et pont Fano–Steane : calculs reproductibles, chemins d'explication, aucune mesure expérimentale revendiquée.</span>
+                </span>
+                <span class="arrow" aria-hidden="true">→</span>
+            </a>
+
+            <a class="feature-link" href="/retro-ingenierie-ia">
+                <span class="tag">SYS-01</span>
+                <span class="txt">
+                    <strong>Rétro-ingénierie assistée par IA — 13 équations, 13 contrôles</strong>
+                    <span>Entropie des sections, couverture d'appels, budget d'un agent MCP, fidélité de reconstruction, différentiel, physique du jeu rejoué et cadre légal : calculs reproductibles sur un échantillon synthétique déclaré, aucun binaire réel analysé, aucun avis juridique.</span>
+                </span>
+                <span class="arrow" aria-hidden="true">→</span>
+            </a>
+
+            <a class="feature-link" href="/reglement-dettes-redistribution">
+                <span class="tag">ECO-01</span>
+                <span class="txt">
+                    <strong>Règlement des dettes et redistribution — 13 équations, 13 contrôles</strong>
+                    <span>Zakat (2,5 % au-delà du nisab), huit catégories coraniques, insolvabilité, qard hasan face au riba, capacité de remboursement, succession (parts fixes et 2:1), stabilisateur, Gini, parabole des épis, continuité, conservation et indice de justice : calculs reproductibles, aucune somme collectée ni redistribuée, aucun versement effectué.</span>
+                </span>
+                <span class="arrow" aria-hidden="true">→</span>
+            </a>
+
+            <div class="hero-actions" style="margin-top:26px;">
+                <a href="/oeuvre-universelle" class="btn-primary">Ouvrir l'Œuvre universelle</a>
+                <a href="/oeuvre-universelle/en" class="btn-ghost" hreflang="en">English</a>
+                <a href="/oeuvre-universelle/ar" class="btn-ghost" hreflang="ar" lang="ar">العربية</a>
+                <a href="/api/v1/oeuvre-universelle" target="_blank" rel="noopener" class="btn-ghost">Résultats JSON</a>
+            </div>
+
+            <p class="split-note">Sans dol : le registre est extensible et ne prétend pas résoudre tous les problèmes du monde. Les paramètres empiriques sont déclarés, non mesurés ; les contrats nouveaux ne sont pas déployés et ne détiennent aucun fonds.</p>
+        </section>
+
+        <!-- ============================ LABORATOIRE ============================ -->
+        <section class="band" id="hub-interactif" aria-labelledby="titre-lab">
+            <div class="lab">
+                <div class="lab-head">
+                    <h3 id="titre-lab">Tester les moteurs du système</h3>
+                    <span>Démonstrateurs techniques · exécutés dans votre navigateur</span>
+                </div>
+
+                <div class="hub-tabs" role="tablist" aria-label="Démonstrateurs">
+                    <button type="button" id="btn-tab-cyber" class="tab-btn active" role="tab" aria-selected="true" aria-controls="tab-cyber" onclick="activerTab('tab-cyber')">Audit cybersécurité</button>
+                    <button type="button" id="btn-tab-eco" class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-eco" tabindex="-1" onclick="activerTab('tab-eco')">Économie &amp; Zakat</button>
+                    <button type="button" id="btn-tab-ia" class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-ia" tabindex="-1" onclick="activerTab('tab-ia')">Dialogue IA</button>
+                    <button type="button" id="btn-tab-code" class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-code" tabindex="-1" onclick="activerTab('tab-code')">Audit de code</button>
+                </div>
+
+                <!-- ONGLET 1 : CYBERSÉCURITÉ -->
+                <div id="tab-cyber" class="tab-panel active" role="tabpanel" aria-labelledby="btn-tab-cyber">
+                    <p class="panel-lede">
+                        Analyse heuristique des en-têtes HTTP/TLS d'un site <strong>public</strong> (http/https, ports 80/443). Les adresses privées, locales ou de métadonnées sont refusées. Le résultat est un indicateur non certifié, pas un audit de sécurité complet.
+                    </p>
+                    <div class="field-row">
+                        <input type="text" id="input-audit-url" class="input" value="https://al-mizan.world" placeholder="https://al-mizan.world" aria-label="URL à auditer">
+                        <button type="button" class="btn-primary" onclick="lancerAuditTechniqueEnDirect()">Auditer ce site</button>
+                        <a href="/console" target="_blank" rel="noopener" class="btn-ghost">Console SOC</a>
+                    </div>
+                    <div id="zone-resultat-audit" class="result-box" style="display:none;" aria-live="polite">
+                        <div id="audit-cible-txt" class="target"></div>
+                        <div id="audit-details-content" class="detail"></div>
+                    </div>
+                </div>
+
+                <!-- ONGLET 2 : ÉCONOMIE SANS RIBA -->
+                <div id="tab-eco" class="tab-panel" role="tabpanel" aria-labelledby="btn-tab-eco">
+                    <p class="panel-lede">
+                        Simulateur de purification et d'équité économique sans usure (Riba = 0.0%) et calcul légal de la Zakat (2.5%) au-delà du Nisab :
+                    </p>
+                    <div class="zakat-row">
+                        <div class="zakat-field">
+                            <label for="input-patrimoine">Patrimoine négociable soumis (EUR)</label>
+                            <input type="number" id="input-patrimoine" class="input" value="10000" oninput="calculerZakatDirect()">
+                        </div>
+                        <div class="zakat-out">
+                            <span class="k">Zakat légale (2,5 %)</span>
+                            <span class="v" id="zakat-montant">250,00 EUR</span>
+                            <span class="n">Attribuée à la Caisse Civique · 0 % de frais</span>
+                        </div>
+                    </div>
+                    <div class="field-row">
+                        <a href="/api/v1/economie_islamique/statut" target="_blank" rel="noopener" class="btn-ghost">Bilan économique (JSON)</a>
+                        <a href="/api/v1/audit/paiements" target="_blank" rel="noopener" class="btn-ghost">Registre interne déclaré (non bancaire)</a>
+                    </div>
+                </div>
+
+                <!-- ONGLET 3 : DIALOGUE IA -->
+                <div id="tab-ia" class="tab-panel" role="tabpanel" aria-labelledby="btn-tab-ia">
+                    <p class="panel-lede">
+                        Dialogue avec l'assistant logiciel Al-Mizan : matrice de 8 288 poids en mémoire vive et bibliothèque embarquée. Le texte est produit par un modèle de génération (Gemini si une clé est configurée) ou par le synthétiseur local. Aucune conscience ni capteur physique.
+                    </p>
+                    <div class="voice-row">
+                        <input type="text" id="input-chat" class="input" value="Bonjour, pouvez-vous présenter le système Al-Mizan ?" placeholder="Parlez ou écrivez ici..." aria-label="Message à l'assistant">
+                        <button type="button" class="btn-primary" onclick="envoyerMessageIA()">Poser la question</button>
+                    </div>
+                    <div class="voice-row">
+                        <button type="button" id="btn-session-vocale" class="voice-btn" onclick="basculerSessionVocaleContinue()">Démarrer le dialogue vocal</button>
+                        <button type="button" id="btn-interrompre-ia" class="stop-btn" style="display:none;" onclick="interrompreSyntheseVocale()">Interrompre l'IA</button>
+                    </div>
+                    <div id="statut-vocal-continu" class="voice-status" aria-live="polite">
+                        Échange vocal ininterrompu : activez le bouton pour parler librement. Le microphone est coupé pendant la synthèse et rouvert après 1,2 s de silence.
+                    </div>
+                    <div class="spectre">
+                        <span class="k">Cochlée spectrale</span>
+                        <div id="spectre-visuel-barre" class="bar">
+                            <div style="flex:30; background:#d8b06a;" title="Basses · Terre (ancrage)"></div>
+                            <div style="flex:55; background:#41cf9b; margin:0 2px;" title="Médiums · Lune (sens et clarté)"></div>
+                            <div style="flex:15; background:#63c8de;" title="Aigus · Soleil (souffle)"></div>
+                        </div>
+                        <span class="state">Équilibre</span>
+                    </div>
+                    <div id="chat-reponse-box" class="result-box">
+                        Prêt pour le dialogue avec l'assistant Al-Mizan...
+                    </div>
+                </div>
+
+                <!-- ONGLET 4 : AGENT DE CODE -->
+                <div id="tab-code" class="tab-panel" role="tabpanel" aria-labelledby="btn-tab-code">
+                    <p class="panel-lede">
+                        L'Agent de Code Al-Mizan réalise un audit statique de la base de code : syntaxe, invariants déclarés et dépendances entre modules. Le score et le nombre de modules sont recalculés à la demande ; ce sont des indicateurs internes, non une certification.
+                    </p>
+                    <div class="mini-grid">
+                        <div class="mini">
+                            <div class="k">Horloge logique</div>
+                            <div class="v">135,097 MHz</div>
+                            <div class="n">Paramètre de conception · Δt = 7,401 ns</div>
+                        </div>
+                        <div class="mini">
+                            <div class="k">Auto-évaluation interne</div>
+                            <div class="v" id="code-score-affichage" style="color:var(--emerald);">à vérifier</div>
+                            <div class="n" id="code-modules-affichage">cliquez sur « Recalculer l'audit »</div>
+                        </div>
+                        <div class="mini">
+                            <div class="k">Nature de l'analyse</div>
+                            <div class="v" style="color:var(--gold);">STATIQUE</div>
+                            <div class="n">Non certifiée · non intrusive</div>
+                        </div>
+                    </div>
+                    <div class="field-row">
+                        <button type="button" class="btn-primary" onclick="recalculerAuditCode()">Recalculer l'audit</button>
+                        <a href="/api/v1/agent_code/statut" target="_blank" rel="noopener" class="btn-ghost">Consulter le JSON</a>
+                        <a href="/unifie" target="_blank" rel="noopener" class="btn-ghost">Tableau de bord unifié</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================ TRANSPARENCE ============================ -->
+        <section class="band" id="transparence" aria-labelledby="titre-transparence">
+            <div class="band-head">
+                <p class="eyebrow">06 · Sans dol</p>
+                <h2 class="band-title" id="titre-transparence">Transparence, limites et preuves vérifiables</h2>
+                <p class="band-desc">Chaque affirmation est classée : opérationnelle (mesurable via l'API), simulée (modèle logiciel) ou spécifiée (règle de conception). Aucune certification externe n'est revendiquée.</p>
+            </div>
+
+            <div class="ledger">
+                <div class="ledger-col">
+                    <h3>Opérationnel · vérifiable</h3>
+                    <ul>
+                        <li>Jeton MZN sur Base Mainnet (chain ID 8453), adresse publique : <a href="https://basescan.org/address/0x520cbd0e1e72178f9e819AFf1e815606923A71db" target="_blank" rel="noopener">0x520c…71db sur BaseScan</a> — vérifiez le code source et les détenteurs directement sur BaseScan.</li>
+                        <li>Tableau Maître Séquentiel : 226 entrées, 22 strates (S0–S21).</li>
+                        <li>APIs publiques : <a href="/api/v1/sante" target="_blank" rel="noopener">/sante</a>, <a href="/api/v1/etat" target="_blank" rel="noopener">/etat</a>, <a href="/api/v1/synapses" target="_blank" rel="noopener">/synapses</a>.</li>
+                        <li>Compte GitHub : <a href="https://github.com/IMAM8MAHDI" target="_blank" rel="noopener">github.com/IMAM8MAHDI</a> — organisation existante, <span class="warn">aucun dépôt public au 29/10/2026</span>.</li>
+                    </ul>
+                </div>
+                <div class="ledger-col">
+                    <h3>Simulé par logiciel</h3>
+                    <ul>
+                        <li>Température cryogénique (22,5 mK) : modèle logiciel, aucun capteur ni QPU physique.</li>
+                        <li>Fidélité Bell, stabilité d'horloge et indice d'harmonie : valeurs calculées ou auto-évaluées.</li>
+                        <li>Matrice de 8 288 poids synaptiques : structure de données en RAM, pas un cerveau biologique.</li>
+                        <li>Boucle synaptique permanente : état réel consultable via <a href="/api/v1/synapses" target="_blank" rel="noopener">/api/v1/synapses</a>.</li>
+                    </ul>
+                </div>
+                <div class="ledger-col">
+                    <h3>Spécifié, non certifié</h3>
+                    <ul>
+                        <li>Riba 0,0 %, partage 50/50, bride 0,6225 : règles inscrites dans la conception et le contrat.</li>
+                        <li>Réserves d'or et d'argent : montants déclarés, non audités par un tiers.</li>
+                        <li>Aucune certification ISO/IEC 27001, NIST CSF 2.0 ou CIS Controls.</li>
+                        <li>Aucun SLA contractuel public ; aucun prix de service publié.</li>
+                        <li>Transactions : registre interne déclaré, sans connexion bancaire ni PSP active.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="notice">
+                <p><strong>Limites déclarées au 29/10/2026.</strong> Les identifiants de dépôt <code>10.5281/zenodo.23479740</code> et <code>10.5281/zenodo.23288947</code> restent enregistrés dans le système de handles, mais leur cible Zenodo répond <code>HTTP 410</code> et DataCite ne renvoie aucune métadonnée : ils ne sont pas consultables à cette date et ne constituent donc pas une référence vérifiable. L'identifiant <code>10.5281/zenodo.23554838</code>, mentionné dans les documents du projet, répond <code>HTTP 404</code>. Le compte GitHub existe mais ne publie aucun dépôt.</p>
+                <p>Le jeton MZN ne constitue ni une promesse de rendement ni une garantie de liquidité. Aucun conseil en investissement n'est fourni.</p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ============================ MODALE ============================ -->
+    <div id="modal-sas" class="modal" role="dialog" aria-modal="true" aria-labelledby="titre-modal" onclick="if(event.target.id==='modal-sas') fermerModalSas()">
+        <div class="modal-sheet">
+            <div class="seal"><svg aria-hidden="true"><use href="#i-lock"></use></svg></div>
+            <h3 id="titre-modal">Accès souverain (démonstrateur)</h3>
+            <p>Le module de preuves multimodales est un démonstrateur : la phrase, le visage, la vivacité et la passkey sont <strong>déclarés par le client</strong>. Aucune caméra, aucun micro et aucune signature WebAuthn ne sont vérifiés.</p>
+            <p>Le déverrouillage n'est pas activé sur ce portail public. Pour connaître l'état d'une démonstration, consultez <a href="/api/v1/auth/statut_session" target="_blank" rel="noopener">/api/v1/auth/statut_session</a> : la réponse ne contient jamais de jeton.</p>
+            <p class="fine">Aucun privilège n'est accordé par cette fenêtre. Toute action protégée exige un jeton d'authentification valide côté serveur.</p>
+            <button type="button" class="btn-primary" onclick="fermerModalSas()">Compris</button>
+        </div>
+    </div>
+
+    <!-- ============================ PIED DE PAGE ============================ -->
+    <footer>
+        <div class="footer-grid">
+            <div>
+                <div class="footer-brand">
+                    <svg aria-hidden="true"><use href="#i-star"></use></svg>
+                    <strong>AL-MIZAN.WORLD · NZT 1989</strong>
+                </div>
+                <p style="max-width:46ch; line-height:1.75; margin-bottom:10px;">
+                    Plateforme logicielle expérimentale d'harmonie et d'économie sans Riba (règle de conception).
+                    Les valeurs physiques présentées sur ce site sont simulées et signalées ; aucune certification externe n'est détenue.
+                    Exploité par <strong style="color:var(--muted);">M. Ahmed EL BAHLOUL</strong> (Entrepreneur Individuel · Nom Commercial : <strong style="color:var(--muted);">NZT 1989</strong>).
+                </p>
+                <div class="legal-lines">
+                    Identification légale : SIREN <code>815 336 599</code> · Code APE <code>7022Z</code><br>
+                    Formalité INPI Guichet Unique N° <code>J00274311299</code> (validation INSEE 23/08/2026)<br>
+                    Siège : 1 Avenue de Verdun, Immeuble Le Forum, 26000 Valence, France<br>
+                    Hébergeur : OVHcloud SAS (2 rue Kellermann, 59100 Roubaix) · IP <code>51.222.159.232</code>
+                </div>
+            </div>
+
+            <div class="footer-col">
+                <h4>Explorer</h4>
+                <ul>
+                    <li><a href="/tableau">Tableau Maître (226)</a></li>
+                    <li><a href="/livre-blanc">Livre Blanc MZN</a></li>
+                    <li><a href="/ponts">Ponts synchrones</a></li>
+                    <li><a href="/qubit-logique">Qubit logique</a></li>
+                    <li><a href="/observateur-triniter">Observateur Triniter</a></li>
+                    <li><a href="/oeuvre-universelle">L'Œuvre universelle</a></li>
+                    <li><a href="/offres">Offres</a></li>
+                    <li><a href="/services">Catalogue de services</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4>Institution</h4>
+                <ul>
+                    <li><a href="/connexion">Compte &amp; connexion</a></li>
+                    <li><a href="/portefeuille">Portefeuille souverain</a></li>
+                    <li><a href="/mentions-legales">Mentions légales</a></li>
+                    <li><a href="/cgu">Conditions générales</a></li>
+                    <li><a href="/cgv">Conditions de vente</a></li>
+                    <li><a href="/confidentialite">Confidentialité</a></li>
+                    <li><a href="/cookies">Cookies</a></li>
+                    <li><a href="/signalement">Signalement</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4>Technique</h4>
+                <ul>
+                    <li><a href="/statut">État du service</a></li>
+                    <li><a href="/securite">Sécurité</a></li>
+                    <li><a href="/accessibilite">Accessibilité</a></li>
+                    <li><a href="/developpeurs">Développeurs</a></li>
+                    <li><a href="/console">Console SOC</a></li>
+                    <li><a href="/video">Vidéo de présentation</a></li>
+                    <li><a href="/contact">Contact</a></li>
+                    <li><a href="/api/v1/sante" target="_blank" rel="noopener">API santé</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <div>© 2026 AL-MIZAN.WORLD / NZT 1989 (Ahmed EL BAHLOUL) — Tous droits réservés. L'Équilibre et la Justice des Mondes.</div>
+            <div class="tags">
+                <a href="/api/v1/legal" target="_blank" rel="noopener">API conformité</a>
+                <a href="/robots.txt">Robots.txt</a>
+                <a href="/sitemap.xml">Sitemap</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // GESTION DES ONGLETS DU HUB MULTI-PRODUITS
+        function activerTab(tabId) {
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.classList.remove('active');
+                b.setAttribute('aria-selected', 'false');
+                b.setAttribute('tabindex', '-1');
+            });
+
+            const panel = document.getElementById(tabId);
+            if(panel) panel.classList.add('active');
+
+            const btn = document.getElementById('btn-' + tabId);
+            if(btn) {
+                btn.classList.add('active');
+                btn.setAttribute('aria-selected', 'true');
+                btn.setAttribute('tabindex', '0');
+            }
+
+            const hub = document.getElementById('hub-interactif');
+            if(hub) hub.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Navigation clavier du jeu d'onglets (flèches, origine, fin)
+        document.addEventListener('DOMContentLoaded', function() {
+            const tablist = document.querySelector('.hub-tabs');
+            if (!tablist) return;
+            tablist.addEventListener('keydown', function(e) {
+                const tabs = Array.prototype.slice.call(tablist.querySelectorAll('.tab-btn'));
+                const i = tabs.indexOf(document.activeElement);
+                if (i < 0) return;
+                let j = null;
+                if (e.key === 'ArrowRight') j = (i + 1) % tabs.length;
+                if (e.key === 'ArrowLeft') j = (i - 1 + tabs.length) % tabs.length;
+                if (e.key === 'Home') j = 0;
+                if (e.key === 'End') j = tabs.length - 1;
+                if (j === null) return;
+                e.preventDefault();
+                tabs[j].focus();
+                tabs[j].click();
+            });
+        });
+
+        // CALCULATEUR ZAKAT LÉGALE 2.5%
+        function calculerZakatDirect() {
+            const pat = parseFloat(document.getElementById('input-patrimoine').value) || 0;
+            const nisabArgentEur = 517.65; // 595g d'argent pur
+            const zakatEl = document.getElementById('zakat-montant');
+            if (pat >= nisabArgentEur) {
+                const z = (pat * 0.025).toFixed(2);
+                zakatEl.innerText = z + " EUR";
+            } else {
+                zakatEl.innerText = "0.00 EUR (Inférieur au Nisab)";
+            }
+        }
+
+        // AUDIT TECHNIQUE EN DIRECT
+        function lancerAuditTechniqueEnDirect() {
+            const url = document.getElementById('input-audit-url').value.trim();
+            if(!url) return alert("Veuillez saisir une URL.");
+
+            const zone = document.getElementById('zone-resultat-audit');
+            zone.style.display = 'block';
+            document.getElementById('audit-cible-txt').innerText = "Analyse en cours : " + url;
+            document.getElementById('audit-details-content').innerHTML = "<em>Interrogation du réseau et calcul de l'indicateur heuristique (non certifié)...</em>";
+
+            fetch('/api/v1/cyber/auditer', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({url: url})
+            })
+            .then(r => r.json())
+            .then(data => {
+                if(!data.succes) {
+                    document.getElementById('audit-details-content').innerText = data.erreur || "Erreur d'audit.";
+                    return;
+                }
+                const a = data.audit;
+                document.getElementById('audit-cible-txt').innerText = `Analyse heuristique (non certifiée) : ${a.url_auditee} (${a.statut_connexion} · ${a.latence_ms} ms)`;
+                document.getElementById('audit-details-content').innerHTML = `
+                    <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:8px; font-weight:bold;">
+                        <span>Indicateur de résilience : <span style="color:var(--accent-emerald);">${a.score_resilience_100} / 100</span></span>
+                        <span>Marge résiduelle (&epsilon;) : <span style="color:var(--accent-gold);">0,50 %</span></span>
+                        <span>Réduction calculée : <span style="color:var(--accent-cyan);">${a.calcul_al_mizan_sans_dol.taux_reduction_risque_pct}%</span></span>
+                    </div>
+                    <div style="font-size:12px; color:var(--text-muted);">${a.calcul_al_mizan_sans_dol.note_honnetete || ''}</div>
+                `;
+            })
+            .catch(e => {
+                document.getElementById('audit-details-content').innerText = "Erreur de communication : " + e;
+            });
+        }
+
+        // =====================================================================
+        // VERROUILLAGE D'ÉTAT SOUVERAIN : ANTI-AUTO-ÉCOUTE ET ISOLATION DU CHAMP TEXTE
+        // =====================================================================
+        let sessionVocaleActive = false;
+        let reconnaissanceVocale = null;
+        let microEstAutorise = false; // Verrou booléen strict : FALSE pendant fetch et parole IA
+        let iaEnTrainDeParler = false;
+        let attenteReponseServeur = false;
+        let timerSilence = null;
+        let timerGardeEcho = null;
+        let tamponTexteCourant = "";
+        let texteEnCoursDePrononciation = "";
+        let timestampFinSynthese = 0;
+        const DELAI_GARDE_ACOUSTIQUE_MS = 1200; // 1.2s de silence obligatoire après la voix IA
+        const historiqueProposIA = []; // Garde mémoire des phrases IA récentes
+
+        function initialiserDialogueVocalContinu() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                alert("Votre navigateur ne supporte pas la reconnaissance vocale Web Speech API.");
+                return;
+            }
+
+            reconnaissanceVocale = new SpeechRecognition();
+            reconnaissanceVocale.continuous = true;
+            reconnaissanceVocale.interimResults = true;
+            reconnaissanceVocale.lang = 'fr-FR';
+
+            reconnaissanceVocale.onstart = function() {
+                if (microEstAutorise && !iaEnTrainDeParler && !attenteReponseServeur) {
+                    actualiserIndicateurVocal("🎙️🟢 EN ÉCOUTE (Parlez librement, l'IA vous écoute...)");
+                }
+            };
+
+            reconnaissanceVocale.onresult = function(event) {
+                // VERROU PHYSIQUE MAÎTRE : Si le micro n'est pas autorisé, que l'IA réfléchit ou parle,
+                // INTERDICTION FORMELLE D'ÉCRIRE DANS LE CHAMP TEXTE OU D'ENVOYER QUOI QUE CE SOIT !
+                const maintenant = Date.now();
+                if (!microEstAutorise || iaEnTrainDeParler || attenteReponseServeur || (maintenant - timestampFinSynthese < DELAI_GARDE_ACOUSTIQUE_MS)) {
+                    tamponTexteCourant = "";
+                    clearTimeout(timerSilence);
+                    return;
+                }
+
+                let texteIntermediaire = "";
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        tamponTexteCourant += " " + event.results[i][0].transcript;
+                    } else {
+                        texteIntermediaire += event.results[i][0].transcript;
+                    }
+                }
+
+                const phraseTotale = (tamponTexteCourant + " " + texteIntermediaire).trim();
+                const champInput = document.getElementById('input-chat');
+
+                // Écriture dans le champ texte UNIQUEMENT si c'est la parole humaine de l'utilisateur
+                if (champInput && phraseTotale && microEstAutorise) {
+                    champInput.value = phraseTotale;
+                }
+
+                // DÉTECTION NATURELLE DE FIN DE PHRASE DE L'UTILISATEUR (750 ms de silence)
+                clearTimeout(timerSilence);
+                timerSilence = setTimeout(function() {
+                    const phraseAValider = (tamponTexteCourant + " " + texteIntermediaire).trim();
+                    if (phraseAValider.length >= 3 && sessionVocaleActive && microEstAutorise && !iaEnTrainDeParler && !attenteReponseServeur) {
+                        
+                        // FILTRE ANTI-ÉCHO RESIDUEL : Similarité lexicale avec les propos de l'IA
+                        if (estEchoParasiteDeLIA(phraseAValider)) {
+                            console.warn("⚠️ Écho de l'IA intercepté et détruit :", phraseAValider);
+                            tamponTexteCourant = "";
+                            const ci = document.getElementById('input-chat');
+                            if (ci) ci.value = "";
+                            actualiserIndicateurVocal("🎙️🟢 EN ÉCOUTE (Écho filtré, à vous la parole...)");
+                            return;
+                        }
+
+                        tamponTexteCourant = "";
+                        executerEchangeVocalAutomatique(phraseAValider);
+                    }
+                }, 750);
+            };
+
+            reconnaissanceVocale.onerror = function(event) {
+                if (event.error !== 'no-speech' && event.error !== 'aborted') {
+                    console.log("Événement acoustique : " + event.error);
+                }
+            };
+
+            reconnaissanceVocale.onend = function() {
+                // Relance STRICTEMENT CONDITIONNÉE : Uniquement si la session est active ET micro autorisé
+                if (sessionVocaleActive && microEstAutorise && !iaEnTrainDeParler && !attenteReponseServeur) {
+                    try { reconnaissanceVocale.start(); } catch(e) {}
+                }
+            };
+        }
+
+        // Filtre Jaccard : Rejette toute phrase captée qui ressemble à ce que l'IA a dit
+        function estEchoParasiteDeLIA(texteEntrant) {
+            if (!texteEntrant || texteEntrant.length < 3) return true;
+            const motsEntrants = texteEntrant.toLowerCase()
+                .replace(/[^a-z0-9àâäéèêëîïôöùûüç]/g, ' ')
+                .split(/\s+/)
+                .filter(w => w.length > 2);
+            if (motsEntrants.length === 0) return true;
+
+            const setEntrant = new Set(motsEntrants);
+
+            for (const phraseIA of historiqueProposIA) {
+                const motsIA = phraseIA.toLowerCase()
+                    .replace(/[^a-z0-9àâäéèêëîïôöùûüç]/g, ' ')
+                    .split(/\s+/)
+                    .filter(w => w.length > 2);
+                if (motsIA.length === 0) continue;
+
+                const setIA = new Set(motsIA);
+                let intersection = 0;
+                for (const m of setEntrant) {
+                    if (setIA.has(m)) intersection++;
+                }
+
+                const ratio = intersection / setEntrant.size;
+                if (ratio >= 0.25) { // Si plus de 25% des mots viennent de l'IA, c'est son écho
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function basculerSessionVocaleContinue() {
+            const btn = document.getElementById('btn-session-vocale');
+            if (!sessionVocaleActive) {
+                if (!reconnaissanceVocale) initialiserDialogueVocalContinu();
+                initialiserSpectreEcouteWebAudio();
+                sessionVocaleActive = true;
+                microEstAutorise = true;
+                iaEnTrainDeParler = false;
+                attenteReponseServeur = false;
+                tamponTexteCourant = "";
+                try {
+                    reconnaissanceVocale.start();
+                    if(btn) {
+                        btn.classList.add('is-recording');
+                        btn.innerText = 'Arrêter le dialogue vocal';
+                    }
+                } catch(e) { console.error(e); }
+            } else {
+                sessionVocaleActive = false;
+                microEstAutorise = false;
+                interrompreSyntheseVocale();
+                if (reconnaissanceVocale) {
+                    try { reconnaissanceVocale.abort(); } catch(e) {}
+                }
+                actualiserIndicateurVocal("⏸️ Session vocale arrêtée. Cliquez pour reprendre.");
+                if(btn) {
+                    btn.classList.remove('is-recording');
+                    btn.innerText = 'Démarrer le dialogue vocal';
+                }
+            }
+        }
+
+        // INTERRUPTION FORCÉE DE LA PAROLE (Barge-In Manuel)
+        function interrompreSyntheseVocale() {
+            if (window.speechSynthesis) {
+                window.speechSynthesis.cancel();
+            }
+            iaEnTrainDeParler = false;
+            attenteReponseServeur = false;
+            timestampFinSynthese = Date.now();
+            texteEnCoursDePrononciation = "";
+            clearTimeout(timerSilence);
+            clearTimeout(timerGardeEcho);
+            tamponTexteCourant = "";
+
+            const btnInterrompre = document.getElementById('btn-interrompre-ia');
+            if (btnInterrompre) btnInterrompre.style.display = 'none';
+
+            const champInput = document.getElementById('input-chat');
+            if (champInput) {
+                champInput.disabled = false;
+                champInput.readOnly = false;
+                champInput.value = "";
+            }
+
+            if (sessionVocaleActive) {
+                microEstAutorise = true;
+                actualiserIndicateurVocal("🎙️🟢 EN ÉCOUTE (Parole reprise par l'utilisateur)");
+                if (reconnaissanceVocale) {
+                    try { reconnaissanceVocale.start(); } catch(e) {}
+                }
+            }
+        }
+
+        // COCHLÉE SPECTRALE WEB AUDIO EN DIRECT ET ÉTALONNAGE HARMONIQUE
+        let audioCtxEcoute = null;
+        let analyseurSpectreNode = null;
+        let filtrePasseHautMicro = null;
+
+        function initialiserSpectreEcouteWebAudio() {
+            if (audioCtxEcoute) return;
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                audioCtxEcoute = new AudioCtx();
+                analyseurSpectreNode = audioCtxEcoute.createAnalyser();
+                analyseurSpectreNode.fftSize = 256; // 128 bins (~172 Hz par bin sous 44.1 kHz)
+                analyseurSpectreNode.smoothingTimeConstant = 0.82; // Amortissement harmonique
+
+                // Filtre passe-haut à 80 Hz pour supprimer le bruit rumble et larsen basse fréquence
+                filtrePasseHautMicro = audioCtxEcoute.createBiquadFilter();
+                filtrePasseHautMicro.type = "highpass";
+                filtrePasseHautMicro.frequency.value = 80;
+
+                navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+                .then(stream => {
+                    const src = audioCtxEcoute.createMediaStreamSource(stream);
+                    src.connect(filtrePasseHautMicro);
+                    filtrePasseHautMicro.connect(analyseurSpectreNode);
+                    bouclerJaugeSpectrale();
+                }).catch(e => console.log("Web Audio non disponible : " + e));
+            } catch(e) {}
+        }
+
+        function extraireTripletSpectralCochlee() {
+            if (!analyseurSpectreNode) return { basses: 30, mediums: 55, aigus: 15, actif: false };
+            const nBins = analyseurSpectreNode.frequencyBinCount;
+            const dataArray = new Uint8Array(nBins);
+            analyseurSpectreNode.getByteFrequencyData(dataArray);
+
+            // Découpage harmonique Al-Mizan calibré pour la voix humaine :
+            // Basses Terre (80 Hz - 350 Hz) : bins 1 à 2
+            // Médiums Lune (350 Hz - 2500 Hz, formants vocaux) : bins 3 à 14
+            // Aigus Soleil (2500 Hz - 8000 Hz, clarté et souffle) : bins 15 à 46
+            let sB = 0, sM = 0, sA = 0;
+            for(let i = 1; i <= 2; i++) sB += (dataArray[i] || 0) * 0.7; // Pondération humaine
+            for(let i = 3; i <= 14; i++) sM += (dataArray[i] || 0) * 1.0;
+            for(let i = 15; i <= 46; i++) sA += (dataArray[i] || 0) * 1.5; // Gain harmoniques claires
+
+            const tot = sB + sM + sA;
+            if (tot < 20) {
+                return { basses: 25, mediums: 60, aigus: 15, actif: true };
+            }
+            const b = Math.max(5, Math.min(85, Math.round((sB / tot) * 100)));
+            const m = Math.max(10, Math.min(85, Math.round((sM / tot) * 100)));
+            const a = Math.max(5, Math.min(70, Math.round((sA / tot) * 100)));
+            const somme = b + m + a;
+            return {
+                basses: Math.round((b / somme) * 100),
+                mediums: Math.round((m / somme) * 100),
+                aigus: Math.round((a / somme) * 100),
+                actif: true
+            };
+        }
+
+        function bouclerJaugeSpectrale() {
+            if (!analyseurSpectreNode) return;
+            const sp = extraireTripletSpectralCochlee();
+            if (sp.actif) {
+                const barre = document.getElementById('spectre-visuel-barre');
+                if (barre) {
+                    barre.innerHTML = `
+                        <div style="flex:${sp.basses}; background:#d8b06a; height:100%;" title="Basses · Terre"></div>
+                        <div style="flex:${sp.mediums}; background:#41cf9b; height:100%; margin:0 2px;" title="Médiums · Lune"></div>
+                        <div style="flex:${sp.aigus}; background:#63c8de; height:100%;" title="Aigus · Soleil"></div>
+                    `;
+                }
+            }
+            if (sessionVocaleActive) {
+                requestAnimationFrame(bouclerJaugeSpectrale);
+            }
+        }
+
+        // SÉLECTION DE LA MEILLEURE VOIX FRANÇAISE NATURELLE HD (Google, Microsoft Natural, Apple)
+        let cacheVoixFrancaiseHD = null;
+        function obtenirMeilleureVoixFrancaise() {
+            if (!window.speechSynthesis) return null;
+            if (cacheVoixFrancaiseHD) return cacheVoixFrancaiseHD;
+            const voixDisponibles = window.speechSynthesis.getVoices();
+            if (!voixDisponibles || voixDisponibles.length === 0) return null;
+
+            // Filtres de priorité pour un timbre naturel, chaud et fluide (non-robotique)
+            const priorites = [
+                v => v.lang.startsWith('fr') && (v.name.includes('Natural') || v.name.includes('Online')),
+                v => v.lang.startsWith('fr') && v.name.includes('Google'),
+                v => v.lang.startsWith('fr') && (v.name.includes('Thomas') || v.name.includes('Amélie') || v.name.includes('Audrey')),
+                v => v.lang.startsWith('fr') && (v.name.includes('Henri') || v.name.includes('Denise')),
+                v => v.lang === 'fr-FR',
+                v => v.lang.startsWith('fr')
+            ];
+
+            for (const test of priorites) {
+                const match = voixDisponibles.find(test);
+                if (match) {
+                    cacheVoixFrancaiseHD = match;
+                    console.log("✦ Voix Al-Mizan HD sélectionnée :", match.name, `[${match.lang}]`);
+                    return match;
+                }
+            }
+            cacheVoixFrancaiseHD = voixDisponibles[0];
+            return cacheVoixFrancaiseHD;
+        }
+
+        if (window.speechSynthesis) {
+            window.speechSynthesis.onvoiceschanged = function() {
+                cacheVoixFrancaiseHD = null;
+                obtenirMeilleureVoixFrancaise();
+            };
+        }
+
+        function executerEchangeVocalAutomatique(message) {
+            // VERROU IMMÉDIAT : Couper le micro AVANT le fetch
+            microEstAutorise = false;
+            attenteReponseServeur = true;
+            clearTimeout(timerSilence);
+            tamponTexteCourant = "";
+
+            if (reconnaissanceVocale) {
+                try { reconnaissanceVocale.abort(); } catch(e) {}
+            }
+
+            const champInput = document.getElementById('input-chat');
+            if (champInput) {
+                champInput.readOnly = true; // Empêche toute modification ou écriture parasite
+            }
+
+            // Mesure spectrale calibrée en direct par la cochlée Web Audio
+            const spectreMesure = extraireTripletSpectralCochlee();
+
+            actualiserIndicateurVocal("⚡ Al-Mizan réfléchit (Micro éteint)...");
+            const box = document.getElementById('chat-reponse-box');
+            if (box) box.innerText = "L'assistant Al-Mizan formule sa réponse à partir de sa matrice de 8 288 poids logiciels...";
+
+            fetch('/api/v1/dialogue', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    message: message,
+                    spectre_audio: spectreMesure
+                })
+            })
+            .then(r => r.json())
+            .then(d => {
+                attenteReponseServeur = false;
+                if (d.succes && d.reponse_ia) {
+                    if (box) box.innerText = d.reponse_ia;
+                    prononcerReponseContinue(d.reponse_ia, d.prosodie_mizan);
+                } else {
+                    deverrouillerMicroPourUtilisateur();
+                }
+            })
+            .catch(e => {
+                attenteReponseServeur = false;
+                actualiserIndicateurVocal("Erreur de flux : " + e);
+                deverrouillerMicroPourUtilisateur();
+            });
+        }
+
+        function prononcerReponseContinue(texte, prosodieObj) {
+            if (!window.speechSynthesis) {
+                deverrouillerMicroPourUtilisateur();
+                return;
+            }
+
+            // DOUBLE VERROU : Micro hermétiquement coupé
+            microEstAutorise = false;
+            iaEnTrainDeParler = true;
+            texteEnCoursDePrononciation = texte;
+            tamponTexteCourant = "";
+            clearTimeout(timerSilence);
+
+            if (reconnaissanceVocale) {
+                try { reconnaissanceVocale.abort(); } catch(e) {}
+            }
+
+            // Enregistrement de la phrase dans l'historique anti-écho
+            historiqueProposIA.push(texte);
+            if (historiqueProposIA.length > 5) historiqueProposIA.shift();
+
+            // Affichage du bouton d'interruption
+            const btnInterrompre = document.getElementById('btn-interrompre-ia');
+            if (btnInterrompre) btnInterrompre.style.display = 'inline-flex';
+
+            window.speechSynthesis.cancel();
+
+            // Nettoyage phonétique du texte (retrait du markdown * ou # pour un son fluide)
+            const texteOral = texte
+                .replace(/\*\*/g, '')
+                .replace(/\*/g, '')
+                .replace(/#{1,6}\s?/g, '')
+                .replace(/`/g, '')
+                .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+                .replace(/\s+/g, ' ')
+                .trim();
+
+            const utterance = new SpeechSynthesisUtterance(texteOral);
+            utterance.lang = 'fr-FR';
+
+            // Attribution de la voix HD naturelle
+            const voixHD = obtenirMeilleureVoixFrancaise();
+            if (voixHD) {
+                utterance.voice = voixHD;
+            }
+
+            // Asservissement acoustique sur l'horloge Al-Mizan
+            let modeAcoustiqueTxt = "";
+            if (prosodieObj && prosodieObj.instructions_synthese) {
+                const inst = prosodieObj.instructions_synthese;
+                const p = prosodieObj.prosodie_mizan;
+                utterance.pitch = inst.pitch || 1.0;
+                utterance.rate = 1.0; // Débit naturel posé et fluide
+                utterance.volume = inst.volume || 0.6225;
+                modeAcoustiqueTxt = ` [${p.mode_musical.split('(')[0].trim()} · \u03c4=${p.battement_tau}/11 · f0=${p.frequence_fondamentale_hz}Hz]`;
+            } else {
+                utterance.rate = 1.0;
+                utterance.pitch = 1.0;
+                utterance.volume = 0.6225;
+            }
+
+            utterance.onstart = function() {
+                iaEnTrainDeParler = true;
+                microEstAutorise = false;
+                actualiserIndicateurVocal(`🔊 Al-Mizan vous parle${modeAcoustiqueTxt} (Microphone coupé hermétiquement)...`);
+            };
+
+            const cloreSyntheseEtAttendreSilence = function() {
+                timestampFinSynthese = Date.now();
+                texteEnCoursDePrononciation = "";
+                if (btnInterrompre) btnInterrompre.style.display = 'none';
+
+                actualiserIndicateurVocal("⏳ Dissipation de l'écho acoustique (1.2 s)...");
+
+                // Fenêtre de garde temporelle stricte : 1.2s de silence complet
+                clearTimeout(timerGardeEcho);
+                timerGardeEcho = setTimeout(() => {
+                    deverrouillerMicroPourUtilisateur();
+                }, DELAI_GARDE_ACOUSTIQUE_MS);
+            };
+
+            utterance.onend = cloreSyntheseEtAttendreSilence;
+            utterance.onerror = cloreSyntheseEtAttendreSilence;
+
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // Déverrouillage propre et sécurisé du micro une fois que tout est silencieux
+        function deverrouillerMicroPourUtilisateur() {
+            iaEnTrainDeParler = false;
+            attenteReponseServeur = false;
+            tamponTexteCourant = "";
+            timestampFinSynthese = Date.now();
+
+            const champInput = document.getElementById('input-chat');
+            if (champInput) {
+                champInput.disabled = false;
+                champInput.readOnly = false;
+                champInput.value = ""; // CHAMP VIDÉ POUR L'UTILISATEUR !
+                champInput.placeholder = "Parlez ou écrivez ici...";
+            }
+
+            if (sessionVocaleActive) {
+                microEstAutorise = true;
+                actualiserIndicateurVocal("🎙️🟢 EN ÉCOUTE (À vous la parole...)");
+                if (reconnaissanceVocale) {
+                    try { reconnaissanceVocale.start(); } catch(e) {}
+                }
+            } else {
+                microEstAutorise = false;
+            }
+        }
+
+        function actualiserIndicateurVocal(msg) {
+            const ind = document.getElementById('statut-vocal-continu');
+            if (ind) ind.innerText = msg;
+        }
+
+        function envoyerMessageIA() {
+            const champInput = document.getElementById('input-chat');
+            const msg = champInput ? champInput.value.trim() : "";
+            if(!msg) return;
+            executerEchangeVocalAutomatique(msg);
+        }
+
+        // MODAL D'INFORMATION SUR L'ACCÈS SOUVERAIN
+        function ouvrirModalSas() {
+            document.getElementById('modal-sas').style.display = 'flex';
+            const b = document.querySelector('#modal-sas .btn-primary');
+            if (b) b.focus();
+        }
+
+        function fermerModalSas() {
+            document.getElementById('modal-sas').style.display = 'none';
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') fermerModalSas();
+        });
+
+        window.addEventListener('scroll', function() {
+            const h = document.getElementById('entete');
+            if (h) h.classList.toggle('is-scrolled', window.scrollY > 8);
+        }, { passive: true });
+
+        // MÉTRIQUES LIVE : valeurs réellement renvoyées par l'API (simulées, non physiques)
+        async function actualiserMetriquesLive() {
+            try {
+                const rep = await fetch('/api/v1/etat', {cache: 'no-store'});
+                if (rep.ok) {
+                    const d = await rep.json();
+                    const t = d.tenseur_12d || {};
+                    const cryo = document.getElementById('metric-cryo');
+                    if (cryo && typeof t.temperature_cryo_mk === 'number') {
+                        cryo.innerText = t.temperature_cryo_mk.toFixed(2).replace('.', ',') + ' mK';
+                    }
+                    const h = document.getElementById('metric-harmonie');
+                    if (h && typeof t.harmonie_globale_mizan === 'number') {
+                        h.innerText = t.harmonie_globale_mizan.toFixed(4).replace('.', ',');
+                    }
+                }
+            } catch(e) {}
+            try {
+                const rep2 = await fetch('/api/v1/synapses', {cache: 'no-store'});
+                if (rep2.ok) {
+                    const d2 = await rep2.json();
+                    const c = d2.connectome || {};
+                    const b = d2.boucle_infinie_permanente || {};
+                    const s = document.getElementById('metric-synapses');
+                    if (s && c.total_synapses_actives != null) {
+                        s.innerText = String(c.total_synapses_actives);
+                    }
+                    const bl = document.getElementById('metric-boucle');
+                    if (bl) {
+                        bl.innerText = b.active_24_7
+                            ? ('active · ' + (b.total_cycles_infinis || 0) + ' cycles')
+                            : ('arrêtée · ' + (b.total_cycles_infinis || 0) + ' cycle');
+                    }
+                }
+            } catch(e) {}
+        }
+        document.addEventListener('DOMContentLoaded', actualiserMetriquesLive);
+
+        // AUDIT STATIQUE À LA DEMANDE (indicateur interne, non certifié)
+        async function recalculerAuditCode() {
+            const sEl = document.getElementById('code-score-affichage');
+            const mEl = document.getElementById('code-modules-affichage');
+            if (sEl) sEl.innerText = 'calcul…';
+            if (mEl) mEl.innerText = 'audit en cours';
+            try {
+                const rep = await fetch('/api/v1/agent_code/statut', {cache: 'no-store'});
+                const d = await rep.json();
+                const score = d.score_harmonie_global_mizan;
+                const total = d.total_modules_examines;
+                const frag = Array.isArray(d.modules)
+                    ? d.modules.filter(m => m.detecte_fragmentation).length
+                    : null;
+                if (sEl) sEl.innerText = (score != null ? score + ' / 100' : 'indisponible');
+                if (mEl) {
+                    mEl.innerText = (total != null ? total + ' modules examinés' : 'indisponible')
+                        + (frag != null ? ' · ' + frag + ' à dépendance faible' : '');
+                }
+                const sK = document.getElementById('metric-score-code');
+                if (sK && score != null) sK.innerText = score + ' / 100';
+                const mK = document.getElementById('metric-modules');
+                if (mK && total != null) mK.innerText = String(total);
+            } catch(e) {
+                if (sEl) sEl.innerText = 'indisponible';
+                if (mEl) mEl.innerText = 'API indisponible';
+            }
+        }
+    </script>
+</body>
+</html>

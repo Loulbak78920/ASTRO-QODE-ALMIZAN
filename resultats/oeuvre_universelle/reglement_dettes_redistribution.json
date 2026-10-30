@@ -1,0 +1,523 @@
+{
+  "version": "1.0",
+  "source": {
+    "type": "corpus normatif",
+    "titre": "Règlement des dettes et redistribution selon les règles islamiques",
+    "references": [
+      {
+        "ref": "Coran 2:275-279",
+        "regle": "interdiction du riba et appel à l'effacement des intérêts"
+      },
+      {
+        "ref": "Coran 2:280",
+        "regle": "report du débiteur en difficulté ; remise de la dette meilleure que l'exigence"
+      },
+      {
+        "ref": "Coran 2:282",
+        "regle": "écriture du contrat de dette et témoins"
+      },
+      {
+        "ref": "Coran 2:245",
+        "regle": "prêt d'honneur (qard hasan) sans intérêt"
+      },
+      {
+        "ref": "Coran 2:261",
+        "regle": "parabole de la multiplication : sept épis, cent grains par épi"
+      },
+      {
+        "ref": "Coran 9:60",
+        "regle": "huit catégories de bénéficiaires de la zakat"
+      },
+      {
+        "ref": "Coran 4:11-12",
+        "regle": "parts successorales fixes"
+      },
+      {
+        "ref": "Coran 5:8",
+        "regle": "justice sans partialité"
+      },
+      {
+        "ref": "Coran 16:90",
+        "regle": "justice, bienfaisance, interdiction de l'oppression"
+      },
+      {
+        "ref": "Coran 49:10",
+        "regle": "réconciliation et paix entre croyants"
+      }
+    ],
+    "conventions_classiques": [
+      "zakat : 1/40 (2,5 %) de la richesse dépassant le nisab après une année lunaire",
+      "nisab : 85 g d'or ou 595 g d'argent, seuils du moteur du dossier"
+    ],
+    "transcript": "sans objet",
+    "note": "Les versets sont cités par référence et paraphrase. Aucune mesure, aucune donnée de marché en temps réel."
+  },
+  "invariants": {
+    "taux_zakat": 0.025,
+    "nisab_argent_g": 595.0,
+    "nisab_or_g": 85.0,
+    "seuil_nisab_argent_eur": 517.3913043478261,
+    "seuil_nisab_or_eur": 5862.068965517242,
+    "taux_riba_autorise": 0.0
+  },
+  "equations": [
+    {
+      "id": "EQ-01",
+      "chemin": "reglement_dettes_redistribution.py → zakat_legale() → C01",
+      "formule": "Z = τ·A·1[A ≥ N] ;  τ = 1/40 ;  N = 595 g (Ag)",
+      "resultat": "Z(1 000 €) = 25.000000 € · Z(500 €) = 0.000000 € · N = 517.391304 €",
+      "statut": "OPÉRATIONNEL",
+      "detail": {
+        "patrimoine_eur": 1000.0,
+        "nisab_argent_eur": 517.3913043478261,
+        "nisab_or_eur": 5862.068965517242,
+        "nisab_argent_g": 595.0,
+        "nisab_or_g": 85.0,
+        "taux": 0.025,
+        "assujetti": true,
+        "zakat_eur": 25.0,
+        "patrimoine_sous_seuil_eur": 500.0,
+        "zakat_sous_seuil_eur": 0.0,
+        "part_par_categorie_eur": 3.125,
+        "lecture": "La zakat porte sur la richesse qui dépasse le nisab, au taux 1/40. Sous le seuil, elle est nulle : la règle protège les petits patrimoines."
+      }
+    },
+    {
+      "id": "EQ-02",
+      "chemin": "reglement_dettes_redistribution.py → categories_coraniques() → C02",
+      "formule": "Q 9:60 ;  k = 1..8 ;  Σ_k s_k = 1 ;  s_k ≥ 0",
+      "resultat": "s_k = 1/8 (k = 1..8) · Σ_k s_k = 1",
+      "statut": "SPÉCIFIÉ",
+      "detail": {
+        "categories": [
+          {
+            "cle": "fuqara",
+            "ar": "الفقراء",
+            "fr": "les pauvres",
+            "poids": "1/8"
+          },
+          {
+            "cle": "masakin",
+            "ar": "المساكين",
+            "fr": "les nécessiteux",
+            "poids": "1/8"
+          },
+          {
+            "cle": "amilin",
+            "ar": "العاملين عليها",
+            "fr": "ceux qui en ont la charge",
+            "poids": "1/8"
+          },
+          {
+            "cle": "muallafa",
+            "ar": "المؤلفة قلوبهم",
+            "fr": "ceux dont les cœurs sont à rallier",
+            "poids": "1/8"
+          },
+          {
+            "cle": "riqab",
+            "ar": "الرقاب",
+            "fr": "l'affranchissement",
+            "poids": "1/8"
+          },
+          {
+            "cle": "gharimin",
+            "ar": "الغارمين",
+            "fr": "les endettés",
+            "poids": "1/8"
+          },
+          {
+            "cle": "fi_sabil",
+            "ar": "في سبيل الله",
+            "fr": "dans le sentier de Dieu",
+            "poids": "1/8"
+          },
+          {
+            "cle": "ibn_sabil",
+            "ar": "ابن السبيل",
+            "fr": "le voyageur en détresse",
+            "poids": "1/8"
+          }
+        ],
+        "nombre": 8,
+        "poids_unitaire": "1/8",
+        "somme_poids": "1",
+        "note": "Répartition à parts égales retenue comme convention de calcul du dossier ; elle n'est pas une prescription coranique de huit parts égales."
+      }
+    },
+    {
+      "id": "EQ-03",
+      "chemin": "reglement_dettes_redistribution.py → reglement_insolvabilite() → C03",
+      "formule": "D' = D − min(C, D) − F ;  0 ≤ F ≤ D − min(C, D) ;  D' ≥ 0",
+      "resultat": "D' = 500.000000 € · F = 0 € ⇒ D' = 0 € · F_max = 700.000000 €",
+      "statut": "OPÉRATIONNEL",
+      "detail": {
+        "dette_eur": 1000.0,
+        "capacite_eur": 300.0,
+        "verse_eur": 300.0,
+        "reste_avant_remise_eur": 700.0,
+        "remise_demandee_eur": 200.0,
+        "remise_effective_eur": 200.0,
+        "reste_eur": 500.0,
+        "solde": false,
+        "scenarios": [
+          {
+            "remise_demandee_eur": 200.0,
+            "remise_effective_eur": 200.0,
+            "reste_eur": 500.0
+          },
+          {
+            "remise_demandee_eur": 700.0,
+            "remise_effective_eur": 700.0,
+            "reste_eur": 0.0
+          },
+          {
+            "remise_demandee_eur": 1000.0,
+            "remise_effective_eur": 700.0,
+            "reste_eur": 0.0
+          }
+        ],
+        "lecture": "Le débiteur sans capacité n'est pas contraint : sa dette est reportée. La remise ne peut pas dépasser le reste dû ; au-delà, elle est plafonnée."
+      }
+    },
+    {
+      "id": "EQ-04",
+      "chemin": "reglement_dettes_redistribution.py → qard_hasan_vs_riba() → C04",
+      "formule": "qard : R = C ;  ribā : R = C(1+r)^n ;  ΔR = R − C",
+      "resultat": "R_qard = 10 000.000000 € · R_ribā(5 %, 10 a) = 16 288.946268 € · ΔR = 6 288.946268 €",
+      "statut": "OPÉRATIONNEL",
+      "detail": {
+        "capital_eur": 10000.0,
+        "taux_annuel": 0.05,
+        "annees": 10,
+        "remboursement_qard_eur": 10000.0,
+        "remboursement_riba_eur": 16288.94626777442,
+        "surcout_riba_eur": 6288.9462677744195,
+        "taux_riba_autorise": 0.0,
+        "lecture": "Le prêt d'honneur restitue le capital sans surplus. Le surplus d'un prêt à intérêt est le riba que le dossier rejette strictement."
+      }
+    },
+    {
+      "id": "EQ-05",
+      "chemin": "reglement_dettes_redistribution.py → capacite_remboursement() → C05",
+      "formule": "C = max(0, Y − E) ;  v = min(C, D) ;  n = ⌈D/C⌉ (C > 0)",
+      "resultat": "C = 800.000000 €/a · n = 5 a · C = 0 ⇒ 2:280",
+      "statut": "SIMULÉ",
+      "detail": {
+        "revenu_eur": 3000.0,
+        "depenses_essentielles_eur": 2200.0,
+        "capacite_eur": 800.0,
+        "dette_eur": 4000.0,
+        "versement_eur": 800.0,
+        "duree_ans": 5,
+        "insolvable": {
+          "revenu_eur": 2000.0,
+          "depenses_essentielles_eur": 2200.0,
+          "capacite_eur": 0.0,
+          "duree_ans": null,
+          "conclusion": "report (Coran 2:280), pas de contrainte"
+        },
+        "lecture": "La capacité ne saisit que le surplus après les besoins essentiels. Un revenu inférieur aux besoins donne une capacité nulle, donc un report."
+      }
+    },
+    {
+      "id": "EQ-06",
+      "chemin": "reglement_dettes_redistribution.py → succession_fixes() → C06",
+      "formule": "s1 = 1/8 ;  s2 = 1/6 ;  s3 = 1/6 ;  R = 13/24 ;  s4:s5 = 2:1",
+      "resultat": "Σ s = 1 · s4/s5 = 2 · s1 = 9 000.000000 €",
+      "statut": "OPÉRATIONNEL",
+      "detail": {
+        "cas": "conjoint, père, mère, un fils, une fille ; masse après dettes",
+        "masse_apres_dettes_eur": 72000.0,
+        "parts": {
+          "conjoint": "1/8",
+          "pere": "1/6",
+          "mere": "1/6",
+          "fils": "13/36",
+          "fille": "13/72"
+        },
+        "montants_eur": {
+          "conjoint": 9000.0,
+          "pere": 12000.0,
+          "mere": 12000.0,
+          "fils": 26000.0,
+          "fille": 13000.0
+        },
+        "somme_parts": "1",
+        "somme_montants_eur": 72000.0,
+        "ratio_fils_fille": 2.0,
+        "note": "Cas unique et déclaré ; le module n'est pas un calculateur général de succession (awl, radd et autres cas ne sont pas traités)."
+      }
+    },
+    {
+      "id": "EQ-07",
+      "chemin": "reglement_dettes_redistribution.py → zakat_stabilisateur() → C07",
+      "formule": "I_Z = τ·W ;  1/τ = rotation",
+      "resultat": "I_Z = 25 000 000 000.000000 € · 1/τ = 40.000000 a",
+      "statut": "SIMULÉ",
+      "detail": {
+        "masse_eur": 1000000000000.0,
+        "taux": 0.025,
+        "injection_annuelle_eur": 25000000000.0,
+        "rotation_ans": 40.0,
+        "lecture": "À flux constant et sans croissance, la zakat fait circuler l'équivalent de la masse en quarante ans."
+      }
+    },
+    {
+      "id": "EQ-08",
+      "chemin": "reglement_dettes_redistribution.py → redistribution_inegalite() → C08",
+      "formule": "G = (a−b)/(2(a+b)) ;  G' = G − t/(a+b) ;  t* = (a−b)/2",
+      "resultat": "G = 0.250000 → 0.125000 (t = 25) → 0.000000 (t = 50)",
+      "statut": "SIMULÉ",
+      "detail": {
+        "haut_eur": 150.0,
+        "bas_eur": 50.0,
+        "moyenne_eur": 100.0,
+        "gini_initial": 0.25,
+        "transfert_egalisation_eur": 50.0,
+        "scenarios": [
+          {
+            "transfert_eur": 25.0,
+            "haut_apres_eur": 125.0,
+            "bas_apres_eur": 75.0,
+            "gini_apres": 0.125
+          },
+          {
+            "transfert_eur": 50.0,
+            "haut_apres_eur": 100.0,
+            "bas_apres_eur": 100.0,
+            "gini_apres": 0.0
+          }
+        ],
+        "note": "Modèle-jouet à deux groupes de même taille, revenu total constant. Ce n'est pas une mesure de la distribution réelle."
+      }
+    },
+    {
+      "id": "EQ-09",
+      "chemin": "reglement_dettes_redistribution.py → parabole_abondance() → C09",
+      "formule": "7 × 100 = 700 ;  700·Z (illustration)",
+      "resultat": "7 × 100 = 700 · 700·Z = 17 500.000000 € (Z = 25.000000 €)",
+      "statut": "SPÉCIFIÉ",
+      "detail": {
+        "epis": 7,
+        "grains_par_epi": 100,
+        "facteur": 700,
+        "zakat_eur": 25.0,
+        "flux_illustratif_eur": 17500.0,
+        "nature": "parabole révélée (Coran 2:261), non un taux de rendement financier"
+      }
+    },
+    {
+      "id": "EQ-10",
+      "chemin": "reglement_dettes_redistribution.py → continuite_zakat() → C10",
+      "formule": "W_n = W_0(1−τ)^n ;  n½ = ln(1/2)/ln(1−τ)",
+      "resultat": "n½ = 27.377851 a · W(40)/W0 = 0.363232",
+      "statut": "OPÉRATIONNEL",
+      "detail": {
+        "taux": 0.025,
+        "annees": 40,
+        "demi_vie_ans": 27.377851233805632,
+        "facteur_restant": 0.36323243988788034,
+        "lecture": "Sans croissance, la zakat réduit de moitié un stock non renouvelé en environ 27,38 ans. La continuité vient du flux, pas de l'accumulation."
+      }
+    },
+    {
+      "id": "EQ-11",
+      "chemin": "reglement_dettes_redistribution.py → conservation_flux() → C11",
+      "formule": "Z = Σ_k A_k + R ;  A_k = (1−ρ)·Z/8",
+      "resultat": "Z = 25.000000 € = Σ A_k (22.500000 €) + R (2.500000 €)",
+      "statut": "OPÉRATIONNEL",
+      "detail": {
+        "zakat_eur": 25.0,
+        "taux_reserve": 0.1,
+        "reserve_eur": 2.5,
+        "distributable_eur": 22.5,
+        "allocation_par_categorie_eur": 2.8125,
+        "allocations_eur": [
+          2.8125,
+          2.8125,
+          2.8125,
+          2.8125,
+          2.8125,
+          2.8125,
+          2.8125,
+          2.8125
+        ],
+        "total_eur": 25.0,
+        "lecture": "Le flux est conservé : la somme des allocations et de la réserve égale exactement la zakat perçue."
+      }
+    },
+    {
+      "id": "EQ-12",
+      "chemin": "reglement_dettes_redistribution.py → indice_justice_paix() → C12",
+      "formule": "J = 1 − T ;  T = 0.40·t_riba + 0.20·t_partage + 0.20·t_zakat + 0.20·t_adossement",
+      "resultat": "T = 0 : J = 1.000000 · T = 0.680000 : J = 0.320000",
+      "statut": "SPÉCIFIÉ",
+      "detail": {
+        "poids": {
+          "riba": 0.4,
+          "partage": 0.2,
+          "zakat": 0.2,
+          "adossement": 0.2
+        },
+        "scenarios": {
+          "halal_pur": {
+            "tension_riba": 0.0,
+            "tension_partage": 0.0,
+            "tension_zakat": 0.0,
+            "tension_adossement": 0.0,
+            "tension_economique": 0.0,
+            "indice_harmonie_economique": 1.0,
+            "conforme_bride_mizan": true
+          },
+          "usuraire": {
+            "tension_riba": 0.25,
+            "tension_partage": 1.0,
+            "tension_zakat": 1.0,
+            "tension_adossement": 0.9,
+            "tension_economique": 0.68,
+            "indice_harmonie_economique": 0.32,
+            "conforme_bride_mizan": false
+          }
+        },
+        "lecture": "L'indice est une convention interne du dossier : 1 = harmonie déclarée, 0 = tension maximale. Il ne mesure ni la paix sociale ni la justice réelle."
+      }
+    },
+    {
+      "id": "EQ-13",
+      "chemin": "reglement_dettes_redistribution.py → ponts_quatre_piliers() → C13",
+      "formule": "P1 ↔ S · P2 ↔ H · P3 ↔ R · P4 ↔ A",
+      "resultat": "4/4 · K = 1.000000",
+      "statut": "SPÉCIFIÉ",
+      "detail": [
+        {
+          "pilier": "P1 — Identité et mandat",
+          "question": "Qui agit, à quel titre, pour quelle durée ?",
+          "regle": "Parties identifiées, capacité et mandat écrits, signature du contrat (Coran 2:282).",
+          "limite": "Le module ne vérifie pas l'identité réelle ; il formalise les champs."
+        },
+        {
+          "pilier": "P2 — Intégrité et provenance",
+          "question": "Ce qui s'exécute est-il ce qui a été signé ?",
+          "regle": "Écriture, témoins, empreinte SHA-256 du contrat et quittance.",
+          "limite": "L'empreinte prouve l'intégrité du contenu, pas la véracité des faits déclarés."
+        },
+        {
+          "pilier": "P3 — Confidentialité et maîtrise",
+          "question": "Qui peut lire, restaurer, effacer ?",
+          "regle": "Registre accessible aux parties, aucune clé privée détenue par le module.",
+          "limite": "Le module ne détient aucun fonds et n'offre aucune garde."
+        },
+        {
+          "pilier": "P4 — Résilience et preuve",
+          "question": "Que reste-t-il quand l'attaque réussit ?",
+          "regle": "Journal d'audit, quittance vérifiable, voie de recours et de réconciliation (Coran 49:10).",
+          "limite": "La preuve est documentaire ; elle ne garantit pas l'exécution forcée."
+        }
+      ]
+    }
+  ],
+  "controles": [
+    {
+      "id": "C01",
+      "nom": "Zakat 2,5 % au-dessus du nisab, nulle en dessous",
+      "attendu": "25.000000 / 0.000000",
+      "obtenu": "25.000000 / 0.000000",
+      "ok": true
+    },
+    {
+      "id": "C02",
+      "nom": "Huit catégories, poids positifs, somme exacte 1",
+      "attendu": "8 / 1",
+      "obtenu": "8 / 1",
+      "ok": true
+    },
+    {
+      "id": "C03",
+      "nom": "Report, remise totale et remise excessive plafonnée",
+      "attendu": "500.000000 / 0.000000 / 700.000000",
+      "obtenu": "500.000000 / 0.000000 / 700.000000",
+      "ok": true
+    },
+    {
+      "id": "C04",
+      "nom": "Qard sans surcoût ; riba 5 % / 10 ans = 6 288,946268 €",
+      "attendu": "6288.946268",
+      "obtenu": "6288.946268",
+      "ok": true
+    },
+    {
+      "id": "C05",
+      "nom": "Capacité 800 €/an, 5 ans ; capacité nulle ⇒ report",
+      "attendu": "800.000000 / 5",
+      "obtenu": "800.000000 / 5",
+      "ok": true
+    },
+    {
+      "id": "C06",
+      "nom": "Parts successorales exactes : somme 1, ratio 2, conjoint 9 000 €",
+      "attendu": "1 / 2 / 9000.000000",
+      "obtenu": "1 / 2 / 9000.000000",
+      "ok": true
+    },
+    {
+      "id": "C07",
+      "nom": "Injection 2,5 % et rotation de 40 ans",
+      "attendu": "40.000000",
+      "obtenu": "40.000000",
+      "ok": true
+    },
+    {
+      "id": "C08",
+      "nom": "Gini 0,25 → 0,125 → 0 sous transferts 25 puis 50",
+      "attendu": "0.250000 / 0.125000 / 0.000000",
+      "obtenu": "0.250000 / 0.125000 / 0.000000",
+      "ok": true
+    },
+    {
+      "id": "C09",
+      "nom": "Parabole : 7 × 100 = 700 ; flux = 700·Z",
+      "attendu": "700 / 17500.000000",
+      "obtenu": "700 / 17500.000000",
+      "ok": true
+    },
+    {
+      "id": "C10",
+      "nom": "Demi-vie 27,377851 ans ; W(40)/W0 = 0,363232",
+      "attendu": "27.377851 / 0.363232",
+      "obtenu": "27.377851 / 0.363232",
+      "ok": true
+    },
+    {
+      "id": "C11",
+      "nom": "Conservation : allocations + réserve = zakat",
+      "attendu": "25.000000",
+      "obtenu": "25.000000",
+      "ok": true
+    },
+    {
+      "id": "C12",
+      "nom": "Indice : halal J = 1 ; usuraire T = 0,68, J = 0,32",
+      "attendu": "0.680000 / 0.320000",
+      "obtenu": "0.680000 / 0.320000",
+      "ok": true
+    },
+    {
+      "id": "C13",
+      "nom": "Quatre piliers reliés, chacun avec sa limite",
+      "attendu": "4 / 1.000000",
+      "obtenu": "4 / 1.000000",
+      "ok": true
+    }
+  ],
+  "resume": {
+    "equations": 13,
+    "controles_ok": 13,
+    "controles_total": 13,
+    "statuts": {
+      "OPÉRATIONNEL": 6,
+      "SIMULÉ": 3,
+      "SPÉCIFIÉ": 4
+    }
+  }
+}
