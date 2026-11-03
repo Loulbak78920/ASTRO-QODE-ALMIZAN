@@ -1,3 +1,6 @@
+
+> **Manuscript DOI (author-confirmed publication / publication confirmée par l'auteur):** https://doi.org/10.5281/zenodo.23918713 . The DOI's record metadata have not been independently inspected here; this DOI is distinct from the older project DOI 10.5281/zenodo.23554838.
+
 # Al-Mizan — Archive submission package / Dossier de dépôt scientifique
 
 **Project originator / Auteur revendiqué:** Ahmed EL BAHLOUL  
