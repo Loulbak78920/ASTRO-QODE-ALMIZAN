@@ -39,6 +39,34 @@ energy = lambda x: 768**2*math.exp(-2*gamma*x)
 derivative = (energy(t+h)-energy(t-h))/(2*h)
 assert close(derivative, -2*gamma*energy(t), tol=1e-8)
 
+
+# Additional checks derived directly from the published two-pole dossier.
+def decompose(qk, qj):
+    return ((-3*qk + 2*qj)/13, (2*qk + 3*qj)/13)
+
+def reconstruct(a, b):
+    return (-3*a + 2*b, 2*a + 3*b)
+
+for qk, qj in ((-2304, 1536), (0, 0), (13, -7), (-9, -11)):
+    aa, bb = decompose(qk, qj)
+    rr = 2*qk + 3*qj
+    qk2, qj2 = reconstruct(aa, bb)
+    assert close(qk2, qk) and close(qj2, qj)
+    assert close(rr, 13*bb)
+    assert close(qk*qk + qj*qj, 13*(aa*aa + bb*bb))
+
+# For constant coefficients, verify both differential equations and residual.
+def state(x):
+    amp = 768*math.exp(-gamma*x)
+    return amp*math.cos(omega*x), amp*math.sin(omega*x)
+
+a_t, b_t = state(t)
+a_p, b_p = state(t+h)
+a_m, b_m = state(t-h)
+assert close((a_p-a_m)/(2*h), -gamma*a_t-omega*b_t, tol=1e-8)
+assert close((b_p-b_m)/(2*h), omega*a_t-gamma*b_t, tol=1e-8)
+assert close(13*b_t, 9984*math.exp(-gamma*t)*math.sin(omega*t))
+
 print("PASS: orthogonal basis, unique decomposition, equilibrium residual,")
 print("      constant-coefficient harmonic solution and energy derivative.")
 print("NOTE: these tests do not establish any universal physical law.")
