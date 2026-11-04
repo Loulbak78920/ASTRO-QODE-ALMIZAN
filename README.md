@@ -1,5 +1,12 @@
 # `IMAM8MAHDI` × `Al-Mizan` × `ASTRO-Q°ODE` (V1.0–V6.6)
 
+## 🔬 Vérification rapide / Quick scientific verification
+
+**Chercheurs et laboratoires / Researchers and laboratories:** [Guide de vérification rapide — 5-minute orientation](docs/QUICK_VERIFICATION_AL_MIZAN.md) · [Appel international à collaboration expérimentale / Open experimental call](docs/INTERNATIONAL_EXPERIMENTAL_COLLABORATION.md) · [Répondre / Respond — GitHub Issue #12](https://github.com/Loulbak78920/ASTRO-QODE-ALMIZAN/issues/12).
+
+Exécuter les vérifications mathématiques / Run mathematical checks: `python research/verify_al_mizan.py`. Pour analyser des mesures indépendantes / To analyze independent measurements: [protocole Python](research/experiment_two_channel_voltage.py). **Statut :** vérifications mathématiques conditionnelles disponibles ; aucune validation physique universelle démontrée / Conditional mathematical checks available; no universal physical validation established.
+
+
 <p align="center">
   <img src="./assets/icone_jeton_mzn_harmonie.svg" alt="Icône Officielle de l'Harmonie du Jeton MZN" width="280" height="280">
   <br>
