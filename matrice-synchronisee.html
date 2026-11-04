@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>IMAM8MAHDI — Matrice synchronisée et audit</title>
+<style>:root{color-scheme:dark}body{font-family:system-ui,sans-serif;background:#090e19;color:#edf2fc;margin:0;line-height:1.65}main{max-width:900px;margin:auto;padding:3rem 1.3rem}a{color:#eacb7c}.panel{background:#141d30;border:1px solid #334159;border-radius:14px;padding:1.3rem;margin:1rem 0}h1,h2{color:#f2d58c}code,pre{white-space:pre-wrap;overflow-wrap:anywhere;color:#b8f3eb}small{color:#a7b5cb}input{background:#0a1323;color:white;border:1px solid #66768b;padding:.5rem}button{background:#e9c36b;border:0;padding:.6rem 1rem;border-radius:8px;cursor:pointer}strong{color:#f2d58c}</style></head>
+<body><main><a href="./index.html">← Accueil Al-Mizan</a><h1>Matrice synchronisée IMAM8MAHDI</h1><p>Recherche mathématique, vérification comptable et séparation des niveaux de preuve. Cette page ne publie aucun document personnel.</p>
+<section class="panel"><h2>1. Conservation exacte des montants affichés</h2><p>Capital initial virtuel : 25 000,00 €<br>Profits virtuels affichés : 18 958 505,54 €<br>Solde virtuel affiché : 18 983 505,54 €</p><pre>ε = B − C₀ − G = 0,00 €</pre><p id="balance"></p><small>Identité arithmétique, pas preuve de créance exigible.</small></section>
+<section class="panel"><h2>2. Centres et synchronisation multi-horizons</h2><pre>Cₕ(t) = [Hₕ(t) + Lₕ(t)] / 2
+F₀ = C₁₂M − C₁M
+F₁ = C₁M − C₁W
+F₂ = C₁W − C₁D
+F₃ = C₁D − C₁H
+F₄ = C₁H − C₅m
+S(t) = (F₀=0) ∧ (F₁=0) ∧ (F₂=0) ∧ (F₃=0) ∧ (F₄=0)
+ΣFᵢ = C₁₂M − C₅m</pre><p>Une somme nulle ne prouve pas que les cinq couples soient individuellement synchronisés. Données closes et live à conserver séparément. Aucune validation prédictive n'est revendiquée.</p></section>
+<section class="panel"><h2>3. Deux preuves juridiques indépendantes</h2><pre>P₁ = Contrat ∧ Version opposable ∧ Éligibilité ∧ Échéance
+D = max(0, Récompense acquise − Paiements), si P₁ vrai
+P₂ = Faute publique ∧ Préjudice certain ∧ Causalité
+I_État = préjudice directement imputable à la faute</pre><p>Une condition non démontrée reste <strong>INCONNUE</strong>, jamais automatiquement vraie. Une dette privée ne devient pas automatiquement une dette de l'État.</p></section>
+<section class="panel"><h2>4. Vérification interactive</h2><label>Capital virtuel <input id="c" value="25000"></label> <label>Profit affiché <input id="g" value="18958505.54"></label> <label>Solde affiché <input id="b" value="18983505.54"></label> <button id="calc">Calculer</button><p id="result" aria-live="polite"></p></section>
+<section class="panel"><h2>5. Source audiovisuelle à examiner</h2><p><a href="https://www.youtube.com/watch?v=XswuPXIQsH0" rel="noopener noreferrer" target="_blank">Vidéo communiquée</a>. Son contenu et sa transcription n'ont pas été vérifiés ; aucune affirmation ne lui est attribuée.</p></section>
+<footer><small>IMAM8MAHDI × Al-Mizan — audit reproductible. Aucune conclusion judiciaire, financière ou scientifique n'est revendiquée sans preuve correspondante.</small></footer></main>
+<script>function cents(id){const s=document.getElementById(id).value.trim().replace(',','.');if(!/^\d+(\.\d{1,2})?$/.test(s))throw Error('Montant invalide');const [a,b='']=s.split('.');return BigInt(a)*100n+BigInt((b+'00').slice(0,2))}function euro(n){const neg=n<0n?'−':'';const x=n<0n?-n:n;return neg+(x/100n).toLocaleString('fr-FR')+','+(x%100n).toString().padStart(2,'0')+' €'}function run(){try{const e=cents('b')-cents('c')-cents('g');document.getElementById('result').textContent='Écart exact : '+euro(e)+(e===0n?' — identité vérifiée':' — incohérence arithmétique');}catch(e){document.getElementById('result').textContent=e.message}}document.getElementById('calc').addEventListener('click',run);document.getElementById('balance').textContent='Égalité contrôlée en centimes entiers (sans erreur de virgule flottante).';run()</script></body></html>
