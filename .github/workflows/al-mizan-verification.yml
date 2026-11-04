@@ -2,18 +2,18 @@ name: Al-Mizan mathematical verification
 
 on:
   push:
-    paths:
-      - 'research/verify_al_mizan.py'
-      - '.github/workflows/al-mizan-verification.yml'
+    branches: ["main", "master"]
   pull_request:
-    paths:
-      - 'research/verify_al_mizan.py'
-      - '.github/workflows/al-mizan-verification.yml'
+    branches: ["main", "master"]
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
