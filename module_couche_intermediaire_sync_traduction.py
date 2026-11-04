@@ -166,6 +166,11 @@ class CoucheIntermediaireSyncTraduction:
         self.total_trames_traduites = 0
         self.total_trames_synchronisees = 0
         self.latence_moyenne_tampon_ms = 0.0
+        # Télémétrie mesurée, distincte des déclarations de synchronisme.
+        self._arrivees_ns: Dict[str, int] = {}
+        self._latences_ms: collections.deque = collections.deque(maxlen=2000)
+        self._retards_cycle_ms: collections.deque = collections.deque(maxlen=2000)
+        self.total_rejets_tampon = 0
 
     def demarrer(self):
         """Démarre le thread de pompage et d'alignement de phase synchrone."""
@@ -202,9 +207,13 @@ class CoucheIntermediaireSyncTraduction:
             self.file_attente_prioritaire.put_nowait(trame)
             with self.verrou:
                 self.total_trames_traduites += 1
+                self._arrivees_ns[trame.id_trame] = time.perf_counter_ns()
             return trame.id_trame
         except queue.Full:
             # En cas de saturation extrême, préservation de l'intégrité par rejet contrôlé
+            with self.verrou:
+                self.total_rejets_tampon += 1
+                self.callbacks_reponse_asynchrone.pop(trame.id_trame, None)
             return "ERREUR_TAMPON_SATURE"
 
     def _boucle_alignement_synchrone(self):
@@ -217,6 +226,13 @@ class CoucheIntermediaireSyncTraduction:
 
         while self.actif:
             debut_cycle = time.perf_counter()
+            # Dérive réelle de cadence mesurée à chaque cycle, sans corriger artificiellement les horodatages.
+            if not hasattr(self, '_prochain_cycle_attendu'):
+                self._prochain_cycle_attendu = debut_cycle
+            retard_ms = max(0.0, (debut_cycle - self._prochain_cycle_attendu) * 1000.0)
+            self._prochain_cycle_attendu = debut_cycle + cadence_synchrone_s
+            with self.verrou:
+                self._retards_cycle_ms.append(retard_ms)
 
             # Dépiler jusqu'à 20 trames prêtes par cycle synchrone
             trames_cycle: List[TrameHarmoniqueTraduite] = []
@@ -235,6 +251,10 @@ class CoucheIntermediaireSyncTraduction:
                 with self.verrou:
                     self.total_trames_synchronisees += 1
                     self.historique_ring_buffer.append(trame)
+                    arrivee_ns = self._arrivees_ns.pop(trame.id_trame, None)
+                    if arrivee_ns is not None:
+                        self._latences_ms.append((time.perf_counter_ns() - arrivee_ns) / 1e6)
+                        self.latence_moyenne_tampon_ms = sum(self._latences_ms) / len(self._latences_ms)
 
                 # Rétro-traduction asynchrone vers le demandeur si callback
                 with self.verrou:
@@ -294,6 +314,10 @@ class CoucheIntermediaireSyncTraduction:
             t_sync = self.total_trames_synchronisees
             taille_tampon = self.file_attente_prioritaire.qsize()
 
+        with self.verrou:
+            latences = tuple(self._latences_ms)
+            retards = tuple(self._retards_cycle_ms)
+            rejets = self.total_rejets_tampon
         return {
             "statut": "COUCHE_INTERMEDIAIRE_OPERATIONNELLE",
             "actif": self.actif,
@@ -301,11 +325,20 @@ class CoucheIntermediaireSyncTraduction:
             "total_trames_synchronisees_coeur": t_sync,
             "trames_en_tampon_actuelles": taille_tampon,
             "capacite_tampon_max": self.capacite_tampon,
+            "mesures_reelles": {
+                "latence_moyenne_tampon_ms": (sum(latences) / len(latences)) if latences else None,
+                "latence_max_tampon_ms": max(latences) if latences else None,
+                "retard_cycle_moyen_ms": (sum(retards) / len(retards)) if retards else None,
+                "retard_cycle_max_ms": max(retards) if retards else None,
+                "rejets_tampon": rejets,
+                "convergence_inter_flux_mesuree": False,
+                "note": "Latences et retards observes; aucune preuve de convergence inter-flux.",
+            },
             "technologies_supportees": [t.value for t in TypeTechnologieAsynchrone],
             "invariants_garantis": {
-                "de_gigue_jitter_absorbe": True,
-                "ordre_chronologique_dt_strict": True,
-                "zero_blocage_coeur_synchrone": True,
+                "de_gigue_jitter_absorbe": "non_verifie",
+                "ordre_chronologique_dt_strict": False,
+                "zero_blocage_coeur_synchrone": "non_verifie",
             },
             "symbole": "🛡️🟢 PONT DE SYNCHRONISATION ASYNCHRONE/SYNCHRONE PARFAIT",
         }
